@@ -14,13 +14,13 @@ what type of video sites are
 
 ## Setup
 
-After downloading this directory of code, install the required pythin libraries:
+After downloading this directory of code, install the required Python libraries:  
 
 ```text
 pip3 install -r requirements.txt
 ```
 
-`ffmpeg` may be required to perform post processing.
+`ffmpeg` may be required to perform post processing.  
 
 ### Usage
 
@@ -31,12 +31,13 @@ your browser. Most browsers except for Safari (thanks Apple) use a common HTML
 file format so unlisted browsers are likely to be supported.  
 
 Tested with browsers:  
-. Safari (MacOS)  
 . Brave (Windows)  
 . Chrome (Windows)  
+. DuckDuckGo (Windows)  
+. Edge (Windows)  
 . Firefox (Windows)  
 . Opera (Windows)  
-. DuckDuckGo (Windows)  
+. Safari (MacOS)  
 . Vivaldi (Windows)  
 
 ### Notes
