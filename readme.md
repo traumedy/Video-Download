@@ -16,8 +16,23 @@ what type of video sites are
 
 After downloading this directory of code, install the required pythin libraries:
 
-```
+```text
 pip3 install -r requirements.txt
 ```
 
 `ffmpeg` may be required to perform post processing.
+
+### Usage
+
+URL list can either be a text file (.txt) with a list of URLs (lines beginning
+with # are ignored) or an HTML file (.html) of bookmarks exported from a browser.  
+
+Tested with browsers:  
+. Safari (MacOS)  
+. Brave (Windows)  
+. Chrome (Windows)  
+. Firefox (Windows)  
+. Opera (Windows)  
+. DuckDuckGo (Windows)
+. Vivaldi (Windows)  
+
