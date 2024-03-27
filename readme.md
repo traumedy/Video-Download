@@ -33,6 +33,6 @@ Tested with browsers:
 . Chrome (Windows)  
 . Firefox (Windows)  
 . Opera (Windows)  
-. DuckDuckGo (Windows)
+. DuckDuckGo (Windows)  
 . Vivaldi (Windows)  
 
