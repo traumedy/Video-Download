@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
-from PySide6.QtWidgets import QListWidget, QCheckBox
+from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -29,8 +29,13 @@ SETTINGS_VAL_USERNAME = "Username"
 SETTINGS_VAL_PASSWORD = "Password"
 SETTINGS_VAL_OVERWRITE = "Overwrite"
 SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
+SETTINGS_VAL_FORMATEXT = "FormatExt"
 SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
 SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
+
+# Output container formats
+format_ext_list = ["3gp", "aac", "flv", "m4a", "mp3", "mp4", "ogg", "wav",
+                   "webm"]
 
 # HTML Document types, not really used
 DOCTYPE_UNKNOWN = 0
@@ -168,6 +173,7 @@ class MainWindow(QMainWindow):
         password_text: QLineEdit
         overwrite_check: QCheckBox
         keepvideo_check: QCheckBox
+        format_ext_combo: QComboBox
         status_text: QTextEdit
         file_progress: QProgressBar
         total_progress: QProgressBar
@@ -221,6 +227,7 @@ class MainWindow(QMainWindow):
         self.password_text = QLineEdit()
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
+        self.format_ext_combo = QComboBox()
         self.status_text = QTextEdit()
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
@@ -229,6 +236,9 @@ class MainWindow(QMainWindow):
 
         # Set widget properties
         self.status_text.setReadOnly(True)
+        self.format_ext_combo.addItem("[Best quality]", "")
+        for ext in format_ext_list:
+            self.format_ext_combo.addItem(ext, ext)
 
     def create_mainwindow_layout(self):
         """Creates layout for main window
@@ -264,6 +274,7 @@ class MainWindow(QMainWindow):
         layout.addRow(QLabel("FFMPEG path:"), ffmpeg_layout)
         layout.addRow(auth_layout)
         layout.addRow(switches_layout)
+        layout.addRow(QLabel("Output extension:"), self.format_ext_combo)
         layout.addRow(self.status_text)
         layout.addRow(QLabel("File progress"), self.file_progress)
         layout.addRow(QLabel("Total progress"), self.total_progress)
@@ -307,6 +318,8 @@ class MainWindow(QMainWindow):
             "Overwrite video files if they exist when downloading")
         self.keepvideo_check.setToolTip(
             "Keep video files after post processing")
+        self.format_ext_combo.setToolTip(
+            "Extension of the output container format")
         self.status_text.setToolTip(
             "Status window")
         self.close_button.setToolTip(
@@ -352,6 +365,8 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_OVERWRITE)))
         self.keepvideo_check.setChecked(self.value_to_bool(
             self.settings.value(SETTINGS_VAL_KEEPVIDEO)))
+        self.format_ext_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATEXT, ""))
 
         # Restore widow size
         size = self.size()
@@ -376,6 +391,8 @@ class MainWindow(QMainWindow):
                                self.overwrite_check.isChecked())
         self.settings.setValue(SETTINGS_VAL_KEEPVIDEO,
                                self.keepvideo_check.isChecked())
+        self.settings.setValue(SETTINGS_VAL_FORMATEXT,
+                               self.format_ext_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_WINDOWWIDTH,
                                self.width())
         self.settings.setValue(SETTINGS_VAL_WINDOWHEIGHT,
@@ -532,6 +549,9 @@ class MainWindow(QMainWindow):
             ydl_opts["overwrites"] = True
         if self.keepvideo_check.isChecked():
             ydl_opts["keepvideo"] = True
+        format_ext = self.format_ext_combo.currentData()
+        if format_ext:
+            ydl_opts["format"] = format_ext
 
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
