@@ -39,3 +39,6 @@ Tested with browsers:
 . DuckDuckGo (Windows)  
 . Vivaldi (Windows)  
 
+### Notes
+
+All settings in the GUI are stored between executions including the window size.  
