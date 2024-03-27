@@ -1,6 +1,6 @@
 # Video-Download.py
 
-Description: Downloads lists of video URLs using yt-dlp library
+Description: GUI for downloading lists of video URLs using yt-dlp library.
 Author: Josh Buchbinder
 
 ## General usage
@@ -25,7 +25,10 @@ pip3 install -r requirements.txt
 ### Usage
 
 URL list can either be a text file (.txt) with a list of URLs (lines beginning
-with # are ignored) or an HTML file (.html) of bookmarks exported from a browser.  
+with # are ignored) or an HTML file (.html) of bookmarks exported from a browser.
+Google "`export bookmarks <browser>`" for detail on how to export bookmarks from
+your browser. Most browsers except for Safari (thanks Apple) use a common HTML
+file format so unlisted browsers are likely to be supported.  
 
 Tested with browsers:  
 . Safari (MacOS)  
