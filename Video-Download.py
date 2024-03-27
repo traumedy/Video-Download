@@ -495,7 +495,7 @@ class MainWindow(QMainWindow):
                                                       encoding="utf-8")
                     .readlines() if line[0] != '#']
         # Remove blank lines
-        strings = [x for x in strings if x]
+        url_list = [x for x in url_list if x]
         return url_list
 
     def parse_html_file(self, file_path):
