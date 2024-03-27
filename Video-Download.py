@@ -494,6 +494,8 @@ class MainWindow(QMainWindow):
         url_list = [line.strip('\n') for line in open(file_path, 'r',
                                                       encoding="utf-8")
                     .readlines() if line[0] != '#']
+        # Remove blank lines
+        strings = [x for x in strings if x]
         return url_list
 
     def parse_html_file(self, file_path):
