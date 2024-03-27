@@ -8,7 +8,6 @@ Author: Josh Buchbinder
 
 import sys
 import shutil
-import dataclasses
 from html.parser import HTMLParser
 from PySide6.QtCore import QFileInfo, QDir, QSettings
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
@@ -159,26 +158,22 @@ class BookmarkHTMLParser(HTMLParser):
 class MainWindow(QMainWindow):
     """Main application window class derived from QMainWindow
     """
-    @dataclasses.dataclass
-    class Widgets:
-        """dataclass that holds the members for MainWindow
-        """
-        list_path_text: QLineEdit
-        list_path_browse_button: QPushButton
-        download_path_text: QLineEdit
-        download_path_browse_button: QPushButton
-        ffmpeg_path_text: QLineEdit
-        ffmpeg_path_browse_button: QPushButton
-        username_text: QLineEdit
-        password_text: QLineEdit
-        overwrite_check: QCheckBox
-        keepvideo_check: QCheckBox
-        format_ext_combo: QComboBox
-        status_text: QTextEdit
-        file_progress: QProgressBar
-        total_progress: QProgressBar
-        close_button: QPushButton
-        download_button: QPushButton
+    list_path_text: QLineEdit
+    list_path_browse_button: QPushButton
+    download_path_text: QLineEdit
+    download_path_browse_button: QPushButton
+    ffmpeg_path_text: QLineEdit
+    ffmpeg_path_browse_button: QPushButton
+    username_text: QLineEdit
+    password_text: QLineEdit
+    overwrite_check: QCheckBox
+    keepvideo_check: QCheckBox
+    format_ext_combo: QComboBox
+    status_text: QTextEdit
+    file_progress: QProgressBar
+    total_progress: QProgressBar
+    close_button: QPushButton
+    download_button: QPushButton
 
     def __init__(self):
         super().__init__()
