@@ -9,12 +9,13 @@ Author: Josh Buchbinder
 import sys
 import shutil
 from html.parser import HTMLParser
-from PySide6.QtCore import QFileInfo, QDir, QUrl, QSettings
+from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
 from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
+from PySide6.QtWidgets import QSizePolicy
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -73,7 +74,6 @@ class FolderSelectDialog(QDialog):
             folder_list ([str]): List of strings for selection
         """
         self.folder_listbox.insertItems(0, folder_list)
-        self.folder_listbox.setCurrentItem(None)
 
     def get_selected(self):
         """Returns string of selected item
@@ -164,7 +164,8 @@ class BookmarkHTMLParser(HTMLParser):
         Returns:
             [str]: Extracted URLs or empty list
         """
-        folders = list(self.url_dict.keys())
+        # Make list of folder names that actually contain URLs
+        folders = [key for key in self.url_dict if self.url_dict[key]]
         if len(folders) == 1:
             # Only one folder, just return all the values
             return list(self.url_dict[folders[0]])
@@ -176,7 +177,7 @@ class BookmarkHTMLParser(HTMLParser):
                 if folder:
                     # Just return the list in the dictionary
                     return self.url_dict[folder]
-                # Combine all the folder lists into one
+                # No folder selected, combine all the folder lists into one
                 url_list = []
                 for urls in list(self.url_dict.values()):
                     url_list.extend(urls)
@@ -267,6 +268,15 @@ class MainWindow(QMainWindow):
         self.download_button = QPushButton("Download videos")
 
         # Set widget properties
+        self.list_path_browse_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Minimum)
+        self.download_path_browse_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Minimum)
+        self.ffmpeg_path_browse_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum,
+            QSizePolicy.Policy.Minimum)
         self.status_text.setReadOnly(True)
         self.format_ext_combo.addItem("[Best quality]", "")
         for ext in format_ext_list:
@@ -281,13 +291,16 @@ class MainWindow(QMainWindow):
         # Create horizontal layouts to stack browse buttons next to paths
         list_path_layout = QHBoxLayout()
         list_path_layout.addWidget(self.list_path_text)
-        list_path_layout.addWidget(self.list_path_browse_button)
+        list_path_layout.addWidget(self.list_path_browse_button, 0,
+                                   Qt.AlignmentFlag.AlignRight)
         download_path_layout = QHBoxLayout()
         download_path_layout.addWidget(self.download_path_text)
-        download_path_layout.addWidget(self.download_path_browse_button)
+        download_path_layout.addWidget(self.download_path_browse_button, 0,
+                                       Qt.AlignmentFlag.AlignRight)
         ffmpeg_layout = QHBoxLayout()
         ffmpeg_layout.addWidget(self.ffmpeg_path_text)
-        ffmpeg_layout.addWidget(self.ffmpeg_path_browse_button)
+        ffmpeg_layout.addWidget(self.ffmpeg_path_browse_button, 0,
+                                Qt.AlignmentFlag.AlignRight)
         auth_layout = QHBoxLayout()
         auth_layout.addWidget(QLabel("Username:"))
         auth_layout.addWidget(self.username_text)
@@ -533,7 +546,7 @@ class MainWindow(QMainWindow):
                                 QMessageBox.StandardButton.Ok)
         else:
             message = f"Processing URL list {file_info.absoluteFilePath()}"
-            self.status_text.append(message)
+            self.add_status_message(message)
             ext = file_info.completeSuffix().lower()
             url_list = []
             if ext == "txt":
@@ -641,7 +654,7 @@ class MainWindow(QMainWindow):
             ydl.add_progress_hook(self.ydl_progress_hook)
             for url in url_list:
                 message = f"Trying download of URL {url}"
-                self.status_text.append(message)
+                self.add_status_message(message)
                 try:
                     ydl.download(url)
                 except utils.DownloadError as e:
@@ -649,7 +662,8 @@ class MainWindow(QMainWindow):
                 count += 1
                 self.total_progress.setValue(count)
 
-        message = f"{len(self.download_filenames)} downloads complete"
+        message = f"{len(url_list)} URLs processed"
+        message += f"\n{len(self.download_filenames)} downloads complete"
         if errors:
             message += f"\n{len(errors)} errors encountered"
         dlg = QMessageBox(self)
@@ -679,16 +693,26 @@ class MainWindow(QMainWindow):
             if filename not in self.download_filenames:
                 self.download_filenames.append(filename)
                 message = f"Downloading file {filename}"
-                self.status_text.append(message)
+                self.add_status_message(message)
             if "finished" == status:
                 message = f"Finished with file {filename}"
-                self.status_text.append(message)
+                self.add_status_message(message)
             elif "error" == status:
                 message = f"Error with file {filename}"
-                self.status_text.append(message)
+                self.add_status_message(message)
 
         # Drive message loop
         QApplication.processEvents()
+
+    def add_status_message(self, message):
+        """Adds text to the status window and scrolls to the bottom
+
+        Args:
+            message (str): Message text to add
+        """
+        self.status_text.append(message)
+        self.status_text.verticalScrollBar().setValue(
+            self.status_text.verticalScrollBar().maximum())
 
 
 def main(argv):

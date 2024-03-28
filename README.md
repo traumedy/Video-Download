@@ -78,6 +78,9 @@ Currently when selecting a container file extension, the requested format will
 attempt to be downloaded from the server _if it is available_. If none is selected,
 the 'best quality' format will be downloaded.  
 
+The file progress bar does not work with some sites. This may be a limitation of
+the yt_dlp library.  
+
 ## Todo  
 
 More format selection options and post processing options will be added.  
