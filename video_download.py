@@ -373,8 +373,10 @@ class MainWindow(QMainWindow):
 
         # Restore widow size
         size = self.size()
-        width = self.settings.value(SETTINGS_VAL_WINDOWWIDTH, size.width())
-        height = self.settings.value(SETTINGS_VAL_WINDOWHEIGHT, size.height())
+        width = int(self.settings.value(SETTINGS_VAL_WINDOWWIDTH,
+                                        size.width()))
+        height = int(self.settings.value(SETTINGS_VAL_WINDOWHEIGHT,
+                                         size.height()))
         self.resize(width, height)
 
     def save_settings(self):

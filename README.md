@@ -25,13 +25,7 @@ version 3.10.
 pip3 install -r requirements.txt
 ```
 
-3. On non Windows platforms, make the Python script executable:  
-
-```bash
-chmod u+x ./video_download.py
-```
-
-4. On some platforms, there may be additional dependencies required. On
+3. On some platforms, there may be additional dependencies required. On
 Ubuntu 22 for instance `xcb-cursor0` is required for Qt:  
 
 ```bash
