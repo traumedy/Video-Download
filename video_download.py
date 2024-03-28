@@ -9,12 +9,13 @@ Author: Josh Buchbinder
 import sys
 import shutil
 from html.parser import HTMLParser
-from PySide6.QtCore import QFileInfo, QDir, QSettings
+from PySide6.QtCore import Qt, QFileInfo, QDir, QSettings
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
 from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox
+from PySide6.QtWidgets import QAbstractItemView
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -70,6 +71,7 @@ class FolderSelectDialog(QDialog):
             folder_list ([str]): List of strings for selection
         """
         self.folder_listbox.insertItems(0, folder_list)
+        self.folder_listbox.setCurrentItem(None)
 
     def get_selected(self):
         """Returns string of selected item
@@ -77,9 +79,8 @@ class FolderSelectDialog(QDialog):
         Returns:
             str: String of selected item or empty string if none selected
         """
-        selected = self.folder_listbox.currentRow()
-        item = self.folder_listbox.item(selected)
-        if item:
+        # List should be in single selection mode so return first item
+        for item in self.folder_listbox.selectedItems():
             return item.text()
         return ""
 
@@ -136,9 +137,14 @@ class BookmarkHTMLParser(HTMLParser):
             if dialog.exec():
                 folder = dialog.get_selected()
                 if folder:
+                    # Just return the list in the dictionary
                     return self.url_dict[folder]
-                return list(self.url_dict.values())
-
+                # Combine all the folder lists into one
+                url_list = []
+                for urls in list(self.url_dict.values()):
+                    url_list.extend(urls)
+                return url_list
+        # Return empty URL list of no folders were found
         return []
 
     # List of extracted URLs
@@ -591,7 +597,6 @@ class MainWindow(QMainWindow):
         status = ""
         if "status" in progress_dict:
             status = progress_dict["status"]
-            # print("\n", status, "\n")
 
         if "downloaded_bytes" in progress_dict and\
                 "total_bytes" in progress_dict and\
@@ -610,7 +615,8 @@ class MainWindow(QMainWindow):
                 message = f"Finished with file {filename}"
                 self.status_text.append(message)
             elif "error" == status:
-                print(f"\nERROR {filename}\n")
+                message = f"Error with file {filename}"
+                self.status_text.append(message)
 
         # Drive message loop
         QApplication.processEvents()
