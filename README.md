@@ -1,7 +1,8 @@
 # video_download.py  
 
-Description: GUI for downloading lists of video URLs using yt-dlp library.
-Author: Josh Buchbinder
+Description: GUI for downloading lists of video URLs using yt-dlp library.  
+
+Author: Josh Buchbinder  
 
 ## General usage  
 
