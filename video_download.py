@@ -528,22 +528,13 @@ class MainWindow(QMainWindow):
         # Get URL list from parser
         return parser.get_url_list()
 
-    def download_url_list(self, url_list):
-        """Performs the downloading of URLs
+    def create_ydl_options(self):
+        """Creates the dictionary of options to pass to YoutubeDL
+        built from UI values and set some default values
 
-        Args:
-            url_list ([str]): List of URLs to download
+        Returns:
+            dict: Dictionary of options for yt_dlp.YoutubeDL constructor
         """
-        # Reset progress bars
-        self.file_progress.setRange(0, 100)
-        self.file_progress.setValue(0)
-        self.total_progress.setRange(0, len(url_list))
-        self.total_progress.setValue(0)
-
-        errors = []
-        self.download_filenames = []
-        count = 0
-
         # Set options for YoutubeDL
         ydl_opts = {}
         ydl_opts["quiet"] = True
@@ -565,6 +556,24 @@ class MainWindow(QMainWindow):
         format_ext = self.format_ext_combo.currentData()
         if format_ext:
             ydl_opts["format"] = format_ext
+        return ydl_opts
+
+    def download_url_list(self, url_list):
+        """Performs the downloading of URLs
+
+        Args:
+            url_list ([str]): List of URLs to download
+        """
+        # Reset progress bars
+        self.file_progress.setRange(0, 100)
+        self.file_progress.setValue(0)
+        self.total_progress.setRange(0, len(url_list))
+        self.total_progress.setValue(0)
+
+        errors = []
+        self.download_filenames = []
+        count = 0
+        ydl_opts = self.create_ydl_options()
 
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
