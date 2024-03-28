@@ -90,6 +90,18 @@ class FolderSelectDialog(QDialog):
 class BookmarkHTMLParser(HTMLParser):
     """HTML parsing class derived from HTMLParser
     """
+    # List of extracted URLs
+    url_dict = {}
+    # Current document type
+    doctype = DOCTYPE_UNKNOWN
+    # Current tag
+    current_tag = ""
+    # Flag for in H3 tag
+    in_folder_title = False
+    # Current folder name
+    current_folder = ""
+    # Parent window for dialog
+    parent_window = None
 
     def handle_decl(self, decl):
         self.url_dict = {}
@@ -148,19 +160,6 @@ class BookmarkHTMLParser(HTMLParser):
                 return url_list
         # Return empty URL list of no folders were found
         return []
-
-    # List of extracted URLs
-    url_dict = {}
-    # Current document type
-    doctype = DOCTYPE_UNKNOWN
-    # Current tag
-    current_tag = ""
-    # Flag for in H3 tag
-    in_folder_title = False
-    # Current folder name
-    current_folder = ""
-    # Parent window for dialog
-    parent_window = None
 
 
 class MainWindow(QMainWindow):
