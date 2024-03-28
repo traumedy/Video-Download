@@ -1,11 +1,11 @@
-# Video-Download.py
+# video_download.py
 
 Description: GUI for downloading lists of video URLs using yt-dlp library.
 Author: Josh Buchbinder
 
 ## General usage
 
-`Video-Download` is a PySide6 (Qt) GUI wrapper around the `yt-dlp`
+`video_download` is a PySide6 (Qt) GUI wrapper around the `yt-dlp`
 python library that will parse a text file containing a list of URLs
 or an HTML file of bookmarks exported from a browser and attempt to
 download the video in each URL. See `yt-dlp` documentation to see
@@ -22,7 +22,7 @@ pip3 install -r requirements.txt
 
 `ffmpeg` may be required to perform post processing.  
 
-### Usage
+## Usage
 
 URL list can either be a text file (.txt) with a list of URLs (lines beginning
 with # are ignored) or an HTML file (.html) of bookmarks exported from a browser.

@@ -1,5 +1,5 @@
-"""Video-Download.py - Parses bookmarks file and downloads videos
-using yt_dlp.
+"""video_download.py - Parses bookmarks file and downloads videos
+using the yt_dlp Python package.
 
 Author: Josh Buchbinder
 """
@@ -174,6 +174,7 @@ class MainWindow(QMainWindow):
     total_progress: QProgressBar
     close_button: QPushButton
     download_button: QPushButton
+    settings: QSettings
 
     def __init__(self):
         super().__init__()
@@ -200,13 +201,13 @@ class MainWindow(QMainWindow):
         # Persistent settings object
         self.settings = QSettings(SETTINGS_COMPANYNAME, SETTINGS_APPNAME)
         # Used to store downloaded filenames from progress hook callback
-        self.filenames = []
+        self.download_filenames = []
 
         # Set minimum window size
         size = self.size()
         self.setMinimumSize(size)
 
-        # Load persistent settings
+        # Load persistent settings including stored window size
         self.load_settings()
 
     def create_mainwindow_widgets(self):
@@ -525,7 +526,7 @@ class MainWindow(QMainWindow):
         self.total_progress.setValue(0)
 
         errors = []
-        self.filenames = []
+        self.download_filenames = []
         count = 0
 
         # Set options for YoutubeDL
@@ -564,7 +565,7 @@ class MainWindow(QMainWindow):
                 count += 1
                 self.total_progress.setValue(count)
 
-        message = f"{len(self.filenames)} downloads complete"
+        message = f"{len(self.download_filenames)} downloads complete"
         if errors:
             message += f"\n{len(errors)} errors encountered"
         dlg = QMessageBox(self)
@@ -592,8 +593,8 @@ class MainWindow(QMainWindow):
             self.file_progress.setValue(value)
         if "filename" in progress_dict:
             filename = progress_dict["filename"]
-            if filename not in self.filenames:
-                self.filenames.append(filename)
+            if filename not in self.download_filenames:
+                self.download_filenames.append(filename)
                 message = f"Downloading file {filename}"
                 self.status_text.append(message)
             if "finished" == status:
