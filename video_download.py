@@ -270,7 +270,7 @@ class MainWindow(QMainWindow):
         layout.addRow(QLabel("FFMPEG path:"), ffmpeg_layout)
         layout.addRow(auth_layout)
         layout.addRow(switches_layout)
-        layout.addRow(QLabel("Output extension:"), self.format_ext_combo)
+        layout.addRow(QLabel("Download extension:"), self.format_ext_combo)
         layout.addRow(self.status_text)
         layout.addRow(QLabel("File progress"), self.file_progress)
         layout.addRow(QLabel("Total progress"), self.total_progress)
@@ -315,7 +315,7 @@ class MainWindow(QMainWindow):
         self.keepvideo_check.setToolTip(
             "Keep video files after post processing")
         self.format_ext_combo.setToolTip(
-            "Extension of the output container format")
+            "Extension of the container format to download")
         self.status_text.setToolTip(
             "Status window")
         self.close_button.setToolTip(
