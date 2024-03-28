@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
-from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox
+from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -101,14 +101,33 @@ class BookmarkHTMLParser(HTMLParser):
     # Current folder name
     current_folder = ""
     # Parent window for dialog
-    parent_window = None
+    parent_widget = None
 
+    def __init__(self, parent=None):
+        super().__init__()
+        # Store parent widget for folder dialog
+        self.parent_widget = parent
+
+    @override
     def handle_decl(self, decl):
+        """Overriden method, handles doctype decleration tags
+
+        Args:
+            decl (str): DOCTYPE string
+        """
+        # Beginning of document, clear dictionary
         self.url_dict = {}
         if decl == "DOCTYPE NETSCAPE-Bookmark-file-1":
             self.doctype = DOCTYPE_NETSCAPE
 
+    @override
     def handle_starttag(self, tag, attrs):
+        """Overriden method, handles tag opening
+
+        Args:
+            tag (str): Tag name
+            attrs (dict): Dictionary of attributes for start tag
+        """
         if "h3" == tag:
             self.in_folder_title = True
         elif "a" == tag:
@@ -117,23 +136,26 @@ class BookmarkHTMLParser(HTMLParser):
                 if "href" == attr[0]:
                     self.url_dict[self.current_folder].append(attr[1])
 
+    @override
     def handle_endtag(self, tag):
+        """Overriden method, handles tag closing
+
+        Args:
+            tag (str): Tag name
+        """
         if "h3" == tag:
             self.in_folder_title = False
 
     def handle_data(self, data):
+        """Overriden method, handles data between tags
+
+        Args:
+            data (str): The data between tags
+        """
         # Folder names are stored in data of H3 tags
         if self.in_folder_title:
             self.current_folder = data
             self.url_dict[self.current_folder] = []
-
-    def set_parent(self, window):
-        """Sets the parent window
-
-        Args:
-            window (QWidget): Parent window
-        """
-        self.parent_window = window
 
     def get_url_list(self):
         """Returns list of URL strings
@@ -146,7 +168,7 @@ class BookmarkHTMLParser(HTMLParser):
             # Only one folder, just return all the values
             return list(self.url_dict[folders[0]])
         if len(folders) > 1:
-            dialog = FolderSelectDialog(self.parent_window)
+            dialog = FolderSelectDialog(self.parent_widget)
             dialog.set_list(folders)
             if dialog.exec():
                 folder = dialog.get_selected()
@@ -185,7 +207,13 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+        # Set title text for window
         self.setWindowTitle("Video URL downloader")
+
+        # Set an icon for our window
+        pixmapi = QStyle.StandardPixmap.SP_DialogSaveButton
+        icon = self.style().standardIcon(pixmapi)
+        self.setWindowIcon(icon)
 
         # Create widgets for window
         self.create_mainwindow_widgets()
@@ -286,7 +314,7 @@ class MainWindow(QMainWindow):
         return layout
 
     def connect_mainwindow_signals(self):
-        """Connects mainwindow signals to slots
+        """Connects main window signals to slots
         """
         self.list_path_browse_button.clicked.connect(
             self.list_browse_button_clicked)
@@ -552,8 +580,7 @@ class MainWindow(QMainWindow):
             [str]: List of lines extracted from file
         """
         # Use our custom HTML parser
-        parser = BookmarkHTMLParser()
-        parser.set_parent(self)
+        parser = BookmarkHTMLParser(self)
         # Feed file into parser
         with open(file_path, 'r', encoding="utf-8") as f:
             parser.feed(f.read())
