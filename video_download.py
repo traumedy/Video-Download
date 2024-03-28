@@ -9,13 +9,12 @@ Author: Josh Buchbinder
 import sys
 import shutil
 from html.parser import HTMLParser
-from PySide6.QtCore import Qt, QFileInfo, QDir, QSettings
+from PySide6.QtCore import QFileInfo, QDir, QUrl, QSettings
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
 from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox
-from PySide6.QtWidgets import QAbstractItemView
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -36,6 +35,9 @@ SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 # Output container formats
 format_ext_list = ["3gp", "aac", "flv", "m4a", "mp3", "mp4", "ogg", "wav",
                    "webm"]
+
+# URL list file extensions
+URLLIST_EXTENSIONS = ["html", "txt"]
 
 # HTML Document types, not really used
 DOCTYPE_UNKNOWN = 0
@@ -331,13 +333,44 @@ class MainWindow(QMainWindow):
 
     @override
     def closeEvent(self, event):
-        """Overridden method
+        """Overridden method, called when window is closing
 
         Args:
             event (PySide6.QtGui.QCloseEvent): Event type
         """
         self.save_settings()
         event.accept()
+
+    @override
+    def dragEnterEvent(self, event):
+        """Overriden method, called when a file is dragged over window
+
+        Args:
+            event (QDragEnterEvent): Event info
+        """
+        drag_url = QUrl(event.mimeData().text())
+        if drag_url.isLocalFile():
+            drag_file = QFileInfo(drag_url.toLocalFile())
+            suffix = drag_file.suffix().lower()
+            if suffix in URLLIST_EXTENSIONS:
+                event.accept()
+                return
+        event.ignore()
+
+    @override
+    def dropEvent(self, event):
+        """Overriden method, called when a file is dropped on window
+
+        Args:
+            event (QDragEvent): Event info
+        """
+        drag_url = QUrl(event.mimeData().text())
+        if drag_url.isLocalFile():
+            drag_file = QFileInfo(drag_url.toLocalFile())
+            self.list_path_text.setText(drag_file.filePath())
+            event.accept()
+            return
+        event.ignore()
 
     @staticmethod
     def value_to_bool(value):

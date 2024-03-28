@@ -67,6 +67,9 @@ Tested with browsers:
 When processing an HTML file of bookmarks, if there are folders you will be
 allowed to choose which folder of URLs to download.  
 
+URL lists (html or txt files) can be dragged and dropped onto the window
+instead of typing or browsing for their their paths.  
+
 ## Notes  
 
 All settings in the GUI are stored between executions including the window size.  
