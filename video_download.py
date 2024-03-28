@@ -107,6 +107,8 @@ class BookmarkHTMLParser(HTMLParser):
         super().__init__()
         # Store parent widget for folder dialog
         self.parent_widget = parent
+        # Handle case of URLs before a folder name
+        self.url_dict[""] = []
 
     @override
     def handle_decl(self, decl):
@@ -116,7 +118,6 @@ class BookmarkHTMLParser(HTMLParser):
             decl (str): DOCTYPE string
         """
         # Beginning of document, clear dictionary
-        self.url_dict = {}
         if decl == "DOCTYPE NETSCAPE-Bookmark-file-1":
             self.doctype = DOCTYPE_NETSCAPE
 
