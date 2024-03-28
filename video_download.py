@@ -349,10 +349,17 @@ class MainWindow(QMainWindow):
         self.download_path_text.setText(
             self.settings.value(SETTINGS_VAL_DOWNLOADPATH, ""))
         # Default to ffmpeg in path
-        ffmpeg_info = QFileInfo(shutil.which("ffmpeg"))
+        ffmpeg_path = shutil.which("ffmpeg")
+        if ffmpeg_path:
+            # If ffmpeg found
+            ffmpeg_info = QFileInfo(ffmpeg_path)
+            ffmpeg_path = ffmpeg_info.dir().path()
+        else:
+            # ffmpeg executable not found in path
+            ffmpeg_path = ""
         self.ffmpeg_path_text.setText(
             self.settings.value(SETTINGS_VAL_FFMPEGPATH,
-                                ffmpeg_info.dir().path()))
+                                ffmpeg_path))
         self.username_text.setText(
             self.settings.value(SETTINGS_VAL_USERNAME, ""))
         self.password_text.setText(
