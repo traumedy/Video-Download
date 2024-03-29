@@ -643,6 +643,9 @@ class MainWindow(QMainWindow):
         self.total_progress.setRange(0, len(url_list))
         self.total_progress.setValue(0)
 
+        # Disable widgets that would interfere with processing
+        self.enable_active_buttons(False)
+
         errors = []
         self.download_filenames = []
         count = 0
@@ -662,6 +665,10 @@ class MainWindow(QMainWindow):
                 count += 1
                 self.total_progress.setValue(count)
 
+        # Reenable widgets
+        self.enable_active_buttons(True)
+
+        # Output status dialog
         message = f"{len(url_list)} URLs processed"
         message += f"\n{len(self.download_filenames)} downloads complete"
         if errors:
@@ -713,6 +720,15 @@ class MainWindow(QMainWindow):
         self.status_text.append(message)
         self.status_text.verticalScrollBar().setValue(
             self.status_text.verticalScrollBar().maximum())
+
+    def enable_active_buttons(self, enable):
+        """Enables or disables widgets while downloading is in progress
+
+        Args:
+            enable (bool): Enable widgets flag
+        """
+        self.close_button.setEnabled(enable)
+        self.download_button.setEnabled(enable)
 
 
 def main(argv):
