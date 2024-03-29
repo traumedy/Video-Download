@@ -264,7 +264,7 @@ class MainWindow(QMainWindow):
         self.status_text = QTextEdit()
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
-        self.close_button = QPushButton("Cancel")
+        self.close_button = QPushButton("Close")
         self.download_button = QPushButton("Download videos")
 
         # Set widget properties
@@ -281,6 +281,7 @@ class MainWindow(QMainWindow):
         self.format_ext_combo.addItem("[Best quality]", "")
         for ext in format_ext_list:
             self.format_ext_combo.addItem(ext, ext)
+        self.download_button.setDefault(True)
 
     def create_mainwindow_layout(self):
         """Creates layout for main window
@@ -309,6 +310,9 @@ class MainWindow(QMainWindow):
         switches_layout = QHBoxLayout()
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
+        buttons_layout = QHBoxLayout()
+        buttons_layout.addWidget(self.close_button)
+        buttons_layout.addWidget(self.download_button)
 
         # Use Form Layout for window
         layout = QFormLayout()
@@ -323,7 +327,8 @@ class MainWindow(QMainWindow):
         layout.addRow(self.status_text)
         layout.addRow(QLabel("File progress"), self.file_progress)
         layout.addRow(QLabel("Total progress"), self.total_progress)
-        layout.addRow(self.close_button, self.download_button)
+        layout.addRow(QLabel(""))
+        layout.addRow(buttons_layout)
 
         return layout
 
@@ -668,7 +673,7 @@ class MainWindow(QMainWindow):
         # Reenable widgets
         self.enable_active_buttons(True)
 
-        # Output status dialog
+        # Display summary message box
         message = f"{len(url_list)} URLs processed"
         message += f"\n{len(self.download_filenames)} downloads complete"
         if errors:
