@@ -205,6 +205,7 @@ class MainWindow(QMainWindow):
     total_progress: QProgressBar
     close_button: QPushButton
     download_button: QPushButton
+    bottom_buttonbox: QDialogButtonBox
     settings: QSettings
 
     def __init__(self):
@@ -266,6 +267,7 @@ class MainWindow(QMainWindow):
         self.total_progress = QProgressBar()
         self.close_button = QPushButton("Close")
         self.download_button = QPushButton("Download videos")
+        self.bottom_buttonbox = QDialogButtonBox()
 
         # Set widget properties
         self.list_path_browse_button.setSizePolicy(
@@ -282,6 +284,10 @@ class MainWindow(QMainWindow):
         for ext in format_ext_list:
             self.format_ext_combo.addItem(ext, ext)
         self.download_button.setDefault(True)
+        self.bottom_buttonbox.addButton(self.close_button,
+                                 QDialogButtonBox.ButtonRole.RejectRole)
+        self.bottom_buttonbox.addButton(self.download_button,
+                                 QDialogButtonBox.ButtonRole.AcceptRole)
 
     def create_mainwindow_layout(self):
         """Creates layout for main window
@@ -310,9 +316,6 @@ class MainWindow(QMainWindow):
         switches_layout = QHBoxLayout()
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
-        buttons_layout = QHBoxLayout()
-        buttons_layout.addWidget(self.close_button)
-        buttons_layout.addWidget(self.download_button)
 
         # Use Form Layout for window
         layout = QFormLayout()
@@ -328,7 +331,7 @@ class MainWindow(QMainWindow):
         layout.addRow(QLabel("File progress"), self.file_progress)
         layout.addRow(QLabel("Total progress"), self.total_progress)
         layout.addRow(QLabel(""))
-        layout.addRow(buttons_layout)
+        layout.addRow(self.bottom_buttonbox)
 
         return layout
 
@@ -732,8 +735,7 @@ class MainWindow(QMainWindow):
         Args:
             enable (bool): Enable widgets flag
         """
-        self.close_button.setEnabled(enable)
-        self.download_button.setEnabled(enable)
+        self.bottom_buttonbox.setEnabled(enable)
 
 
 def main(argv):
