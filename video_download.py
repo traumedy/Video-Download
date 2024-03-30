@@ -669,7 +669,10 @@ class MainWindow(QMainWindow):
                 try:
                     ydl.download(url)
                 except utils.DownloadError as e:
-                    errors.append(str(e))
+                    error_message = str(e)
+                    errors.append(error_message)
+                    message = f"Download error: {error_message}"
+                    self.add_status_message(message)
                 count += 1
                 self.total_progress.setValue(count)
 
@@ -728,6 +731,8 @@ class MainWindow(QMainWindow):
         self.status_text.append(message)
         self.status_text.verticalScrollBar().setValue(
             self.status_text.verticalScrollBar().maximum())
+        # Drive message loop
+        QApplication.processEvents()
 
     def enable_active_buttons(self, enable):
         """Enables or disables widgets while downloading is in progress
