@@ -8,6 +8,7 @@ Author: Josh Buchbinder
 
 import sys
 import shutil
+import re
 from html.parser import HTMLParser
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
@@ -44,6 +45,9 @@ URLLIST_EXTENSIONS = ["html", "txt"]
 DOCTYPE_UNKNOWN = 0
 DOCTYPE_NETSCAPE = 1
 DOCTYPE_SAFARI = 2
+
+# Regex to strip color codes from string
+REGEX_COLORSTRIP = r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]'
 
 
 class FolderSelectDialog(QDialog):
@@ -722,13 +726,25 @@ class MainWindow(QMainWindow):
         # Drive message loop
         QApplication.processEvents()
 
+    def strip_color_codes(self, message):
+        """Removes console color escape codes from string 
+
+        Args:
+            message (str): Message with possible color codes
+
+        Returns:
+            str: message with color escape codes removed
+        """
+        regex = re.compile(REGEX_COLORSTRIP)
+        return regex.sub("", message)
+
     def add_status_message(self, message):
         """Adds text to the status window and scrolls to the bottom
 
         Args:
             message (str): Message text to add
         """
-        self.status_text.append(message)
+        self.status_text.append(self.strip_color_codes(message))
         self.status_text.verticalScrollBar().setValue(
             self.status_text.verticalScrollBar().maximum())
         # Drive message loop
