@@ -165,7 +165,7 @@ class BookmarkHTMLParser(HTMLParser):
             [str]: Extracted URLs or empty list
         """
         # Make list of folder names that actually contain URLs
-        folders = [key for key in self.url_dict if self.url_dict[key]]
+        folders = [key for key, val in self.url_dict.items() if val]
         if len(folders) == 1:
             # Only one folder, just return all the values
             return list(self.url_dict[folders[0]])
@@ -285,9 +285,9 @@ class MainWindow(QMainWindow):
             self.format_ext_combo.addItem(ext, ext)
         self.download_button.setDefault(True)
         self.bottom_buttonbox.addButton(self.close_button,
-                                 QDialogButtonBox.ButtonRole.RejectRole)
+                                        QDialogButtonBox.ButtonRole.RejectRole)
         self.bottom_buttonbox.addButton(self.download_button,
-                                 QDialogButtonBox.ButtonRole.AcceptRole)
+                                        QDialogButtonBox.ButtonRole.AcceptRole)
 
     def create_mainwindow_layout(self):
         """Creates layout for main window
@@ -619,7 +619,7 @@ class MainWindow(QMainWindow):
         # Set options for YoutubeDL
         ydl_opts = {}
         ydl_opts["quiet"] = True
-        ydl_opts["verbose"] = False
+        # ydl_opts["verbose"] = False
         ydl_opts["no_warnings"] = True
         ffmpeg_path = self.ffmpeg_path_text.text()
         if ffmpeg_path:
