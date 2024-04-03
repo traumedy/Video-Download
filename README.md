@@ -15,18 +15,38 @@ what type of video sites are
 
 ## Setup  
 
-After cloning this repo of code, follow these steps:  
+After cloning this repository of code and entering the directory,
+follow these steps:  
 
 1. Ensure you have a recent version of Python 3 installed, at least
-version 3.10.
+version 3.10.  
 
-2. Install requirements.txt:  
+2. Optionally create and activate a venv virtual environment to contain
+the packages for this program:  
+
+```bash
+python -m venv venv
+```
+
+On Windows:  
+
+```bash
+venv\Scripts\activate
+```
+
+On *nix or Mac:  
+
+```
+*nix $ source venv/bin/activate
+```
+
+3. Install requirements.txt:  
 
 ```bash
 pip3 install -r requirements.txt
 ```
 
-3. On some platforms, there may be additional dependencies required. On
+4. On some platforms, there may be additional dependencies required. On
 Ubuntu 22 for instance `xcb-cursor0` is required for Qt:  
 
 ```bash
