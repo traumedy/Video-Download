@@ -11,12 +11,13 @@ import shutil
 import re
 from html.parser import HTMLParser
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
 from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
-from PySide6.QtWidgets import QSizePolicy
+from PySide6.QtWidgets import QSizePolicy, QStackedLayout
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -30,16 +31,47 @@ SETTINGS_VAL_USERNAME = "Username"
 SETTINGS_VAL_PASSWORD = "Password"
 SETTINGS_VAL_OVERWRITE = "Overwrite"
 SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
-SETTINGS_VAL_FORMATEXT = "FormatExt"
+SETTINGS_VAL_FORMATTYPE = "FormatType"
+SETTINGS_VAL_FORMATQUALITY = "FormatQuality"
+SETTINGS_VAL_FORMATAUDEXT = "FormatAudExt"
+SETTINGS_VAL_FORMATVIDEXT = "FormatVidExt"
+SETTINGS_VAL_FORMATSTRING = "FormatString"
 SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
 SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
+
+FORMAT_TYPE_AUDVID_BY_QUA = 0
+FORMAT_TYPE_AUD_BY_QUA = 1
+FORMAT_TYPE_VID_BY_QUA = 2
+FORMAT_TYPE_AUDVID_BY_EXT = 3
+FORMAT_TYPE_AUD_BY_EXT = 4
+FORMAT_TYPE_VID_BY_EXT = 5
+FORMAT_TYPE_RAWSTRING = 6
+
+format_type_list = [
+    ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA),
+    ("Audio only by quality", FORMAT_TYPE_AUD_BY_QUA),
+    ("Video only by quality", FORMAT_TYPE_VID_BY_QUA),
+    ("Audio+Video by extension", FORMAT_TYPE_AUDVID_BY_EXT),
+    ("Audio only by extension", FORMAT_TYPE_AUD_BY_EXT),
+    ("Video only by extension", FORMAT_TYPE_VID_BY_EXT),
+    ("Raw format string", FORMAT_TYPE_RAWSTRING)
+]
+
+format_labels_quality_list = ["Best quality", "Second best quality",
+                              "Third best quality", "Fourth best quality"]
 
 # Output container formats
 format_ext_list = ["3gp", "aac", "flv", "m4a", "mp3", "mp4", "ogg", "wav",
                    "webm"]
+format_ext_aud_list = ["3gp", "aac", "m4a", "mp3", "wav"]
+format_ext_vid_list = ["3gp", "flv", "mp4", "webm"]
 
 # URL list file extensions
 URLLIST_EXTENSIONS = ["html", "txt"]
+
+# URL for format string help
+FORMAT_STRING_HELP_URL = "https://github.com/yt-dlp/yt-dlp/blob/"\
+    "master/README.md#format-selection"
 
 # HTML Document types, not really used
 DOCTYPE_UNKNOWN = 0
@@ -203,7 +235,15 @@ class MainWindow(QMainWindow):
     password_text: QLineEdit
     overwrite_check: QCheckBox
     keepvideo_check: QCheckBox
-    format_ext_combo: QComboBox
+    format_stacked_layout: QStackedLayout
+    format_type_combo: QComboBox
+    format_quality_combo: QComboBox
+    format_audext_combo: QComboBox
+    format_vidext_combo: QComboBox
+    format_string_layout_widget: QWidget
+    format_string_layout: QHBoxLayout
+    format_string_text: QLineEdit
+    format_string_help_button: QPushButton
     status_text: QTextEdit
     file_progress: QProgressBar
     total_progress: QProgressBar
@@ -265,7 +305,15 @@ class MainWindow(QMainWindow):
         self.password_text = QLineEdit()
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
-        self.format_ext_combo = QComboBox()
+        self.format_type_combo = QComboBox()
+        self.format_quality_combo = QComboBox()
+        self.format_audext_combo = QComboBox()
+        self.format_vidext_combo = QComboBox()
+        self.format_string_layout_widget = QWidget()
+        self.format_string_layout = QHBoxLayout(
+            self.format_string_layout_widget)
+        self.format_string_text = QLineEdit()
+        self.format_string_help_button = QPushButton("Help")
         self.status_text = QTextEdit()
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
@@ -294,12 +342,20 @@ class MainWindow(QMainWindow):
         self.ffmpeg_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
+        # By default the layout is too tall for the QStackedLayout
+        self.format_string_layout.setContentsMargins(0, 0, 0, 0)
         # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
-        # Populate format selection combo box
-        self.format_ext_combo.addItem("[Best quality]", "")
-        for ext in format_ext_list:
-            self.format_ext_combo.addItem(ext, ext)
+        # Populate format selection combo boxes
+        for label, idx in format_type_list:
+            self.format_type_combo.addItem(label, idx)
+        for idx, label in enumerate(format_labels_quality_list):
+            self.format_quality_combo.addItem(label, "." + str(idx + 1))
+        for ext in format_ext_aud_list:
+            self.format_audext_combo.addItem(ext, ext)
+        for ext in format_ext_vid_list:
+            self.format_vidext_combo.addItem(ext, ext)
+
         # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
                                         QDialogButtonBox.ButtonRole.RejectRole)
@@ -333,6 +389,18 @@ class MainWindow(QMainWindow):
         switches_layout = QHBoxLayout()
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
+        self.format_stacked_layout = QStackedLayout()
+        self.format_stacked_layout.addWidget(self.format_quality_combo)
+        self.format_stacked_layout.addWidget(self.format_audext_combo)
+        self.format_stacked_layout.addWidget(self.format_vidext_combo)
+        self.format_string_layout.addWidget(QLabel("Format string:"))
+        self.format_string_layout.addWidget(self.format_string_text)
+        self.format_string_layout.addWidget(self.format_string_help_button)
+        self.format_stacked_layout.addWidget(self.format_string_layout_widget)
+        format_type_layout = QHBoxLayout()
+        format_type_layout.addWidget(QLabel("Format selection"))
+        format_type_layout.addWidget(self.format_type_combo)
+        format_type_layout.addLayout(self.format_stacked_layout)
 
         # Use Form Layout for window
         layout = QFormLayout()
@@ -343,7 +411,7 @@ class MainWindow(QMainWindow):
         layout.addRow(QLabel("FFMPEG path:"), ffmpeg_layout)
         layout.addRow(auth_layout)
         layout.addRow(switches_layout)
-        layout.addRow(QLabel("Download extension:"), self.format_ext_combo)
+        layout.addRow(format_type_layout)
         layout.addRow(self.status_text)
         layout.addRow(QLabel("File progress"), self.file_progress)
         layout.addRow(QLabel("Total progress"), self.total_progress)
@@ -361,8 +429,14 @@ class MainWindow(QMainWindow):
             self.download_browse_button_clicked)
         self.ffmpeg_path_browse_button.clicked.connect(
             self.ffmpeg_browse_button_clicked)
-        self.close_button.clicked.connect(self.close)
-        self.download_button.clicked.connect(self.download_button_clicked)
+        self.format_type_combo.currentIndexChanged.connect(
+            self.format_type_combo_changed)
+        self.format_string_help_button.clicked.connect(
+            self.format_string_help_button_clicked)
+        self.close_button.clicked.connect(
+            self.close)
+        self.download_button.clicked.connect(
+            self.download_button_clicked)
 
     def create_mainwindow_tooltips(self):
         """Sets tooltips for main window widgets
@@ -388,8 +462,25 @@ class MainWindow(QMainWindow):
             "Overwrite video files if they exist when downloading")
         self.keepvideo_check.setToolTip(
             "Keep video files after post processing")
-        self.format_ext_combo.setToolTip(
-            "Extension of the container format to download")
+        self.format_type_combo.setToolTip(
+            "Select which method of format selection to use")
+        self.format_quality_combo.setToolTip(
+            "Select the quality level to download. "
+            "Different quality levels may result in different file types. "
+            "Not all quality levels may be available.")
+        self.format_audext_combo.setToolTip(
+            "Select the audio file extension to download. "
+            "This does not guarantee a specific codec."
+            "Different sites will have different file types available and "
+            "may not offer all types")
+        self.format_vidext_combo.setToolTip(
+            "Select the video file extension to download. "
+            "This does not guarantee a specific codec. "
+            "Different sites will have different file types available and "
+            "may not offer all types")
+        self.format_string_text.setToolTip(
+            "Enter the string representing the format to download. Click "
+            "the Help button for more information.")
         self.status_text.setToolTip(
             "Status window")
         self.close_button.setToolTip(
@@ -473,8 +564,16 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_OVERWRITE)))
         self.keepvideo_check.setChecked(self.value_to_bool(
             self.settings.value(SETTINGS_VAL_KEEPVIDEO)))
-        self.format_ext_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATEXT, ""))
+        self.format_type_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATTYPE, ""))
+        self.format_quality_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATQUALITY, ""))
+        self.format_audext_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATAUDEXT, ""))
+        self.format_vidext_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATVIDEXT, ""))
+        self.format_string_text.setText(
+            self.settings.value(SETTINGS_VAL_FORMATSTRING, ""))
 
         # Restore widow size
         size = self.size()
@@ -501,8 +600,16 @@ class MainWindow(QMainWindow):
                                self.overwrite_check.isChecked())
         self.settings.setValue(SETTINGS_VAL_KEEPVIDEO,
                                self.keepvideo_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_FORMATEXT,
-                               self.format_ext_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATTYPE,
+                               self.format_type_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATQUALITY,
+                               self.format_quality_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATAUDEXT,
+                               self.format_audext_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATVIDEXT,
+                               self.format_vidext_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATSTRING,
+                               self.format_string_text.text())
         self.settings.setValue(SETTINGS_VAL_WINDOWWIDTH,
                                self.width())
         self.settings.setValue(SETTINGS_VAL_WINDOWHEIGHT,
@@ -554,6 +661,33 @@ class MainWindow(QMainWindow):
             | QFileDialog.DontResolveSymlinks)
         if path:
             self.ffmpeg_path_text.setText(path)
+
+    def format_type_combo_changed(self, new_index):
+        """Called when format type combo changes
+
+        Args:
+            new_index (int): Index of newly selected item
+        """
+        type_id = self.format_type_combo.itemData(new_index)
+        if type_id in [FORMAT_TYPE_AUDVID_BY_QUA,
+                       FORMAT_TYPE_AUD_BY_QUA,
+                       FORMAT_TYPE_VID_BY_QUA]:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_quality_combo)
+        elif type_id == FORMAT_TYPE_AUD_BY_EXT:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_audext_combo)
+        elif type_id in [FORMAT_TYPE_VID_BY_EXT, FORMAT_TYPE_AUDVID_BY_EXT]:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_vidext_combo)
+        elif type_id == FORMAT_TYPE_RAWSTRING:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_string_layout_widget)
+
+    def format_string_help_button_clicked(self):
+        """Called when string help button is clicked
+        """
+        QDesktopServices.openUrl(FORMAT_STRING_HELP_URL)
 
     def download_button_clicked(self):
         """Called when download button is clicked
@@ -651,9 +785,35 @@ class MainWindow(QMainWindow):
             ydl_opts["overwrites"] = True
         if self.keepvideo_check.isChecked():
             ydl_opts["keepvideo"] = True
-        format_ext = self.format_ext_combo.currentData()
-        if format_ext:
-            ydl_opts["format"] = format_ext
+
+        # Create format string
+        format_str = ""
+        type_id = self.format_type_combo.currentData()
+        if type_id in [FORMAT_TYPE_AUDVID_BY_QUA,
+                       FORMAT_TYPE_AUD_BY_QUA,
+                       FORMAT_TYPE_VID_BY_QUA]:
+            quality_str = self.format_quality_combo.currentData()
+            if type_id == FORMAT_TYPE_AUDVID_BY_QUA:
+                format_str = "best" + quality_str
+            elif type_id == FORMAT_TYPE_AUD_BY_QUA:
+                format_str = "bestaudio" + quality_str
+            elif type_id == FORMAT_TYPE_VID_BY_QUA:
+                format_str = "bestvideo" + quality_str
+        elif type_id == FORMAT_TYPE_AUDVID_BY_EXT:
+            ext = self.format_vidext_combo.currentData()
+            format_str = ext
+        elif type_id == FORMAT_TYPE_AUD_BY_EXT:
+            ext = self.format_audext_combo.currentData()
+            format_str = f"bestaudio[ext={ext}]"
+        elif type_id == FORMAT_TYPE_VID_BY_EXT:
+            ext = self.format_vidext_combo.currentData()
+            format_str = f"bestvideo[ext={ext}]"
+        elif type_id == SETTINGS_VAL_FORMATSTRING:
+            format_str = self.format_string_text.getText()
+        if format_str:
+            message = f"Using format string: {format_str}"
+            self.add_status_message(message)
+            ydl_opts["format"] = format_str
         return ydl_opts
 
     def download_url_list(self, url_list):
