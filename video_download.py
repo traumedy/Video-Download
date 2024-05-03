@@ -274,20 +274,33 @@ class MainWindow(QMainWindow):
         self.bottom_buttonbox = QDialogButtonBox()
 
         # Set widget properties
+        # These Expanding policies seem necessary for Mac to get the
+        #  QLineEdit fields to expand to fill
+        self.list_path_text.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum)
         self.list_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
+        self.download_path_text.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum)
         self.download_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
+        self.ffmpeg_path_text.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum)
         self.ffmpeg_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
+        # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
+        # Populate format selection combo box
         self.format_ext_combo.addItem("[Best quality]", "")
         for ext in format_ext_list:
             self.format_ext_combo.addItem(ext, ext)
-        self.download_button.setDefault(True)
+        # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
                                         QDialogButtonBox.ButtonRole.RejectRole)
         self.bottom_buttonbox.addButton(self.download_button,
