@@ -1,16 +1,16 @@
 # video_download.py  
 
-Description: GUI for downloading lists of video URLs using yt-dlp library.  
+Description: GUI for downloading video URLs using yt-dlp library.  
 
 Author: Josh Buchbinder  
 
 ## General usage  
 
 `video_download` is a PySide6 (Qt) GUI wrapper around the `yt-dlp`
-python library that will parse a text file containing a list of URLs
+python library that cam parse a text file containing a list of URLs
 or an HTML file of bookmarks exported from a browser and attempt to
 download the video in each URL. See `yt-dlp` documentation to see
-what type of video sites are
+what video sites are
 [supported](https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md).
 
 ## Setup  
@@ -66,13 +66,22 @@ python ./video_download.py
 ./video_download.py
 ```
 
-The URL list can either be a text file (.txt) with a list of URLs (lines
-beginning with # are ignored) or an HTML file (.html) of bookmarks exported
-from a browser.
+A single URL or a list of URLs can be specified. The URL list can either be
+a text file (.txt) with a list of URLs (lines beginning with # are ignored)
+or an HTML file (.html) of bookmarks exported from a browser.  
+
 Google "`export bookmarks <browser name>`" for detail on how to export
 bookmarks from your browser. Most browsers except for Safari (thanks Apple)
 use a common HTML file format so unlisted browsers are likely to be
 supported.  
+
+When processing an HTML file of bookmarks, if there are folders you will be
+allowed to choose which folder of URLs to download.  
+
+URL lists (html or txt files) can be dragged and dropped onto the window
+instead of typing or browsing for their their paths.  
+
+## Notes  
 
 Tested with browsers:  
 . Brave (Windows)  
@@ -83,14 +92,6 @@ Tested with browsers:
 . Opera (Windows)  
 . Safari (MacOS)  
 . Vivaldi (Windows)  
-
-When processing an HTML file of bookmarks, if there are folders you will be
-allowed to choose which folder of URLs to download.  
-
-URL lists (html or txt files) can be dragged and dropped onto the window
-instead of typing or browsing for their their paths.  
-
-## Notes  
 
 All settings in the GUI are stored between executions including the window size.  
 

@@ -24,6 +24,8 @@ from overrides import override
 # App name string used for settings
 SETTINGS_COMPANYNAME = "MySoft"
 SETTINGS_APPNAME = "Youtube-Download"
+SETTINGS_VAL_URLTYPE = "UrlType"
+SETTINGS_VAL_URLTEXT = "UrlText"
 SETTINGS_VAL_URLLIST = "UrlList"
 SETTINGS_VAL_DOWNLOADPATH = "DownloadPath"
 SETTINGS_VAL_FFMPEGPATH = "FfmpegPath"
@@ -38,6 +40,11 @@ SETTINGS_VAL_FORMATVIDEXT = "FormatVidExt"
 SETTINGS_VAL_FORMATSTRING = "FormatString"
 SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
 SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
+
+url_type_labels = ["Single URL:", "URL List:"]
+
+URL_TYPE_SINGLE = 0
+URL_TYPE_LIST = 1
 
 FORMAT_TYPE_AUDVID_BY_QUA = 0
 FORMAT_TYPE_AUD_BY_QUA = 1
@@ -225,6 +232,10 @@ class BookmarkHTMLParser(HTMLParser):
 class MainWindow(QMainWindow):
     """Main application window class derived from QMainWindow
     """
+    url_type_combo: QComboBox
+    url_stacked_layout: QStackedLayout
+    url_text: QLineEdit
+    list_path_layout_widget: QWidget
     list_path_text: QLineEdit
     list_path_browse_button: QPushButton
     download_path_text: QLineEdit
@@ -241,7 +252,6 @@ class MainWindow(QMainWindow):
     format_audext_combo: QComboBox
     format_vidext_combo: QComboBox
     format_string_layout_widget: QWidget
-    format_string_layout: QHBoxLayout
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
     status_text: QTextEdit
@@ -264,13 +274,6 @@ class MainWindow(QMainWindow):
 
         # Create widgets for window
         self.create_mainwindow_widgets()
-
-        # Set widget tooltips
-        self.create_mainwindow_tooltips()
-
-        # Connect widget signals
-        self.connect_mainwindow_signals()
-
         # Create central widget
         central_widget = QWidget()
         # Create window layout
@@ -279,6 +282,10 @@ class MainWindow(QMainWindow):
         central_widget.setLayout(layout)
         # Set widget as main window central widget
         self.setCentralWidget(central_widget)
+        # Connect widget signals
+        self.connect_mainwindow_signals()
+        # Set widget tooltips
+        self.create_mainwindow_tooltips()
 
         # Persistent settings object
         self.settings = QSettings(SETTINGS_COMPANYNAME, SETTINGS_APPNAME)
@@ -295,6 +302,9 @@ class MainWindow(QMainWindow):
     def create_mainwindow_widgets(self):
         """Create widgets for window
         """
+        self.url_type_combo = QComboBox()
+        self.url_text = QLineEdit()
+        self.list_path_layout_widget = QWidget()
         self.list_path_text = QLineEdit()
         self.list_path_browse_button = QPushButton("Browse...")
         self.download_path_text = QLineEdit()
@@ -310,8 +320,6 @@ class MainWindow(QMainWindow):
         self.format_audext_combo = QComboBox()
         self.format_vidext_combo = QComboBox()
         self.format_string_layout_widget = QWidget()
-        self.format_string_layout = QHBoxLayout(
-            self.format_string_layout_widget)
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
         self.status_text = QTextEdit()
@@ -322,6 +330,10 @@ class MainWindow(QMainWindow):
         self.bottom_buttonbox = QDialogButtonBox()
 
         # Set widget properties
+
+        # Populate url type listbox
+        for label in url_type_labels:
+            self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
         #  QLineEdit fields to expand to fill
         self.list_path_text.setSizePolicy(
@@ -342,8 +354,6 @@ class MainWindow(QMainWindow):
         self.ffmpeg_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
-        # By default the layout is too tall for the QStackedLayout
-        self.format_string_layout.setContentsMargins(0, 0, 0, 0)
         # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
         # Populate format selection combo boxes
@@ -369,10 +379,15 @@ class MainWindow(QMainWindow):
             QLayout: Layout for main window
         """
         # Create horizontal layouts to stack browse buttons next to paths
-        list_path_layout = QHBoxLayout()
+
+        list_path_layout = QHBoxLayout(self.list_path_layout_widget)
         list_path_layout.addWidget(self.list_path_text)
         list_path_layout.addWidget(self.list_path_browse_button, 0,
                                    Qt.AlignmentFlag.AlignRight)
+        self.url_stacked_layout = QStackedLayout()
+        self.url_stacked_layout.addWidget(self.url_text)
+        self.url_stacked_layout.addWidget(self.list_path_layout_widget)
+
         download_path_layout = QHBoxLayout()
         download_path_layout.addWidget(self.download_path_text)
         download_path_layout.addWidget(self.download_path_browse_button, 0,
@@ -393,20 +408,26 @@ class MainWindow(QMainWindow):
         self.format_stacked_layout.addWidget(self.format_quality_combo)
         self.format_stacked_layout.addWidget(self.format_audext_combo)
         self.format_stacked_layout.addWidget(self.format_vidext_combo)
-        self.format_string_layout.addWidget(QLabel("Format string:"))
-        self.format_string_layout.addWidget(self.format_string_text)
-        self.format_string_layout.addWidget(self.format_string_help_button)
+        format_string_layout = QHBoxLayout(
+            self.format_string_layout_widget)
+        format_string_layout.addWidget(QLabel("Format string:"))
+        format_string_layout.addWidget(self.format_string_text)
+        format_string_layout.addWidget(self.format_string_help_button)
         self.format_stacked_layout.addWidget(self.format_string_layout_widget)
         format_type_layout = QHBoxLayout()
         format_type_layout.addWidget(QLabel("Format selection"))
         format_type_layout.addWidget(self.format_type_combo)
         format_type_layout.addLayout(self.format_stacked_layout)
 
+        # By default the layout is too tall for the QStackedLayout
+        format_string_layout.setContentsMargins(0, 0, 0, 0)
+        list_path_layout.setContentsMargins(0, 0, 0, 0)
+
         # Use Form Layout for window
         layout = QFormLayout()
 
         # Add widgets to window layout
-        layout.addRow(QLabel("URL list:"), list_path_layout)
+        layout.addRow(self.url_type_combo, self.url_stacked_layout)
         layout.addRow(QLabel("Download path:"), download_path_layout)
         layout.addRow(QLabel("FFMPEG path:"), ffmpeg_layout)
         layout.addRow(auth_layout)
@@ -423,6 +444,8 @@ class MainWindow(QMainWindow):
     def connect_mainwindow_signals(self):
         """Connects main window signals to slots
         """
+        self.url_type_combo.currentIndexChanged.connect(
+            self.url_stacked_layout.setCurrentIndex)
         self.list_path_browse_button.clicked.connect(
             self.list_browse_button_clicked)
         self.download_path_browse_button.clicked.connect(
@@ -442,6 +465,10 @@ class MainWindow(QMainWindow):
         """Sets tooltips for main window widgets
         """
         # Set widget tooltips
+        self.url_type_combo.setToolTip(
+            "Select either a single URL to download or a URL list")
+        self.url_text.setToolTip(
+            "The URL of a page with a video to download")
         self.list_path_text.setToolTip(
             "The path to the list of URLs to download")
         self.list_path_browse_button.setToolTip(
@@ -540,6 +567,10 @@ class MainWindow(QMainWindow):
     def load_settings(self):
         """Loads persistent settings
         """
+        self.url_type_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_URLTYPE, ""))
+        self.url_text.setText(
+            self.settings.value(SETTINGS_VAL_URLTEXT, ""))
         self.list_path_text.setText(
             self.settings.value(SETTINGS_VAL_URLLIST, ""))
         self.download_path_text.setText(
@@ -586,6 +617,10 @@ class MainWindow(QMainWindow):
     def save_settings(self):
         """Save persistent settingss
         """
+        self.settings.setValue(SETTINGS_VAL_URLTYPE,
+                               self.url_type_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_URLTEXT,
+                               self.url_text.text())
         self.settings.setValue(SETTINGS_VAL_URLLIST,
                                self.list_path_text.text())
         self.settings.setValue(SETTINGS_VAL_DOWNLOADPATH,
@@ -692,39 +727,53 @@ class MainWindow(QMainWindow):
     def download_button_clicked(self):
         """Called when download button is clicked
         """
-        file_info = QFileInfo(self.list_path_text.text())
         dir_info = QFileInfo(self.download_path_text.text())
-        if not file_info.exists():
-            QMessageBox.warning(self, "Missing URL list",
-                                "Enter the path to a valid list of URLs",
-                                QMessageBox.StandardButton.Ok)
-        elif not dir_info.isDir():
+        if not dir_info.isDir():
             QMessageBox.warning(self, "Missing download directory",
                                 "Enter a valid directory for files to be "
                                 "downloaded to",
                                 QMessageBox.StandardButton.Ok)
-        else:
-            message = f"Processing URL list {file_info.absoluteFilePath()}"
-            self.add_status_message(message)
-            ext = file_info.completeSuffix().lower()
-            url_list = []
-            if ext == "txt":
-                url_list = self.parse_txt_file(file_info.absoluteFilePath())
-            elif ext == "html":
-                url_list = self.parse_html_file(file_info.absoluteFilePath())
-            else:
-                QMessageBox.warning(self, "Unsupported file type",
-                                    "Valid file types are HTML, TXT",
+            return
+        url_list = []
+        url_type_index = self.url_type_combo.currentIndex()
+        if url_type_index == URL_TYPE_SINGLE:
+            url = self.url_text.text()
+            if not url:
+                QMessageBox.warning(self, "Missing download URL",
+                                    "Enter a valid URL to be downloaded",
                                     QMessageBox.StandardButton.Ok)
-            if url_list:
-                # Store the current diretory to return after processing
-                current_path = QDir.currentPath()
-                # Change path to download directory
-                QDir.setCurrent(dir_info.absoluteFilePath())
-                # Download URLs
-                self.download_url_list(url_list)
-                # Return to current directory
-                QDir.setCurrent(current_path)
+                return
+
+            url_list = [url]
+        elif url_type_index == URL_TYPE_LIST:
+            file_info = QFileInfo(self.list_path_text.text())
+            if not file_info.exists():
+                QMessageBox.warning(self, "Missing URL list",
+                                    "Enter the path to a valid list of URLs",
+                                    QMessageBox.StandardButton.Ok)
+            else:
+                message = f"Processing URL list {file_info.absoluteFilePath()}"
+                self.add_status_message(message)
+                ext = file_info.completeSuffix().lower()
+                url_list = []
+                if ext == "txt":
+                    url_list = self.parse_txt_file(file_info.absoluteFilePath())
+                elif ext == "html":
+                    url_list = self.parse_html_file(file_info.absoluteFilePath())
+                else:
+                    QMessageBox.warning(self, "Unsupported file type",
+                                        "Valid file types are HTML, TXT",
+                                        QMessageBox.StandardButton.Ok)
+        # Process URLs
+        if url_list:
+            # Store the current diretory to return after processing
+            current_path = QDir.currentPath()
+            # Change path to download directory
+            QDir.setCurrent(dir_info.absoluteFilePath())
+            # Download URLs
+            self.download_url_list(url_list)
+            # Return to current directory
+            QDir.setCurrent(current_path)
 
     def parse_txt_file(self, file_path):
         """Parses a simple text file and builds a list of entries
