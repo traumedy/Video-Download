@@ -81,6 +81,9 @@ allowed to choose which folder of URLs to download.
 URL lists (html or txt files) can be dragged and dropped onto the window
 instead of typing or browsing for their their paths.  
 
+In `Format selection` specify `Audio+Video by quality` and `Best quality` to
+download the best quality file.  
+
 ## Notes  
 
 Tested with browsers:  

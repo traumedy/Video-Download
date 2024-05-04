@@ -33,10 +33,13 @@ SETTINGS_VAL_USERNAME = "Username"
 SETTINGS_VAL_PASSWORD = "Password"
 SETTINGS_VAL_OVERWRITE = "Overwrite"
 SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
+SETTINGS_VAL_PREFERFREEFORMATS = "PreferFreeFormats"
 SETTINGS_VAL_FORMATTYPE = "FormatType"
 SETTINGS_VAL_FORMATQUALITY = "FormatQuality"
 SETTINGS_VAL_FORMATAUDEXT = "FormatAudExt"
 SETTINGS_VAL_FORMATVIDEXT = "FormatVidExt"
+SETTINGS_VAL_FORMATAUDCODEC = "FormatAudCodec"
+SETTINGS_VAL_FORMATVIDCODEC = "FormatVidCodec"
 SETTINGS_VAL_FORMATSTRING = "FormatString"
 SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
 SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
@@ -52,7 +55,9 @@ FORMAT_TYPE_VID_BY_QUA = 2
 FORMAT_TYPE_AUDVID_BY_EXT = 3
 FORMAT_TYPE_AUD_BY_EXT = 4
 FORMAT_TYPE_VID_BY_EXT = 5
-FORMAT_TYPE_RAWSTRING = 6
+FORMAT_TYPE_AUD_BY_CODEC = 6
+FORMAT_TYPE_VID_BY_CODEC = 7
+FORMAT_TYPE_RAWSTRING = 8
 
 format_type_list = [
     ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA),
@@ -61,6 +66,8 @@ format_type_list = [
     ("Audio+Video by extension", FORMAT_TYPE_AUDVID_BY_EXT),
     ("Audio only by extension", FORMAT_TYPE_AUD_BY_EXT),
     ("Video only by extension", FORMAT_TYPE_VID_BY_EXT),
+    ("Audio only by codec", FORMAT_TYPE_AUD_BY_CODEC),
+    ("Video only by codec", FORMAT_TYPE_VID_BY_CODEC),
     ("Raw format string", FORMAT_TYPE_RAWSTRING)
 ]
 
@@ -70,8 +77,16 @@ format_labels_quality_list = ["Best quality", "Second best quality",
 # Output container formats
 format_ext_list = ["3gp", "aac", "flv", "m4a", "mp3", "mp4", "ogg", "wav",
                    "webm"]
-format_ext_aud_list = ["3gp", "aac", "m4a", "mp3", "wav"]
-format_ext_vid_list = ["3gp", "flv", "mp4", "webm"]
+format_ext_aud_list = ["m4a", "aac", "mp3", "ogg", "opus", "webm"]
+format_ext_vid_list = ["mp4", "mov", "webm", "flv", "3gp"]
+# Audio and video Codecs
+format_codec_aud_list = ["flac", "alac", "wav", "aiff", "opus", "vorbis",
+                         "aac", "mp4a", "mp3", "ac4", "eac3", "ac3", "dts"]
+format_codec_vid_list = [("av01", "av01"), ("vp9.2", "vp09.2"),
+                         ("vp9", "vp09"), ("avc1", "avc1"),
+                         ("h265", "h265"), ("h264", "h265"),
+                         ("vp8", "vp08"), ("h263", "h263"),
+                         ("theora", "theora")]
 
 # URL list file extensions
 URLLIST_EXTENSIONS = ["html", "txt"]
@@ -246,11 +261,14 @@ class MainWindow(QMainWindow):
     password_text: QLineEdit
     overwrite_check: QCheckBox
     keepvideo_check: QCheckBox
+    preferfreeformats_check: QCheckBox
     format_stacked_layout: QStackedLayout
     format_type_combo: QComboBox
     format_quality_combo: QComboBox
     format_audext_combo: QComboBox
     format_vidext_combo: QComboBox
+    format_audcodec_combo: QComboBox
+    format_vidcodec_combo: QComboBox
     format_string_layout_widget: QWidget
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
@@ -315,10 +333,13 @@ class MainWindow(QMainWindow):
         self.password_text = QLineEdit()
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
+        self.preferfreeformats_check = QCheckBox("Prefer free formats")
         self.format_type_combo = QComboBox()
         self.format_quality_combo = QComboBox()
         self.format_audext_combo = QComboBox()
         self.format_vidext_combo = QComboBox()
+        self.format_audcodec_combo = QComboBox()
+        self.format_vidcodec_combo = QComboBox()
         self.format_string_layout_widget = QWidget()
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
@@ -365,6 +386,10 @@ class MainWindow(QMainWindow):
             self.format_audext_combo.addItem(ext, ext)
         for ext in format_ext_vid_list:
             self.format_vidext_combo.addItem(ext, ext)
+        for codec in format_codec_aud_list:
+            self.format_audcodec_combo.addItem(codec, codec)
+        for codec, cstr in format_codec_vid_list:
+            self.format_vidcodec_combo.addItem(codec, cstr)
 
         # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
@@ -404,10 +429,13 @@ class MainWindow(QMainWindow):
         switches_layout = QHBoxLayout()
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
+        switches_layout.addWidget(self.preferfreeformats_check)
         self.format_stacked_layout = QStackedLayout()
         self.format_stacked_layout.addWidget(self.format_quality_combo)
         self.format_stacked_layout.addWidget(self.format_audext_combo)
         self.format_stacked_layout.addWidget(self.format_vidext_combo)
+        self.format_stacked_layout.addWidget(self.format_audcodec_combo)
+        self.format_stacked_layout.addWidget(self.format_vidcodec_combo)
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
@@ -415,7 +443,7 @@ class MainWindow(QMainWindow):
         format_string_layout.addWidget(self.format_string_help_button)
         self.format_stacked_layout.addWidget(self.format_string_layout_widget)
         format_type_layout = QHBoxLayout()
-        format_type_layout.addWidget(QLabel("Format selection"))
+        format_type_layout.addWidget(QLabel("Format selection:"))
         format_type_layout.addWidget(self.format_type_combo)
         format_type_layout.addLayout(self.format_stacked_layout)
 
@@ -489,6 +517,9 @@ class MainWindow(QMainWindow):
             "Overwrite video files if they exist when downloading")
         self.keepvideo_check.setToolTip(
             "Keep video files after post processing")
+        self.preferfreeformats_check.setToolTip(
+            "Whether to prefer video formats with free containers over "
+            "non-free ones of same quality")
         self.format_type_combo.setToolTip(
             "Select which method of format selection to use")
         self.format_quality_combo.setToolTip(
@@ -499,15 +530,26 @@ class MainWindow(QMainWindow):
             "Select the audio file extension to download. "
             "This does not guarantee a specific codec."
             "Different sites will have different file types available and "
-            "may not offer all types")
+            "may not offer all types.")
         self.format_vidext_combo.setToolTip(
             "Select the video file extension to download. "
             "This does not guarantee a specific codec. "
             "Different sites will have different file types available and "
-            "may not offer all types")
+            "may not offer all types.")
+        self.format_audcodec_combo.setToolTip(
+            "Select the audio codec to download."
+            "Different sites will have different audio codecs available and "
+            "may not offer all types.")
+        self.format_vidcodec_combo.setToolTip(
+            "Select the video codec to download."
+            "Different sites will have different video codecs available and "
+            "may not offer all types.")
         self.format_string_text.setToolTip(
             "Enter the string representing the format to download. Click "
             "the Help button for more information.")
+        self.format_string_help_button.setToolTip(
+            "Launches a browser directed to detailed information about "
+            "creating yt-dlp format strings.")
         self.status_text.setToolTip(
             "Status window")
         self.close_button.setToolTip(
@@ -595,6 +637,8 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_OVERWRITE)))
         self.keepvideo_check.setChecked(self.value_to_bool(
             self.settings.value(SETTINGS_VAL_KEEPVIDEO)))
+        self.preferfreeformats_check.setChecked(self.value_to_bool(
+            self.settings.value(SETTINGS_VAL_PREFERFREEFORMATS)))
         self.format_type_combo.setCurrentText(
             self.settings.value(SETTINGS_VAL_FORMATTYPE, ""))
         self.format_quality_combo.setCurrentText(
@@ -603,6 +647,10 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_FORMATAUDEXT, ""))
         self.format_vidext_combo.setCurrentText(
             self.settings.value(SETTINGS_VAL_FORMATVIDEXT, ""))
+        self.format_audcodec_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATAUDCODEC, ""))
+        self.format_vidcodec_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATVIDCODEC, ""))
         self.format_string_text.setText(
             self.settings.value(SETTINGS_VAL_FORMATSTRING, ""))
 
@@ -635,6 +683,8 @@ class MainWindow(QMainWindow):
                                self.overwrite_check.isChecked())
         self.settings.setValue(SETTINGS_VAL_KEEPVIDEO,
                                self.keepvideo_check.isChecked())
+        self.settings.setValue(SETTINGS_VAL_PREFERFREEFORMATS,
+                               self.preferfreeformats_check.isChecked())
         self.settings.setValue(SETTINGS_VAL_FORMATTYPE,
                                self.format_type_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_FORMATQUALITY,
@@ -643,6 +693,10 @@ class MainWindow(QMainWindow):
                                self.format_audext_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_FORMATVIDEXT,
                                self.format_vidext_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATAUDCODEC,
+                               self.format_audcodec_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATVIDCODEC,
+                               self.format_vidcodec_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_FORMATSTRING,
                                self.format_string_text.text())
         self.settings.setValue(SETTINGS_VAL_WINDOWWIDTH,
@@ -715,6 +769,12 @@ class MainWindow(QMainWindow):
         elif type_id in [FORMAT_TYPE_VID_BY_EXT, FORMAT_TYPE_AUDVID_BY_EXT]:
             self.format_stacked_layout.setCurrentWidget(
                 self.format_vidext_combo)
+        elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_audcodec_combo)
+        elif type_id == FORMAT_TYPE_VID_BY_CODEC:
+            self.format_stacked_layout.setCurrentWidget(
+                self.format_vidcodec_combo)
         elif type_id == FORMAT_TYPE_RAWSTRING:
             self.format_stacked_layout.setCurrentWidget(
                 self.format_string_layout_widget)
@@ -757,9 +817,11 @@ class MainWindow(QMainWindow):
                 ext = file_info.completeSuffix().lower()
                 url_list = []
                 if ext == "txt":
-                    url_list = self.parse_txt_file(file_info.absoluteFilePath())
+                    url_list = self.parse_txt_file(
+                        file_info.absoluteFilePath())
                 elif ext == "html":
-                    url_list = self.parse_html_file(file_info.absoluteFilePath())
+                    url_list = self.parse_html_file(
+                        file_info.absoluteFilePath())
                 else:
                     QMessageBox.warning(self, "Unsupported file type",
                                         "Valid file types are HTML, TXT",
@@ -819,7 +881,7 @@ class MainWindow(QMainWindow):
         # Set options for YoutubeDL
         ydl_opts = {}
         ydl_opts["quiet"] = True
-        # ydl_opts["verbose"] = False
+        ydl_opts["verbose"] = False
         ydl_opts["no_warnings"] = True
         ffmpeg_path = self.ffmpeg_path_text.text()
         if ffmpeg_path:
@@ -834,6 +896,8 @@ class MainWindow(QMainWindow):
             ydl_opts["overwrites"] = True
         if self.keepvideo_check.isChecked():
             ydl_opts["keepvideo"] = True
+        if self.preferfreeformats_check.isChecked():
+            ydl_opts["prefer_free_formats"] = True
 
         # Create format string
         format_str = ""
@@ -857,8 +921,14 @@ class MainWindow(QMainWindow):
         elif type_id == FORMAT_TYPE_VID_BY_EXT:
             ext = self.format_vidext_combo.currentData()
             format_str = f"bestvideo[ext={ext}]"
-        elif type_id == SETTINGS_VAL_FORMATSTRING:
-            format_str = self.format_string_text.getText()
+        elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
+            codec = self.format_audcodec_combo.currentData()
+            format_str = f"ba[acodec^={codec}]"
+        elif type_id == FORMAT_TYPE_VID_BY_CODEC:
+            codec = self.format_vidcodec_combo.currentData()
+            format_str = f"bv[vcodec^={codec}]"
+        elif type_id == FORMAT_TYPE_RAWSTRING:
+            format_str = self.format_string_text.text()
         if format_str:
             message = f"Using format string: {format_str}"
             self.add_status_message(message)
@@ -949,7 +1019,7 @@ class MainWindow(QMainWindow):
         QApplication.processEvents()
 
     def strip_color_codes(self, message):
-        """Removes console color escape codes from string 
+        """Removes console color escape codes from string
 
         Args:
             message (str): Message with possible color codes
