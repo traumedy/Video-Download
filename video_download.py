@@ -11,7 +11,7 @@ import shutil
 import re
 from html.parser import HTMLParser
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QFont
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
@@ -20,6 +20,9 @@ from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
 from PySide6.QtWidgets import QSizePolicy, QStackedWidget
 from yt_dlp import YoutubeDL, utils
 from overrides import override
+
+# Monospace font name used for status window text
+MONOSPACE_FONT_NAME = "Monospace"
 
 # App name string used for settings
 SETTINGS_COMPANYNAME = "MySoft"
@@ -249,7 +252,9 @@ class MainWindow(QMainWindow):
     """
     url_type_combo: QComboBox
     url_stacked_widget: QStackedWidget
+    url_text_layout_widget: QWidget
     url_text: QLineEdit
+    list_formats_button: QPushButton
     list_path_layout_widget: QWidget
     list_path_text: QLineEdit
     list_path_browse_button: QPushButton
@@ -322,7 +327,9 @@ class MainWindow(QMainWindow):
         """
         self.url_stacked_widget = QStackedWidget()
         self.url_type_combo = QComboBox()
+        self.url_text_layout_widget = QWidget()
         self.url_text = QLineEdit()
+        self.list_formats_button = QPushButton("List formats")
         self.list_path_layout_widget = QWidget()
         self.list_path_text = QLineEdit()
         self.list_path_browse_button = QPushButton("Browse...")
@@ -386,6 +393,15 @@ class MainWindow(QMainWindow):
 
         # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
+        # Set status to fix font family
+        font = QFont(MONOSPACE_FONT_NAME)
+        font.setStyleHint(QFont.StyleHint.TypeWriter)
+        # font.setWeight(QFont.Weight.Black)
+        self.status_text.setFont(font)
+        # Set status window to not wrap text
+        self.status_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
+        # Set to accept rich text
+        self.status_text.setAcceptRichText(True)
 
         # Populate format selection combo boxes
         for label, idx in format_type_list:
@@ -415,11 +431,14 @@ class MainWindow(QMainWindow):
         """
         # Create horizontal layouts to stack browse buttons next to paths
 
+        url_layout = QHBoxLayout(self.url_text_layout_widget)
+        url_layout.addWidget(self.url_text)
+        url_layout.addWidget(self.list_formats_button)
         list_path_layout = QHBoxLayout(self.list_path_layout_widget)
         list_path_layout.addWidget(self.list_path_text)
         list_path_layout.addWidget(self.list_path_browse_button, 0,
                                    Qt.AlignmentFlag.AlignRight)
-        self.url_stacked_widget.addWidget(self.url_text)
+        self.url_stacked_widget.addWidget(self.url_text_layout_widget)
         self.url_stacked_widget.addWidget(self.list_path_layout_widget)
         download_path_layout = QHBoxLayout()
         download_path_layout.addWidget(self.download_path_text)
@@ -455,8 +474,9 @@ class MainWindow(QMainWindow):
         format_type_layout.addWidget(self.format_stacked_widget)
 
         # By default the layout is too tall for the QStackedWidget
-        format_string_layout.setContentsMargins(0, 0, 0, 0)
+        url_layout.setContentsMargins(0, 0, 0, 0)
         list_path_layout.setContentsMargins(0, 0, 0, 0)
+        format_string_layout.setContentsMargins(0, 0, 0, 0)
 
         # Use Form Layout for window
         layout = QFormLayout()
@@ -481,6 +501,8 @@ class MainWindow(QMainWindow):
         """
         self.url_type_combo.currentIndexChanged.connect(
             self.url_stacked_widget.setCurrentIndex)
+        self.list_formats_button.clicked.connect(
+            self.list_formats_button_clicked)
         self.list_path_browse_button.clicked.connect(
             self.list_browse_button_clicked)
         self.download_path_browse_button.clicked.connect(
@@ -504,6 +526,9 @@ class MainWindow(QMainWindow):
             "Select either a single URL to download or a URL list")
         self.url_text.setToolTip(
             "The URL of a page with a video to download")
+        self.list_formats_button.setToolTip(
+            "Retrieve the list of video and audio formats available for "
+            "this URL.")
         self.list_path_text.setToolTip(
             "The path to the list of URLs to download")
         self.list_path_browse_button.setToolTip(
@@ -560,7 +585,10 @@ class MainWindow(QMainWindow):
             "Launches a browser directed to detailed information about "
             "creating yt-dlp format strings.")
         self.status_text.setToolTip(
-            "Status window")
+            "This window shows status text. You can pinch and zoom the text "
+            "in this window or hold ctrl and use the mouse wheel to change "
+            "the zoom factor, and copy text by dragging and then pressing "
+            "ctrl-c.")
         self.close_button.setToolTip(
             "Close this window")
         self.download_button.setToolTip(
@@ -662,7 +690,6 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_FORMATVIDCODEC, ""))
         self.format_string_text.setText(
             self.settings.value(SETTINGS_VAL_FORMATSTRING, ""))
-
         # Restore widow size
         size = self.size()
         width = int(self.settings.value(SETTINGS_VAL_WINDOWWIDTH,
@@ -712,6 +739,17 @@ class MainWindow(QMainWindow):
                                self.width())
         self.settings.setValue(SETTINGS_VAL_WINDOWHEIGHT,
                                self.height())
+
+    def list_formats_button_clicked(self):
+        """Called when list formats button is clicked
+        """
+        url = self.url_text.text()
+        if not url:
+            QMessageBox.warning(self, "Missing download URL",
+                                "Enter a valid URL for format listing",
+                                QMessageBox.StandardButton.Ok)
+            return
+        self.download_url_formats(url)
 
     def list_browse_button_clicked(self):
         """Called when video list browse button is clicked
@@ -812,7 +850,6 @@ class MainWindow(QMainWindow):
                                     "Enter a valid URL to be downloaded",
                                     QMessageBox.StandardButton.Ok)
                 return
-
             url_list = [url]
         elif url_type_index == URL_TYPE_LIST:
             file_info = QFileInfo(self.list_path_text.text())
@@ -1028,6 +1065,47 @@ class MainWindow(QMainWindow):
         # Drive message loop
         QApplication.processEvents()
 
+    def download_url_formats(self, url):
+        """Download and display the formats avilable at url
+
+        Args:
+            url (str): URL to download format list from
+        """
+        ydl_opts = {}
+        ydl_opts["quiet"] = True
+        ydl_opts["noprogress"] = True
+        ydl_opts["verbose"] = False
+        ydl_opts["no_warnings"] = True
+        ydl_opts["simulate"] = True
+
+        # Disable widgets that would interfere with processing
+        self.enable_active_buttons(False)
+
+        # Perform downloads
+        with YoutubeDL(ydl_opts) as ydl:
+            meta = ydl.extract_info(url, download=False) 
+            format_list = meta.get('formats', [meta])
+            for fmt in format_list:
+                message = "\n" + str(fmt) + "\n"
+                print(message)
+                keys = ["format_id", "ext", "acodec", "vcodec",
+                        "resolution"]
+                if all(k in fmt for k in keys):
+                    message = f"id:<b>{fmt['format_id']}</b>  " + \
+                        f"ext:<b>{fmt['ext']}</b>  " + \
+                        f"acodec:<b>{fmt['acodec']}</b>  " + \
+                        f"vcodec:<b>{fmt['vcodec']}</b>"
+                    if "resolution" in fmt:
+                        message += f"  resolution:<b>{fmt['resolution']}</b>"
+                    if "tbr" in fmt:
+                        message += f"  bitrate:<b>{fmt['tbr']}K/s</b>"
+                    if "format_note" in fmt:
+                        message += f"  note:<b>{fmt['format_note']}</b>"
+                    self.add_status_message(message)
+
+        # Reenable widgets that would interfere with processing
+        self.enable_active_buttons(True)
+
     def strip_color_codes(self, message):
         """Removes console color escape codes from string
 
@@ -1058,6 +1136,7 @@ class MainWindow(QMainWindow):
         Args:
             enable (bool): Enable widgets flag
         """
+        self.list_formats_button.setEnabled(enable)
         self.bottom_buttonbox.setEnabled(enable)
 
 
