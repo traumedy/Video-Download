@@ -84,6 +84,10 @@ instead of typing or browsing for their their paths.
 In `Format selection` specify `Audio+Video by quality` and `Best quality` to
 download the best quality file.  
 
+The "List formats" button can be used to list the available formats for a
+single URL. In `Format selection` you can specify `Raw format string` and
+enter the `id` shown for a format to download that specific format.  
+
 ffmpeg is only required if you select format options that require post
 processing.  
 
