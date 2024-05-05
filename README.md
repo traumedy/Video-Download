@@ -84,6 +84,9 @@ instead of typing or browsing for their their paths.
 In `Format selection` specify `Audio+Video by quality` and `Best quality` to
 download the best quality file.  
 
+ffmpeg is only required if you select format options that require post
+processing.  
+
 ## Notes  
 
 Tested with browsers:  

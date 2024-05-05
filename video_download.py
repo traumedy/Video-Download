@@ -17,7 +17,7 @@ from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox
 from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
-from PySide6.QtWidgets import QSizePolicy, QStackedLayout
+from PySide6.QtWidgets import QSizePolicy, QStackedWidget
 from yt_dlp import YoutubeDL, utils
 from overrides import override
 
@@ -248,7 +248,7 @@ class MainWindow(QMainWindow):
     """Main application window class derived from QMainWindow
     """
     url_type_combo: QComboBox
-    url_stacked_layout: QStackedLayout
+    url_stacked_widget: QStackedWidget
     url_text: QLineEdit
     list_path_layout_widget: QWidget
     list_path_text: QLineEdit
@@ -262,7 +262,7 @@ class MainWindow(QMainWindow):
     overwrite_check: QCheckBox
     keepvideo_check: QCheckBox
     preferfreeformats_check: QCheckBox
-    format_stacked_layout: QStackedLayout
+    format_stacked_widget: QStackedWidget
     format_type_combo: QComboBox
     format_quality_combo: QComboBox
     format_audext_combo: QComboBox
@@ -320,6 +320,7 @@ class MainWindow(QMainWindow):
     def create_mainwindow_widgets(self):
         """Create widgets for window
         """
+        self.url_stacked_widget = QStackedWidget()
         self.url_type_combo = QComboBox()
         self.url_text = QLineEdit()
         self.list_path_layout_widget = QWidget()
@@ -334,6 +335,7 @@ class MainWindow(QMainWindow):
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
         self.preferfreeformats_check = QCheckBox("Prefer free formats")
+        self.format_stacked_widget = QStackedWidget()
         self.format_type_combo = QComboBox()
         self.format_quality_combo = QComboBox()
         self.format_audext_combo = QComboBox()
@@ -375,8 +377,16 @@ class MainWindow(QMainWindow):
         self.ffmpeg_path_browse_button.setSizePolicy(
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Minimum)
+
+        # Prevent QStackedWidgets from expanding vertically
+        self.url_stacked_widget.setSizePolicy(QSizePolicy.Policy.Expanding,
+                                              QSizePolicy.Policy.Fixed)
+        self.format_stacked_widget.setSizePolicy(QSizePolicy.Policy.Expanding,
+                                                 QSizePolicy.Policy.Fixed)
+
         # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
+
         # Populate format selection combo boxes
         for label, idx in format_type_list:
             self.format_type_combo.addItem(label, idx)
@@ -409,10 +419,8 @@ class MainWindow(QMainWindow):
         list_path_layout.addWidget(self.list_path_text)
         list_path_layout.addWidget(self.list_path_browse_button, 0,
                                    Qt.AlignmentFlag.AlignRight)
-        self.url_stacked_layout = QStackedLayout()
-        self.url_stacked_layout.addWidget(self.url_text)
-        self.url_stacked_layout.addWidget(self.list_path_layout_widget)
-
+        self.url_stacked_widget.addWidget(self.url_text)
+        self.url_stacked_widget.addWidget(self.list_path_layout_widget)
         download_path_layout = QHBoxLayout()
         download_path_layout.addWidget(self.download_path_text)
         download_path_layout.addWidget(self.download_path_browse_button, 0,
@@ -430,24 +438,23 @@ class MainWindow(QMainWindow):
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
         switches_layout.addWidget(self.preferfreeformats_check)
-        self.format_stacked_layout = QStackedLayout()
-        self.format_stacked_layout.addWidget(self.format_quality_combo)
-        self.format_stacked_layout.addWidget(self.format_audext_combo)
-        self.format_stacked_layout.addWidget(self.format_vidext_combo)
-        self.format_stacked_layout.addWidget(self.format_audcodec_combo)
-        self.format_stacked_layout.addWidget(self.format_vidcodec_combo)
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
         format_string_layout.addWidget(self.format_string_text)
-        format_string_layout.addWidget(self.format_string_help_button)
-        self.format_stacked_layout.addWidget(self.format_string_layout_widget)
+        format_string_layout.addWidget(self.format_string_help_button, 0,
+                                       Qt.AlignmentFlag.AlignRight)
+        self.format_stacked_widget.addWidget(self.format_quality_combo)
+        self.format_stacked_widget.addWidget(self.format_audext_combo)
+        self.format_stacked_widget.addWidget(self.format_vidext_combo)
+        self.format_stacked_widget.addWidget(self.format_audcodec_combo)
+        self.format_stacked_widget.addWidget(self.format_vidcodec_combo)
+        self.format_stacked_widget.addWidget(self.format_string_layout_widget)
         format_type_layout = QHBoxLayout()
-        format_type_layout.addWidget(QLabel("Format selection:"))
         format_type_layout.addWidget(self.format_type_combo)
-        format_type_layout.addLayout(self.format_stacked_layout)
+        format_type_layout.addWidget(self.format_stacked_widget)
 
-        # By default the layout is too tall for the QStackedLayout
+        # By default the layout is too tall for the QStackedWidget
         format_string_layout.setContentsMargins(0, 0, 0, 0)
         list_path_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -455,15 +462,15 @@ class MainWindow(QMainWindow):
         layout = QFormLayout()
 
         # Add widgets to window layout
-        layout.addRow(self.url_type_combo, self.url_stacked_layout)
-        layout.addRow(QLabel("Download path:"), download_path_layout)
-        layout.addRow(QLabel("FFMPEG path:"), ffmpeg_layout)
+        layout.addRow(self.url_type_combo, self.url_stacked_widget)
+        layout.addRow("Download path:", download_path_layout)
+        layout.addRow("FFMPEG path:", ffmpeg_layout)
         layout.addRow(auth_layout)
         layout.addRow(switches_layout)
-        layout.addRow(format_type_layout)
+        layout.addRow("Format selection:", format_type_layout)
         layout.addRow(self.status_text)
-        layout.addRow(QLabel("File progress"), self.file_progress)
-        layout.addRow(QLabel("Total progress"), self.total_progress)
+        layout.addRow("File progress", self.file_progress)
+        layout.addRow("Total progress", self.total_progress)
         layout.addRow(QLabel(""))
         layout.addRow(self.bottom_buttonbox)
 
@@ -473,7 +480,7 @@ class MainWindow(QMainWindow):
         """Connects main window signals to slots
         """
         self.url_type_combo.currentIndexChanged.connect(
-            self.url_stacked_layout.setCurrentIndex)
+            self.url_stacked_widget.setCurrentIndex)
         self.list_path_browse_button.clicked.connect(
             self.list_browse_button_clicked)
         self.download_path_browse_button.clicked.connect(
@@ -506,7 +513,9 @@ class MainWindow(QMainWindow):
         self.download_path_browse_button.setToolTip(
             "Use dialog to browse to download directory")
         self.ffmpeg_path_text.setToolTip(
-            "Path to directory containing ffmpeg and ffprobe binaries")
+            "Path to directory containing ffmpeg and ffprobe binaries. "
+            "ffmpeg is only required if you select format options that "
+            "require post processing.")
         self.ffmpeg_path_browse_button.setToolTip(
             "Use fialog to browse to ffmpeg directory")
         self.username_text.setToolTip(
@@ -761,22 +770,22 @@ class MainWindow(QMainWindow):
         if type_id in [FORMAT_TYPE_AUDVID_BY_QUA,
                        FORMAT_TYPE_AUD_BY_QUA,
                        FORMAT_TYPE_VID_BY_QUA]:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_quality_combo)
         elif type_id == FORMAT_TYPE_AUD_BY_EXT:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_audext_combo)
         elif type_id in [FORMAT_TYPE_VID_BY_EXT, FORMAT_TYPE_AUDVID_BY_EXT]:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_vidext_combo)
         elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_audcodec_combo)
         elif type_id == FORMAT_TYPE_VID_BY_CODEC:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_vidcodec_combo)
         elif type_id == FORMAT_TYPE_RAWSTRING:
-            self.format_stacked_layout.setCurrentWidget(
+            self.format_stacked_widget.setCurrentWidget(
                 self.format_string_layout_widget)
 
     def format_string_help_button_clicked(self):
@@ -872,15 +881,16 @@ class MainWindow(QMainWindow):
         return parser.get_url_list()
 
     def create_ydl_options(self):
-        """Creates the dictionary of options to pass to YoutubeDL
+        """Creates the dictionary of options to pass to yt_dlp.YoutubeDL
         built from UI values and set some default values
 
         Returns:
             dict: Dictionary of options for yt_dlp.YoutubeDL constructor
         """
-        # Set options for YoutubeDL
+        # Set options for yt_dlp.YoutubeDL
         ydl_opts = {}
         ydl_opts["quiet"] = True
+        ydl_opts["noprogress"] = True
         ydl_opts["verbose"] = False
         ydl_opts["no_warnings"] = True
         ffmpeg_path = self.ffmpeg_path_text.text()
@@ -958,7 +968,7 @@ class MainWindow(QMainWindow):
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
             self.file_progress.setValue(0)
-            ydl.add_progress_hook(self.ydl_progress_hook)
+            ydl.add_progress_hook(self.ydl_download_progress_hook)
             for url in url_list:
                 message = f"Trying download of URL {url}"
                 self.add_status_message(message)
@@ -985,7 +995,7 @@ class MainWindow(QMainWindow):
         dlg.setText(message)
         dlg.exec()
 
-    def ydl_progress_hook(self, progress_dict):
+    def ydl_download_progress_hook(self, progress_dict):
         """Callback function for download progress
 
         Args:
