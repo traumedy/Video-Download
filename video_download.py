@@ -11,7 +11,9 @@ import shutil
 import re
 from html.parser import HTMLParser
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
-from PySide6.QtGui import QDesktopServices, QFont
+from PySide6.QtGui import QDesktopServices, QFont, QBrush, QColor
+from PySide6.QtGui import QTextDocument, QTextTable, QTextTableFormat
+from PySide6.QtGui import QTextTableCell, QTextCursor
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
@@ -396,7 +398,7 @@ class MainWindow(QMainWindow):
         # Set status to fix font family
         font = QFont(MONOSPACE_FONT_NAME)
         font.setStyleHint(QFont.StyleHint.TypeWriter)
-        # font.setWeight(QFont.Weight.Black)
+        font.setWeight(QFont.Weight.Black)
         self.status_text.setFont(font)
         # Set status window to not wrap text
         self.status_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
@@ -1065,12 +1067,42 @@ class MainWindow(QMainWindow):
         # Drive message loop
         QApplication.processEvents()
 
+    @staticmethod
+    def table_add_row(table, fields, header=False):
+        """Adds a row to a QTextTable
+
+        Args:
+            table (QTextTable): Table to be modified
+            fields ([str]): List of fiends to add
+            header (bool): True if this is the header (Default: False)
+        """
+        cursor = QTextCursor()
+        if not header:
+            table.appendRows(1)
+        row = table.rows() - 1
+        for idx, field in enumerate(fields):
+            cell = table.cellAt(row, idx)
+            cursor = cell.firstCursorPosition()
+            if header:
+                fmt = cell.format()
+                fmt.setFontWeight(QFont.Weight.Bold)
+                fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
+                cell.setFormat(fmt)
+            cursor.insertText(str(field))
+
     def download_url_formats(self, url):
         """Download and display the formats avilable at url
 
         Args:
             url (str): URL to download format list from
         """
+
+        message = f"Trying to retrieve format list for URL {url}"
+        self.add_status_message(message)
+
+        # Disable widgets that would interfere with processing
+        self.enable_active_buttons(False)
+
         ydl_opts = {}
         ydl_opts["quiet"] = True
         ydl_opts["noprogress"] = True
@@ -1078,30 +1110,43 @@ class MainWindow(QMainWindow):
         ydl_opts["no_warnings"] = True
         ydl_opts["simulate"] = True
 
-        # Disable widgets that would interfere with processing
-        self.enable_active_buttons(False)
-
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
-            meta = ydl.extract_info(url, download=False) 
+            meta = ydl.extract_info(url, download=False)
             format_list = meta.get('formats', [meta])
+            text_doc = QTextDocument()
+            table_format = QTextTableFormat()
+            table_format.setCellPadding(4)
+            table_format.setCellSpacing(0)
+            # table_format.setBorder(0)
+            cursor = QTextCursor(text_doc)
+            table = cursor.insertTable(1, 7, table_format)
+            headers = ["ID", "Extension", "Audio codec", "Video codec",
+                       "Resolution", "Bitrate", "Note"]
+            self.table_add_row(table, headers, True)
+
             for fmt in format_list:
-                message = "\n" + str(fmt) + "\n"
-                print(message)
                 keys = ["format_id", "ext", "acodec", "vcodec",
                         "resolution"]
                 if all(k in fmt for k in keys):
-                    message = f"id:<b>{fmt['format_id']}</b>  " + \
-                        f"ext:<b>{fmt['ext']}</b>  " + \
-                        f"acodec:<b>{fmt['acodec']}</b>  " + \
-                        f"vcodec:<b>{fmt['vcodec']}</b>"
+                    fields = [fmt['format_id'], fmt['ext'], fmt['acodec'],
+                              fmt['vcodec']]
                     if "resolution" in fmt:
-                        message += f"  resolution:<b>{fmt['resolution']}</b>"
+                        fields.append(fmt['resolution'])
+                    else:
+                        fields.append("")
                     if "tbr" in fmt:
-                        message += f"  bitrate:<b>{fmt['tbr']}K/s</b>"
+                        fields.append(str(fmt['tbr']) + "K/s")
+                    else:
+                        fields.append("")
                     if "format_note" in fmt:
-                        message += f"  note:<b>{fmt['format_note']}</b>"
-                    self.add_status_message(message)
+                        fields.append(fmt['format_note'])
+                    else:
+                        fields.append("")
+                    self.table_add_row(table, fields)
+
+            # Add table to status window
+            self.status_text.append(text_doc.toHtml())
 
         # Reenable widgets that would interfere with processing
         self.enable_active_buttons(True)
