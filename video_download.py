@@ -1120,9 +1120,9 @@ class MainWindow(QMainWindow):
             table_format.setCellSpacing(0)
             # table_format.setBorder(0)
             cursor = QTextCursor(text_doc)
-            table = cursor.insertTable(1, 7, table_format)
             headers = ["ID", "Extension", "Audio codec", "Video codec",
-                       "Resolution", "Bitrate", "Note"]
+                       "Resolution", "Bitrate", "Size", "Note"]
+            table = cursor.insertTable(1, len(headers), table_format)
             self.table_add_row(table, headers, True)
 
             for fmt in format_list:
@@ -1137,6 +1137,10 @@ class MainWindow(QMainWindow):
                         fields.append("")
                     if "tbr" in fmt:
                         fields.append(str(fmt['tbr']) + "K/s")
+                    else:
+                        fields.append("")
+                    if "filesize" in fmt:
+                        fields.append(format(fmt['filesize'], ','))
                     else:
                         fields.append("")
                     if "format_note" in fmt:
