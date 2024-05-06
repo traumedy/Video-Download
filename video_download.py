@@ -92,8 +92,8 @@ format_ext_vid_list = ["mp4", "mov", "webm", "flv", "3gp"]
 format_codec_aud_list = ["flac", "alac", "wav", "aiff", "opus", "vorbis",
                          "aac", "mp4a", "mp3", "ac4", "eac3", "ac3", "dts"]
 format_codec_vid_list = [("av01", "av01"), ("vp9.2", "vp09.2"),
-                         ("vp9", "vp09"), ("avc1", "avc1"),
-                         ("h265", "h265"), ("h264", "h265"),
+                         ("vp9", "vp09"), ("avc1/h264", "avc1"),
+                         ("hevc/h265", "h265"),
                          ("vp8", "vp08"), ("h263", "h263"),
                          ("theora", "theora")]
 # Merge options
@@ -123,9 +123,8 @@ format_merge_vid_list = [("Best video", "bestvideo"),
                          ("Codec av01", "bv*[vcodec~=av01]"),
                          ("Codec vp9.2", "bv*[vcodec~=vp09.2]"),
                          ("Codec vp9", "bv*[vcodec~=vp09]"),
-                         ("Codec avc1", "bv*[vcodec~=avc1]"),
-                         ("Codec h265", "bv*[vcodec~=h265]"),
-                         ("Codec h264", "bv*[vcodec~=h264]"),
+                         ("Codec hevc/h265", "bv*[vcodec~=h265]"),
+                         ("Codec avc1/h264", "bv*[vcodec~=avc1]"),
                          ("Codec vp8", "bv*[vcodec~=vp08]"),
                          ("Codec h263", "bv*[vcodec~=h263]"),
                          ("Codec theora", "bv*[vcodec~=theora]"),
@@ -1205,6 +1204,8 @@ class MainWindow(QMainWindow):
                 error_message = str(e)
                 message = f"Download error: {error_message}"
                 self.add_status_message(message)
+                # Reenable widgets that would interfere with processing
+                self.enable_active_buttons(True)
                 return
 
             text_doc = QTextDocument()
@@ -1219,34 +1220,27 @@ class MainWindow(QMainWindow):
             self.table_add_row(table, headers, True)
 
             for fmt in format_list:
-                keys = ["format_id", "ext", "acodec", "vcodec",
-                        "resolution"]
-                if all(k in fmt for k in keys):
-                    fields = [fmt['format_id'], fmt['ext'], fmt['acodec'],
-                              fmt['vcodec']]
-                    if "resolution" in fmt:
-                        fields.append(fmt['resolution'])
-                    else:
-                        fields.append("")
-                    if "tbr" in fmt:
-                        if fmt['tbr']:
-                            fields.append(format(fmt['tbr'], ',') + " K/s")
+                # Tupple is key, is_numeric, suffix
+                keys = [("format_id", False, ""),
+                        ("ext", False, ""),
+                        ("acodec", False, ""),
+                        ("vcodec", False, ""),
+                        ("resolution", False, ""),
+                        ("tbr", True, " K/s"),
+                        ("filesize", True, " bytes"),
+                        ("format_note", False, "")]
+                fields = []
+                for key, is_numeric, suffix in keys:
+                    text = ""
+                    if key in fmt:
+                        if is_numeric:
+                            text = format(fmt[key], ',')
                         else:
-                            fields.append("")
-                    else:
-                        fields.append("")
-                    if "filesize" in fmt:
-                        if fmt['filesize']:
-                            fields.append(format(fmt['filesize'], ','))
-                        else:
-                            fields.append("")
-                    else:
-                        fields.append("")
-                    if "format_note" in fmt:
-                        fields.append(fmt['format_note'])
-                    else:
-                        fields.append("")
-                    self.table_add_row(table, fields)
+                            text = fmt[key]
+                        text += suffix
+                    fields.append(text)
+                # Add fields to table
+                self.table_add_row(table, fields)
 
             # Add table to status window
             self.status_text.append(text_doc.toHtml())
