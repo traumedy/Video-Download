@@ -45,6 +45,8 @@ SETTINGS_VAL_FORMATAUDEXT = "FormatAudExt"
 SETTINGS_VAL_FORMATVIDEXT = "FormatVidExt"
 SETTINGS_VAL_FORMATAUDCODEC = "FormatAudCodec"
 SETTINGS_VAL_FORMATVIDCODEC = "FormatVidCodec"
+SETTINGS_VAL_FORMATMERGEAUD = "FormatMergeAud"
+SETTINGS_VAL_FORMATMERGEVID = "FormatMergeVid"
 SETTINGS_VAL_FORMATSTRING = "FormatString"
 SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
 SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
@@ -62,7 +64,8 @@ FORMAT_TYPE_AUD_BY_EXT = 4
 FORMAT_TYPE_VID_BY_EXT = 5
 FORMAT_TYPE_AUD_BY_CODEC = 6
 FORMAT_TYPE_VID_BY_CODEC = 7
-FORMAT_TYPE_RAWSTRING = 8
+FORMAT_TYPE_MERGE = 8
+FORMAT_TYPE_RAWSTRING = 9
 
 format_type_list = [
     ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA),
@@ -73,6 +76,7 @@ format_type_list = [
     ("Video only by extension", FORMAT_TYPE_VID_BY_EXT),
     ("Audio only by codec", FORMAT_TYPE_AUD_BY_CODEC),
     ("Video only by codec", FORMAT_TYPE_VID_BY_CODEC),
+    ("Merge formats", FORMAT_TYPE_MERGE),
     ("Raw format string", FORMAT_TYPE_RAWSTRING)
 ]
 
@@ -92,6 +96,44 @@ format_codec_vid_list = [("av01", "av01"), ("vp9.2", "vp09.2"),
                          ("h265", "h265"), ("h264", "h265"),
                          ("vp8", "vp08"), ("h263", "h263"),
                          ("theora", "theora")]
+# Merge options
+format_merge_aud_list = [("Best audio", "bestaudio"),
+                         ("All audio only", "mergeall[vcodec=none]"),
+                         ("Codec flac", "ba[acodec~=flac]"),
+                         ("Codec alac", "ba[acodec~=alac]"),
+                         ("Codec wav", "ba[acodec~=wav]"),
+                         ("Codec aiff", "ba[acodec~=aiff]"),
+                         ("Codec opus", "ba[acodec~=opus]"),
+                         ("Codec vorbis", "ba[acodec~=vorbis]"),
+                         ("Codec aac", "ba[acodec~=aac]"),
+                         ("Codec mp4a", "ba[acodec~=mp4a]"),
+                         ("Codec mp3", "ba[acodec~=mp3]"),
+                         ("Codec ac4", "ba[acodec~=ac4]"),
+                         ("Codec eac3", "ba[acodec~=eac3]"),
+                         ("Codec ac3", "ba[acodec~=ac3]"),
+                         ("Codec dts", "ba[acodec~=dts]"),
+                         ("Extension m4a", "be[ext=m4a]"),
+                         ("Extension aac", "be[ext=aac]"),
+                         ("Extension mp3", "be[ext=mp3]"),
+                         ("Extension ogg", "be[ext=ogg]"),
+                         ("Extension opus", "be[ext=opus]"),
+                         ("Extension webm", "be[ext=webm]")]
+format_merge_vid_list = [("Best video", "bestvideo"),
+                         ("All video only", "mergeall[acodec=none"),
+                         ("Codec av01", "bv*[vcodec~=av01]"),
+                         ("Codec vp9.2", "bv*[vcodec~=vp09.2]"),
+                         ("Codec vp9", "bv*[vcodec~=vp09]"),
+                         ("Codec avc1", "bv*[vcodec~=avc1]"),
+                         ("Codec h265", "bv*[vcodec~=h265]"),
+                         ("Codec h264", "bv*[vcodec~=h264]"),
+                         ("Codec vp8", "bv*[vcodec~=vp08]"),
+                         ("Codec h263", "bv*[vcodec~=h263]"),
+                         ("Codec theora", "bv*[vcodec~=theora]"),
+                         ("Extension mp4", "bv*[ext=mp4]"),
+                         ("Extension mov", "bv*[ext=mov]"),
+                         ("Extension webm", "bv*[ext=webm]"),
+                         ("Extension flv", "bv*[ext=flv]"),
+                         ("Extension 3gp", "bv*[ext=3gp]")]
 
 # URL list file extensions
 URLLIST_EXTENSIONS = ["html", "txt"]
@@ -276,6 +318,9 @@ class MainWindow(QMainWindow):
     format_vidext_combo: QComboBox
     format_audcodec_combo: QComboBox
     format_vidcodec_combo: QComboBox
+    format_merge_layout_widget: QWidget
+    format_merge_audio_combo: QComboBox
+    format_merge_video_combo: QComboBox
     format_string_layout_widget: QWidget
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
@@ -351,6 +396,9 @@ class MainWindow(QMainWindow):
         self.format_vidext_combo = QComboBox()
         self.format_audcodec_combo = QComboBox()
         self.format_vidcodec_combo = QComboBox()
+        self.format_merge_layout_widget = QWidget()
+        self.format_merge_audio_combo = QComboBox()
+        self.format_merge_video_combo = QComboBox()
         self.format_string_layout_widget = QWidget()
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
@@ -416,8 +464,12 @@ class MainWindow(QMainWindow):
             self.format_vidext_combo.addItem(ext, ext)
         for codec in format_codec_aud_list:
             self.format_audcodec_combo.addItem(codec, codec)
-        for codec, cstr in format_codec_vid_list:
-            self.format_vidcodec_combo.addItem(codec, cstr)
+        for label, codec in format_codec_vid_list:
+            self.format_vidcodec_combo.addItem(label, codec)
+        for label, fstr in format_merge_aud_list:
+            self.format_merge_audio_combo.addItem(label, fstr)
+        for label, fstr in format_merge_vid_list:
+            self.format_merge_video_combo.addItem(label, fstr)
 
         # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
@@ -465,11 +517,20 @@ class MainWindow(QMainWindow):
         format_string_layout.addWidget(self.format_string_text)
         format_string_layout.addWidget(self.format_string_help_button, 0,
                                        Qt.AlignmentFlag.AlignRight)
+        format_merge_layout = QHBoxLayout(
+            self.format_merge_layout_widget)
+        format_merge_layout.addWidget(QLabel("Audio:"),
+                                      alignment=Qt.AlignmentFlag.AlignRight)
+        format_merge_layout.addWidget(self.format_merge_audio_combo)
+        format_merge_layout.addWidget(QLabel("Video:"),
+                                      alignment=Qt.AlignmentFlag.AlignRight)
+        format_merge_layout.addWidget(self.format_merge_video_combo)
         self.format_stacked_widget.addWidget(self.format_quality_combo)
         self.format_stacked_widget.addWidget(self.format_audext_combo)
         self.format_stacked_widget.addWidget(self.format_vidext_combo)
         self.format_stacked_widget.addWidget(self.format_audcodec_combo)
         self.format_stacked_widget.addWidget(self.format_vidcodec_combo)
+        self.format_stacked_widget.addWidget(self.format_merge_layout_widget)
         self.format_stacked_widget.addWidget(self.format_string_layout_widget)
         format_type_layout = QHBoxLayout()
         format_type_layout.addWidget(self.format_type_combo)
@@ -479,6 +540,7 @@ class MainWindow(QMainWindow):
         url_layout.setContentsMargins(0, 0, 0, 0)
         list_path_layout.setContentsMargins(0, 0, 0, 0)
         format_string_layout.setContentsMargins(0, 0, 0, 0)
+        format_merge_layout.setContentsMargins(0, 0, 0, 0)
 
         # Use Form Layout for window
         layout = QFormLayout()
@@ -580,6 +642,12 @@ class MainWindow(QMainWindow):
             "Select the video codec to download."
             "Different sites will have different video codecs available and "
             "may not offer all types.")
+        self.format_merge_audio_combo.setToolTip(
+            "The audio format or formats to be combined into the output file. "
+            "ffmpeg is required.")
+        self.format_merge_video_combo.setToolTip(
+            "The video format or formats to be combined into the output file. "
+            "ffmpeg is required.")
         self.format_string_text.setToolTip(
             "Enter the string representing the format to download. Click "
             "the Help button for more information.")
@@ -690,6 +758,10 @@ class MainWindow(QMainWindow):
             self.settings.value(SETTINGS_VAL_FORMATAUDCODEC, ""))
         self.format_vidcodec_combo.setCurrentText(
             self.settings.value(SETTINGS_VAL_FORMATVIDCODEC, ""))
+        self.format_merge_audio_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATMERGEAUD, ""))
+        self.format_merge_video_combo.setCurrentText(
+            self.settings.value(SETTINGS_VAL_FORMATMERGEVID, ""))
         self.format_string_text.setText(
             self.settings.value(SETTINGS_VAL_FORMATSTRING, ""))
         # Restore widow size
@@ -735,6 +807,10 @@ class MainWindow(QMainWindow):
                                self.format_audcodec_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_FORMATVIDCODEC,
                                self.format_vidcodec_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATMERGEAUD,
+                               self.format_merge_audio_combo.currentText())
+        self.settings.setValue(SETTINGS_VAL_FORMATMERGEVID,
+                               self.format_merge_video_combo.currentText())
         self.settings.setValue(SETTINGS_VAL_FORMATSTRING,
                                self.format_string_text.text())
         self.settings.setValue(SETTINGS_VAL_WINDOWWIDTH,
@@ -824,6 +900,9 @@ class MainWindow(QMainWindow):
         elif type_id == FORMAT_TYPE_VID_BY_CODEC:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_vidcodec_combo)
+        elif type_id == FORMAT_TYPE_MERGE:
+            self.format_stacked_widget.setCurrentWidget(
+                self.format_merge_layout_widget)
         elif type_id == FORMAT_TYPE_RAWSTRING:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_string_layout_widget)
@@ -972,10 +1051,16 @@ class MainWindow(QMainWindow):
             format_str = f"bestvideo[ext={ext}]"
         elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
             codec = self.format_audcodec_combo.currentData()
-            format_str = f"ba[acodec^={codec}]"
+            format_str = f"bestaudio[acodec^={codec}]"
         elif type_id == FORMAT_TYPE_VID_BY_CODEC:
             codec = self.format_vidcodec_combo.currentData()
-            format_str = f"bv[vcodec^={codec}]"
+            format_str = f"bestvideo[vcodec^={codec}]"
+        elif type_id == FORMAT_TYPE_MERGE:
+            audtype = self.format_merge_audio_combo.currentData()
+            vidtype = self.format_merge_video_combo.currentData()
+            format_str = f"{audtype}+{vidtype}"
+            ydl_opts["allow_multiple_audio_streams"] = True
+            ydl_opts["allow_multiple_video_streams"] = True
         elif type_id == FORMAT_TYPE_RAWSTRING:
             format_str = self.format_string_text.text()
         if format_str:
@@ -1144,7 +1229,10 @@ class MainWindow(QMainWindow):
                     else:
                         fields.append("")
                     if "filesize" in fmt:
-                        fields.append(format(fmt['filesize'], ','))
+                        if fmt['filesize']:
+                            fields.append(format(fmt['filesize'], ','))
+                        else:
+                            fields.append("")
                     else:
                         fields.append("")
                     if "format_note" in fmt:
