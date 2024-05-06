@@ -1088,7 +1088,8 @@ class MainWindow(QMainWindow):
                 fmt.setFontWeight(QFont.Weight.Bold)
                 fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
                 cell.setFormat(fmt)
-            cursor.insertText(str(field))
+            if field:
+                cursor.insertText(str(field))
 
     def download_url_formats(self, url):
         """Download and display the formats avilable at url
@@ -1136,7 +1137,10 @@ class MainWindow(QMainWindow):
                     else:
                         fields.append("")
                     if "tbr" in fmt:
-                        fields.append(str(fmt['tbr']) + "K/s")
+                        if fmt['tbr']:
+                            fields.append(format(fmt['tbr'], ',') + " K/s")
+                        else:
+                            fields.append("")
                     else:
                         fields.append("")
                     if "filesize" in fmt:
