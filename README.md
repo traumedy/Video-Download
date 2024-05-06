@@ -86,12 +86,16 @@ download the best quality file.
 
 The "List formats" button can be used to list the available formats for a
 single URL. In `Format selection` you can specify `Raw format string` and
-enter the `id` shown for a format to download that specific format.  
+enter the `ID` shown for a format to download that specific format.  
 
 ffmpeg is only required if you select format options that require post
 processing such as `Merge formats`.  
 
 ## Notes  
+
+Some sites do not include a video identifier in the page URL. Right
+click on the video window and there may be an option to
+`Copy video URL`.
 
 Tested with browsers:  
 . Brave (Windows)  
@@ -103,15 +107,12 @@ Tested with browsers:
 . Safari (MacOS)  
 . Vivaldi (Windows)  
 
-All settings in the GUI are stored between executions including the window size.  
+All settings in the GUI are stored between executions including the window
+size.  
 
-Currently when selecting a container file extension, the requested format will
-attempt to be downloaded from the server _if it is available_. If none is selected,
-the 'best quality' format will be downloaded.  
+Every site has a limited selection of file types, audio and video codecs. Use
+the `List formats` button available when `Single URL` is selecte at the top
+to view the available formats for a site based on any video URL.
 
-The file progress bar does not work with some sites. This may be a limitation of
-the yt_dlp library.  
-
-## Todo  
-
-More format selection options and post processing options will be added.  
+The file progress bar does not work with some sites. This may be a limitation
+of the yt_dlp library.  

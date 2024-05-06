@@ -1198,8 +1198,15 @@ class MainWindow(QMainWindow):
 
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
-            meta = ydl.extract_info(url, download=False)
-            format_list = meta.get('formats', [meta])
+            try:
+                meta = ydl.extract_info(url, download=False)
+                format_list = meta.get('formats', [meta])
+            except utils.DownloadError as e:
+                error_message = str(e)
+                message = f"Download error: {error_message}"
+                self.add_status_message(message)
+                return
+
             text_doc = QTextDocument()
             table_format = QTextTableFormat()
             table_format.setCellPadding(4)
