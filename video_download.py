@@ -1232,7 +1232,7 @@ class MainWindow(QMainWindow):
                 fields = []
                 for key, is_numeric, suffix in keys:
                     text = ""
-                    if key in fmt:
+                    if key in fmt and fmt[key]:
                         if is_numeric:
                             text = format(fmt[key], ',')
                         else:
