@@ -1,13 +1,13 @@
 # video_download.py  
 
-Description: GUI for downloading video URLs using yt-dlp library.  
+Description: GUI for downloading video URLs using `yt_dlp` library.  
 
 Author: Josh Buchbinder  
 
 ## General usage  
 
-`video_download` is a PySide6 (Qt) GUI wrapper around the `yt-dlp`
-python library that cam parse a text file containing a list of URLs
+`video_download` is a PySide6 (Qt) GUI wrapper around the `yt_-_dlp`
+Python library that can parse a text file containing a list of URLs
 or an HTML file of bookmarks exported from a browser and attempt to
 download the video in each URL. See `yt-dlp` documentation to see
 what video sites are
