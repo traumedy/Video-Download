@@ -57,8 +57,8 @@ class MainWindow(QMainWindow):
     consoleoutput_check: QCheckBox
     subtitles_layout: QHBoxLayout
     generatedsubs_check: QCheckBox
-    subs_format_combo: QComboBox
     subs_lang_combo: QComboBox
+    subs_format_combo: QComboBox
     subs_delay_spin: QSpinBox
     list_subs_button: QPushButton
     format_stacked_widget: QStackedWidget
@@ -147,8 +147,8 @@ class MainWindow(QMainWindow):
         self.downloadsubs_check = QCheckBox("Download subtitles")
         self.consoleoutput_check = QCheckBox("Console output")
         self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
-        self.subs_format_combo = QComboBox()
         self.subs_lang_combo = QComboBox()
+        self.subs_format_combo = QComboBox()
         self.subs_delay_spin = QSpinBox()
         self.list_subs_button = QPushButton("List subtitles")
         self.subtitles_layout = QHBoxLayout()
@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
                                                  QSizePolicy.Policy.Fixed)
         # Prevent various other widgets from expanding (some of these don't
         # work)
-        widgets = [self.subs_format_combo, self.subs_lang_combo,
+        widgets = [self.subs_lang_combo, self.subs_format_combo,
                    self.list_subs_button, self.format_type_combo,
                    self.format_quality_combo, self.format_audext_combo,
                    self.format_vidext_combo, self.format_audcodec_combo,
@@ -227,11 +227,10 @@ class MainWindow(QMainWindow):
         self.status_text.setAcceptRichText(True)
 
         # Populate subtitles combo boxes
-        for label, built_in in ComboBoxConst.SUBTITLES_FORMAT_LIST:
-            self.subs_format_combo.addItem(label, built_in)
-        self.subs_lang_combo.addItem("All languages", "all")
         for lang, lang_code in ComboBoxConst.SUBTITLES_LANGUAGES_LIST:
             self.subs_lang_combo.addItem(lang, lang_code)
+        for label, built_in in ComboBoxConst.SUBTITLES_FORMAT_LIST:
+            self.subs_format_combo.addItem(label, built_in)
 
         # Populate format selection combo boxes
         for label, idx in ComboBoxConst.FORMAT_TYPE_LIST:
@@ -295,12 +294,12 @@ class MainWindow(QMainWindow):
         switches_layout.addWidget(self.consoleoutput_check)
         self.subtitles_layout = QHBoxLayout()
         self.subtitles_layout.addWidget(self.generatedsubs_check)
-        self.subtitles_layout.addWidget(QLabel("Format:",
-                                        alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subs_format_combo)
         self.subtitles_layout.addWidget(QLabel("Language:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
         self.subtitles_layout.addWidget(self.subs_lang_combo)
+        self.subtitles_layout.addWidget(QLabel("Format:",
+                                        alignment=Qt.AlignmentFlag.AlignRight))
+        self.subtitles_layout.addWidget(self.subs_format_combo)
         self.subtitles_layout.addWidget(QLabel("Delay:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
         self.subtitles_layout.addWidget(self.subs_delay_spin)
@@ -407,8 +406,8 @@ class MainWindow(QMainWindow):
         self.downloadsubs_check.setToolTip(ToolTips.TTT_DOWNLOADSUBS_CHECK)
         self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
         self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
-        self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
         self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
+        self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
         self.subs_delay_spin.setToolTip(ToolTips.TTT_SUBS_DELAY_SPIN)
         self.list_subs_button.setToolTip(ToolTips.TTT_LIST_SUBS_BUTTON)
         self.format_type_combo.setToolTip(ToolTips.TTT_FORMAT_TYPE_COMBO)
@@ -479,17 +478,13 @@ class MainWindow(QMainWindow):
             if isinstance(value, str)\
             else bool(value)
 
-    def load_settings(self):
-        """Loads persistent settings
+    def get_settings_widgets(self):
+        """Returns list of widgets and their associated settings key string
+            and their default values
+
+        Returns:
+            [(QWidget, str)]: [(Widget, settings key, default)]
         """
-        self.url_type_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_URLTYPE, ""))
-        self.url_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_URLTEXT, ""))
-        self.list_path_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_URLLIST, ""))
-        self.download_path_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""))
         # Default to ffmpeg in path
         ffmpeg_path = shutil.which("ffmpeg")
         if ffmpeg_path:
@@ -499,47 +494,68 @@ class MainWindow(QMainWindow):
         else:
             # ffmpeg executable not found in path
             ffmpeg_path = ""
-        self.ffmpeg_path_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FFMPEGPATH,
-                                ffmpeg_path))
-        self.username_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_USERNAME, ""))
-        self.password_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_PASSWORD, ""))
-        self.overwrite_check.setChecked(self.value_to_bool(
-            self.settings.value(SettingsConst.SETTINGS_VAL_OVERWRITE)))
-        self.keepvideo_check.setChecked(self.value_to_bool(
-            self.settings.value(SettingsConst.SETTINGS_VAL_KEEPVIDEO)))
-        self.preferfreeformats_check.setChecked(self.value_to_bool(
-            self.settings.value(SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS)))
-        self.downloadsubs_check.setChecked(self.value_to_bool(
-            self.settings.value(SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES)))
-        self.generatedsubs_check.setChecked(self.value_to_bool(
-            self.settings.value(SettingsConst.SETTINGS_VAL_AUTOGENSUBS)))
-        self.subs_format_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT))
-        self.subs_lang_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE))
-        self.subs_delay_spin.setValue(
-            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLEDELAY, 0))
-        self.format_type_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATTYPE, ""))
-        self.format_quality_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATQUALITY, ""))
-        self.format_audext_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATAUDEXT, ""))
-        self.format_vidext_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATVIDEXT, ""))
-        self.format_audcodec_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATAUDCODEC, ""))
-        self.format_vidcodec_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATVIDCODEC, ""))
-        self.format_merge_audio_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""))
-        self.format_merge_video_combo.setCurrentText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""))
-        self.format_string_text.setText(
-            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATSTRING, ""))
+
+        return [
+            (self.url_type_combo, SettingsConst.SETTINGS_VAL_URLTYPE, ""),
+            (self.url_text, SettingsConst.SETTINGS_VAL_URLTEXT, ""),
+            (self.list_path_text, SettingsConst.SETTINGS_VAL_URLLIST, ""),
+            (self.download_path_text,
+                SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""),
+            (self.ffmpeg_path_text,
+                SettingsConst.SETTINGS_VAL_FFMPEGPATH, ffmpeg_path),
+            (self.username_text, SettingsConst.SETTINGS_VAL_USERNAME, ""),
+            (self.password_text, SettingsConst.SETTINGS_VAL_PASSWORD, ""),
+            (self.overwrite_check, SettingsConst.SETTINGS_VAL_OVERWRITE, ""),
+            (self.keepvideo_check, SettingsConst.SETTINGS_VAL_KEEPVIDEO, ""),
+            (self.preferfreeformats_check,
+                SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, ""),
+            (self.downloadsubs_check,
+                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, ""),
+            (self.consoleoutput_check,
+                SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, ""),
+            (self.generatedsubs_check,
+                SettingsConst.SETTINGS_VAL_AUTOGENSUBS, ""),
+            (self.subs_lang_combo,
+                SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE, ""),
+            (self.subs_format_combo,
+                SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT, ""),
+            (self.subs_delay_spin,
+                SettingsConst.SETTINGS_VAL_SUBTITLEDELAY, 0),
+            (self.format_type_combo,
+                SettingsConst.SETTINGS_VAL_FORMATTYPE, ""),
+            (self.format_quality_combo,
+                SettingsConst.SETTINGS_VAL_FORMATQUALITY, ""),
+            (self.format_audext_combo,
+                SettingsConst.SETTINGS_VAL_FORMATAUDEXT, ""),
+            (self.format_vidext_combo,
+                SettingsConst.SETTINGS_VAL_FORMATVIDEXT, ""),
+            (self.format_audcodec_combo,
+                SettingsConst.SETTINGS_VAL_FORMATAUDCODEC, ""),
+            (self.format_vidcodec_combo,
+                SettingsConst.SETTINGS_VAL_FORMATVIDCODEC, ""),
+            (self.format_merge_audio_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""),
+            (self.format_merge_video_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""),
+            (self.format_string_text,
+                SettingsConst.SETTINGS_VAL_FORMATSTRING, "")]
+
+    def load_settings(self):
+        """Loads persistent settings
+        """
+        widgets = self.get_settings_widgets()
+        for widget, settings_key, default in widgets:
+            if isinstance(widget, QLineEdit):
+                widget.setText(self.settings.value(settings_key, default))
+            elif isinstance(widget, QComboBox):
+                widget.setCurrentText(self.settings.value(settings_key,
+                                                          default))
+            elif isinstance(widget, QCheckBox):
+                widget.setChecked(self.value_to_bool(
+                                  self.settings.value(settings_key)))
+            elif isinstance(widget, QSpinBox):
+                widget.setValue(self.settings.value(settings_key,
+                                                    default))
         # Restore widow size
         size = self.size()
         width = int(self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
@@ -551,56 +567,17 @@ class MainWindow(QMainWindow):
     def save_settings(self):
         """Save persistent settingss
         """
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLTYPE,
-                               self.url_type_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLTEXT,
-                               self.url_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLLIST,
-                               self.list_path_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_DOWNLOADPATH,
-                               self.download_path_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FFMPEGPATH,
-                               self.ffmpeg_path_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_USERNAME,
-                               self.username_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_PASSWORD,
-                               self.password_text.text())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_OVERWRITE,
-                               self.overwrite_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_KEEPVIDEO,
-                               self.keepvideo_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS,
-                               self.preferfreeformats_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES,
-                               self.downloadsubs_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT,
-                               self.consoleoutput_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_AUTOGENSUBS,
-                               self.generatedsubs_check.isChecked())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT,
-                               self.subs_format_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE,
-                               self.subs_lang_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLEDELAY,
-                               self.subs_delay_spin.value())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATTYPE,
-                               self.format_type_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATQUALITY,
-                               self.format_quality_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATAUDEXT,
-                               self.format_audext_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATVIDEXT,
-                               self.format_vidext_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATAUDCODEC,
-                               self.format_audcodec_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATVIDCODEC,
-                               self.format_vidcodec_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATMERGEAUD,
-                               self.format_merge_audio_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATMERGEVID,
-                               self.format_merge_video_combo.currentText())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATSTRING,
-                               self.format_string_text.text())
+        widgets = self.get_settings_widgets()
+        for widget, settings_key, _ in widgets:
+            if isinstance(widget, QLineEdit):
+                self.settings.setValue(settings_key, widget.text())
+            elif isinstance(widget, QComboBox):
+                self.settings.setValue(settings_key, widget.currentText())
+            elif isinstance(widget, QCheckBox):
+                self.settings.setValue(settings_key, widget.isChecked())
+            elif isinstance(widget, QSpinBox):
+                self.settings.setValue(settings_key, widget.value())
+        # Save size of main window
         self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
                                self.width())
         self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
@@ -829,13 +806,13 @@ class MainWindow(QMainWindow):
                 ydl_opts["writeautomaticsub"] = True
             else:
                 ydl_opts["writesubtitles"] = True
+            subs_language = self.subs_lang_combo.currentData()
+            ydl_opts["subtitleslangs"] = [subs_language]
             subs_format = self.subs_format_combo.currentText()
             if self.subs_format_combo.currentData():
                 ydl_opts["subtitlesformat"] = subs_format
             else:
                 ydl_opts["convertsubtitles"] = subs_format
-            subs_language = self.subs_lang_combo.currentData()
-            ydl_opts["subtitleslangs"] = [subs_language]
             sleep_interval = self.subs_delay_spin.value()
             ydl_opts["sleep_interval_subtitles"] = sleep_interval
 

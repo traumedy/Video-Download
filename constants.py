@@ -67,7 +67,8 @@ class ComboBoxConst:
     SUBTITLES_FORMAT_LIST = [("vtt", True), ("ttml", True), ("srv3", True),
                              ("srv2", True), ("srv1", True), ("json3", True),
                              ("ass", False), ("lrc", False), ("srt", False)]
-    SUBTITLES_LANGUAGES_LIST = [("Afrikaans", "af"), ("Akan", "ak"),
+    SUBTITLES_LANGUAGES_LIST = [("All languages", "all"),
+                                ("Afrikaans", "af"), ("Akan", "ak"),
                                 ("Albanian", "sq"), ("Amharic", "am"),
                                 ("Arabic", "ar"), ("Armenian", "hy"),
                                 ("Assamese", "as"), ("Aymara", "ay"),
@@ -242,10 +243,10 @@ class ToolTips:
         "console that launched this program. Useful for debugging."
     TTT_GENERATEDSUBS_CHECK = "Download auto-generated caption text. If" \
         "unchecked, actual subtitles will be downloaded."
-    TTT_SUBS_FORMAT_COMBO = "The destination subtitle format. Some formats " \
-        "will be converted."
     TTT_SUBS_LANG_COMBO = "The languages of subtitles to download. The " \
         "languages must be available from the server."
+    TTT_SUBS_FORMAT_COMBO = "The destination subtitle format. Some formats " \
+        "will be converted."
     TTT_SUBS_DELAY_SPIN = "The delay in seconds between subtitle retrieval. " \
         "If too many download requests happen too quickly, some sites will " \
         "abort the activity."
