@@ -1032,6 +1032,7 @@ class MainWindow(QMainWindow):
         Args:
             url (str): URL of video
         """
+        self.enable_active_buttons(False)
         message = f"Trying to retrieve subtitle list for URL {url}"
         self.add_status_message(message)
 
@@ -1045,6 +1046,7 @@ class MainWindow(QMainWindow):
                 error_message = str(e)
                 message = f"Download error: {error_message}"
                 self.add_status_message(message)
+                self.enable_active_buttons(True)
                 return
 
             def parse_subs(self, key, name):
@@ -1099,8 +1101,10 @@ class MainWindow(QMainWindow):
         Args:
             enable (bool): Enable widgets flag
         """
-        self.list_formats_button.setEnabled(enable)
-        self.bottom_buttonbox.setEnabled(enable)
+        widgets = [self.list_formats_button, self.list_subs_button,
+                   self.bottom_buttonbox]
+        for widget in widgets:
+            widget.setEnabled(enable)
 
 
 def main(argv):
