@@ -7,363 +7,29 @@ like YouTube, Vimeo, Instagram, etc using the yt_dlp Python package.
 Author: Josh Buchbinder
 """
 
+__author__ = "Josh Buchbinder"
+__copyright__ = "Copyright 2024, Josh Buchbinder"
+__version__ = "0.1.0"
+
 import sys
 import shutil
 import re
-from html.parser import HTMLParser
+from overrides import override
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
 from PySide6.QtGui import QDesktopServices, QFont, QBrush, QColor
 from PySide6.QtGui import QTextDocument, QTextTable, QTextTableFormat
 from PySide6.QtGui import QTextTableCell, QTextCursor
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
-from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QVBoxLayout, QTextEdit
+from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
-from PySide6.QtWidgets import QProgressBar, QDialog, QDialogButtonBox, QSpinBox
-from PySide6.QtWidgets import QListWidget, QCheckBox, QComboBox, QStyle
+from PySide6.QtWidgets import QProgressBar, QDialogButtonBox, QSpinBox
+from PySide6.QtWidgets import QCheckBox, QComboBox, QStyle
 from PySide6.QtWidgets import QSizePolicy, QStackedWidget
 from yt_dlp import YoutubeDL, utils
-from overrides import override
 
-# Monospace font name used for status window text
-MONOSPACE_FONT_NAME = "Monospace"
-
-# App name string used for settings
-SETTINGS_COMPANYNAME = "MySoft"
-SETTINGS_APPNAME = "Youtube-Download"
-SETTINGS_VAL_URLTYPE = "UrlType"
-SETTINGS_VAL_URLTEXT = "UrlText"
-SETTINGS_VAL_URLLIST = "UrlList"
-SETTINGS_VAL_DOWNLOADPATH = "DownloadPath"
-SETTINGS_VAL_FFMPEGPATH = "FfmpegPath"
-SETTINGS_VAL_USERNAME = "Username"
-SETTINGS_VAL_PASSWORD = "Password"
-SETTINGS_VAL_OVERWRITE = "Overwrite"
-SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
-SETTINGS_VAL_CONSOLEOUTPUT = "ConsoleOutput"
-SETTINGS_VAL_PREFERFREEFORMATS = "PreferFreeFormats"
-SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitles"
-SETTINGS_VAL_SUBTITLEFORMAT = "SubtitleFormat"
-SETTINGS_VAL_SUBTITLESGENERATED = "SubtitlesGenerated"
-SETTINGS_VAL_SUBTITLELANGUAGE = "SubtitleLanguage"
-SETTINGS_VAL_SUBTITLEDELAY = "SubtitleDelay"
-SETTINGS_VAL_FORMATTYPE = "FormatType"
-SETTINGS_VAL_FORMATQUALITY = "FormatQuality"
-SETTINGS_VAL_FORMATAUDEXT = "FormatAudExt"
-SETTINGS_VAL_FORMATVIDEXT = "FormatVidExt"
-SETTINGS_VAL_FORMATAUDCODEC = "FormatAudCodec"
-SETTINGS_VAL_FORMATVIDCODEC = "FormatVidCodec"
-SETTINGS_VAL_FORMATMERGEAUD = "FormatMergeAud"
-SETTINGS_VAL_FORMATMERGEVID = "FormatMergeVid"
-SETTINGS_VAL_FORMATSTRING = "FormatString"
-SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
-SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
-
-url_type_labels = ["Single URL:", "URL List:"]
-
-URL_TYPE_SINGLE = 0
-URL_TYPE_LIST = 1
-
-SUBTITLES_FORMAT_LIST = [("vtt", True), ("ttml", True), ("srv3", True),
-                         ("srv2", True), ("srv1", True), ("json3", True),
-                         ("ass", False), ("lrc", False), ("srt", False)]
-SUBTITLES_LANGUAGES_LIST = [("Afrikaans", "af"), ("Akan", "ak"),
-                            ("Albanian", "sq"), ("Amharic", "am"),
-                            ("Arabic", "ar"), ("Armenian", "hy"),
-                            ("Assamese", "as"), ("Aymara", "ay"),
-                            ("Azerbaijani", "az"), ("Bangla", "bn"),
-                            ("Basque", "eu"), ("Belarusian", "be"),
-                            ("Bhojpuri", "bho"), ("Bosnian", "bs"),
-                            ("Bulgarian", "bg"), ("Burmese", "my"),
-                            ("Catalan", "ca"), ("Cebuano", "ceb"),
-                            ("Chinese (Simplified)", "zh-Hans"),
-                            ("Chinese (Traditional)", "zh-Hant"),
-                            ("Corsican", "co"), ("Croatian", "hr"),
-                            ("Czech", "cs"), ("Danish", "da"),
-                            ("Divehi", "dv"), ("Dutch", "nl"),
-                            ("English (Original)", "en-orig"),
-                            ("English", "en"),
-                            ("Esperanto", "eo"), ("Estonian", "et"),
-                            ("Ewe", "ee"), ("Filipino", "fil"),
-                            ("Finnish", "fi"), ("French", "fr"),
-                            ("Galician", "gl"), ("Ganda", "lg"),
-                            ("Georgian", "ka"), ("German", "de"),
-                            ("Greek", "el"), ("Guarani", "gn"),
-                            ("Gujarati", "gu"), ("Haitian Creole", "ht"),
-                            ("Hausa", "ha"), ("Hawaiian", "haw"),
-                            ("Hebrew", "iw"), ("Hindi", "hi"),
-                            ("Hmong", "hmn"), ("Hungarian", "hu"),
-                            ("Icelandic", "is"), ("Igbo", "ig"),
-                            ("Indonesian", "id"), ("Irish", "ga"),
-                            ("Italian", "it"), ("Japanese", "ja"),
-                            ("Javanese", "jv"), ("Kannada", "kn"),
-                            ("Kazakh", "kk"), ("Khmer", "km"),
-                            ("Kinyarwanda", "rw"), ("Korean", "ko"),
-                            ("Krio", "kri"), ("Kurdish", "ku"),
-                            ("Kyrgyz", "ky"), ("Lao", "lo"),
-                            ("Latin", "la"), ("Latvian", "lv"),
-                            ("Lingala", "ln"), ("Lithuanian", "lt"),
-                            ("Luxembourgish", "lb"), ("Macedonian", "mk"),
-                            ("Malagasy", "mg"), ("Malay", "ms"),
-                            ("Malayalam", "ml"), ("Maltese", "mt"),
-                            ("Māori", "mi"), ("Marathi", "mr"),
-                            ("Mongolian", "mn"), ("Nepali", "ne"),
-                            ("Northern Sotho", "nso"), ("Norwegian", "no"),
-                            ("Nyanja", "ny"), ("Odia", "or"),
-                            ("Oromo", "om"), ("Pashto", "ps"),
-                            ("Persian", "fa"), ("Polish", "pl"),
-                            ("Portuguese", "pt"), ("Punjabi", "pa"),
-                            ("Quechua", "qu"), ("Romanian", "ro"),
-                            ("Russian", "ru"), ("Samoan", "sm"),
-                            ("Sanskrit", "sa"), ("Scottish Gaelic", "gd"),
-                            ("Serbian", "sr"), ("Shona", "sn"),
-                            ("Sindhi", "sd"), ("Sinhala", "si"),
-                            ("Slovak", "sk"), ("Slovenian", "sl"),
-                            ("Somali", "so"), ("Southern Sotho", "st"),
-                            ("Spanish", "es"), ("Sundanese", "su"),
-                            ("Swahili", "sw"), ("Swedish", "sv"),
-                            ("Tajik", "tg"), ("Tamil", "ta"),
-                            ("Tatar", "tt"), ("Telugu", "te"),
-                            ("Thai", "th"), ("Tigrinya", "ti"),
-                            ("Tsonga", "ts"), ("Turkish", "tr"),
-                            ("Turkmen", "tk"), ("Ukrainian", "uk"),
-                            ("Urdu", "ur"), ("Uyghur", "ug"),
-                            ("Uzbek", "uz"), ("Vietnamese", "vi"),
-                            ("Welsh", "cy"), ("Western Frisian", "fy"),
-                            ("Xhosa", "xh"), ("Yiddish", "yi"),
-                            ("Yoruba", "yo"), ("Zulu", "zu")]
-
-FORMAT_TYPE_AUDVID_BY_QUA = 0
-FORMAT_TYPE_AUD_BY_QUA = 1
-FORMAT_TYPE_VID_BY_QUA = 2
-FORMAT_TYPE_AUDVID_BY_EXT = 3
-FORMAT_TYPE_AUD_BY_EXT = 4
-FORMAT_TYPE_VID_BY_EXT = 5
-FORMAT_TYPE_AUD_BY_CODEC = 6
-FORMAT_TYPE_VID_BY_CODEC = 7
-FORMAT_TYPE_MERGE = 8
-FORMAT_TYPE_RAWSTRING = 9
-
-FORMAT_TYPE_LIST = [
-    ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA),
-    ("Audio only by quality", FORMAT_TYPE_AUD_BY_QUA),
-    ("Video only by quality", FORMAT_TYPE_VID_BY_QUA),
-    ("Audio+Video by extension", FORMAT_TYPE_AUDVID_BY_EXT),
-    ("Audio only by extension", FORMAT_TYPE_AUD_BY_EXT),
-    ("Video only by extension", FORMAT_TYPE_VID_BY_EXT),
-    ("Audio only by codec", FORMAT_TYPE_AUD_BY_CODEC),
-    ("Video only by codec", FORMAT_TYPE_VID_BY_CODEC),
-    ("Merge formats", FORMAT_TYPE_MERGE),
-    ("Raw format string", FORMAT_TYPE_RAWSTRING)
-]
-
-FORMAT_LABELS_QUALITY_LIST = ["Best quality", "Second best quality",
-                              "Third best quality", "Fourth best quality"]
-
-# Output container formats
-FORMAT_EXT_LIST = ["3gp", "aac", "flv", "m4a", "mp3", "mp4", "ogg", "wav",
-                   "webm"]
-FORMAT_EXT_AUD_LIST = ["m4a", "aac", "mp3", "ogg", "opus", "webm"]
-FORMAT_EXT_VID_LIST = ["mp4", "mov", "webm", "flv", "3gp"]
-# Audio and video Codecs
-FORMAT_CODEC_AUD_LIST = ["flac", "alac", "wav", "aiff", "opus", "vorbis",
-                         "aac", "mp4a", "mp3", "ac4", "eac3", "ac3", "dts"]
-FORMAT_CODEC_VID_LIST = [("av01", "av01"), ("vp9.2", "vp09.2"),
-                         ("vp9", "vp09"), ("avc1/h264", "avc1"),
-                         ("hevc/h265", "h265"),
-                         ("vp8", "vp08"), ("h263", "h263"),
-                         ("theora", "theora")]
-# Merge options
-FORMAT_MERGE_AUD_LIST = [("Best audio", "bestaudio"),
-                         ("All audio only", "mergeall[vcodec=none]"),
-                         ("Codec flac", "ba[acodec~=flac]"),
-                         ("Codec alac", "ba[acodec~=alac]"),
-                         ("Codec wav", "ba[acodec~=wav]"),
-                         ("Codec aiff", "ba[acodec~=aiff]"),
-                         ("Codec opus", "ba[acodec~=opus]"),
-                         ("Codec vorbis", "ba[acodec~=vorbis]"),
-                         ("Codec aac", "ba[acodec~=aac]"),
-                         ("Codec mp4a", "ba[acodec~=mp4a]"),
-                         ("Codec mp3", "ba[acodec~=mp3]"),
-                         ("Codec ac4", "ba[acodec~=ac4]"),
-                         ("Codec eac3", "ba[acodec~=eac3]"),
-                         ("Codec ac3", "ba[acodec~=ac3]"),
-                         ("Codec dts", "ba[acodec~=dts]"),
-                         ("Extension m4a", "be[ext=m4a]"),
-                         ("Extension aac", "be[ext=aac]"),
-                         ("Extension mp3", "be[ext=mp3]"),
-                         ("Extension ogg", "be[ext=ogg]"),
-                         ("Extension opus", "be[ext=opus]"),
-                         ("Extension webm", "be[ext=webm]")]
-FORMAT_MERGE_VID_LIST = [("Best video", "bestvideo"),
-                         ("All video only", "mergeall[acodec=none"),
-                         ("Codec av01", "bv*[vcodec~=av01]"),
-                         ("Codec vp9.2", "bv*[vcodec~=vp09.2]"),
-                         ("Codec vp9", "bv*[vcodec~=vp09]"),
-                         ("Codec hevc/h265", "bv*[vcodec~=h265]"),
-                         ("Codec avc1/h264", "bv*[vcodec~=avc1]"),
-                         ("Codec vp8", "bv*[vcodec~=vp08]"),
-                         ("Codec h263", "bv*[vcodec~=h263]"),
-                         ("Codec theora", "bv*[vcodec~=theora]"),
-                         ("Extension mp4", "bv*[ext=mp4]"),
-                         ("Extension mov", "bv*[ext=mov]"),
-                         ("Extension webm", "bv*[ext=webm]"),
-                         ("Extension flv", "bv*[ext=flv]"),
-                         ("Extension 3gp", "bv*[ext=3gp]")]
-
-# URL list file extensions
-URLLIST_EXTENSIONS = ["html", "txt"]
-
-# URL for format string help
-FORMAT_STRING_HELP_URL = "https://github.com/yt-dlp/yt-dlp/blob/"\
-    "master/README.md#format-selection"
-
-# HTML Document types, not really used
-DOCTYPE_UNKNOWN = 0
-DOCTYPE_NETSCAPE = 1
-DOCTYPE_SAFARI = 2
-
-# Regex to strip color codes from string
-REGEX_COLORSTRIP = r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]'
-
-
-class FolderSelectDialog(QDialog):
-    """Simple dialog box allowing selection of an item from a list
-    """
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setWindowTitle("Select bookmark folder")
-        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        self.button_box = QDialogButtonBox(buttons)
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
-
-        self.layout = QVBoxLayout()
-        message = QLabel("Select the folder of URLs or none for all folders")
-        self.folder_listbox = QListWidget()
-        self.layout.addWidget(message)
-        self.layout.addWidget(self.folder_listbox)
-        self.layout.addWidget(self.button_box)
-        self.setLayout(self.layout)
-
-    def set_list(self, folder_list):
-        """Sets string list for selection
-
-        Args:
-            folder_list ([str]): List of strings for selection
-        """
-        self.folder_listbox.insertItems(0, folder_list)
-
-    def get_selected(self):
-        """Returns string of selected item
-
-        Returns:
-            str: String of selected item or empty string if none selected
-        """
-        # List should be in single selection mode so return first item
-        for item in self.folder_listbox.selectedItems():
-            return item.text()
-        return ""
-
-
-class BookmarkHTMLParser(HTMLParser):
-    """HTML parsing class derived from HTMLParser
-    """
-    # List of extracted URLs
-    url_dict = {}
-    # Current document type
-    doctype = DOCTYPE_UNKNOWN
-    # Current tag
-    current_tag = ""
-    # Flag for in H3 tag
-    in_folder_title = False
-    # Current folder name
-    current_folder = ""
-    # Parent window for dialog
-    parent_widget = None
-
-    def __init__(self, parent=None):
-        super().__init__()
-        # Store parent widget for folder dialog
-        self.parent_widget = parent
-        # Handle case of URLs before a folder name
-        self.url_dict[""] = []
-
-    @override
-    def handle_decl(self, decl):
-        """Overriden method, handles doctype decleration tags
-
-        Args:
-            decl (str): DOCTYPE string
-        """
-        # Beginning of document, clear dictionary
-        if decl == "DOCTYPE NETSCAPE-Bookmark-file-1":
-            self.doctype = DOCTYPE_NETSCAPE
-
-    @override
-    def handle_starttag(self, tag, attrs):
-        """Overriden method, handles tag opening
-
-        Args:
-            tag (str): Tag name
-            attrs (dict): Dictionary of attributes for start tag
-        """
-        if "h3" == tag:
-            self.in_folder_title = True
-        elif "a" == tag:
-            # URLs are stored in href attribute of a tags
-            for attr in attrs:
-                if "href" == attr[0]:
-                    self.url_dict[self.current_folder].append(attr[1])
-
-    @override
-    def handle_endtag(self, tag):
-        """Overriden method, handles tag closing
-
-        Args:
-            tag (str): Tag name
-        """
-        if "h3" == tag:
-            self.in_folder_title = False
-
-    def handle_data(self, data):
-        """Overriden method, handles data between tags
-
-        Args:
-            data (str): The data between tags
-        """
-        # Folder names are stored in data of H3 tags
-        if self.in_folder_title:
-            self.current_folder = data
-            self.url_dict[self.current_folder] = []
-
-    def get_url_list(self):
-        """Returns list of URL strings
-
-        Returns:
-            [str]: Extracted URLs or empty list
-        """
-        # Make list of folder names that actually contain URLs
-        folders = [key for key, val in self.url_dict.items() if val]
-        if len(folders) == 1:
-            # Only one folder, just return all the values
-            return list(self.url_dict[folders[0]])
-        if len(folders) > 1:
-            dialog = FolderSelectDialog(self.parent_widget)
-            dialog.set_list(folders)
-            if dialog.exec():
-                folder = dialog.get_selected()
-                if folder:
-                    # Just return the list in the dictionary
-                    return self.url_dict[folder]
-                # No folder selected, combine all the folder lists into one
-                url_list = []
-                for urls in list(self.url_dict.values()):
-                    url_list.extend(urls)
-                return url_list
-        # Return empty URL list of no folders were found
-        return []
+from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips
+from bookmark_html_parser import BookmarkHTMLParser
+from utils import table_add_row, table_create
 
 
 class MainWindow(QMainWindow):
@@ -387,14 +53,14 @@ class MainWindow(QMainWindow):
     overwrite_check: QCheckBox
     keepvideo_check: QCheckBox
     preferfreeformats_check: QCheckBox
-    downloadsubtitles_check: QCheckBox
+    downloadsubs_check: QCheckBox
     consoleoutput_check: QCheckBox
     subtitles_layout: QHBoxLayout
-    subtitles_generated: QCheckBox
-    subtitles_format_combo: QComboBox
-    subtitles_languages_combo: QComboBox
-    subtitles_delay_spin: QSpinBox
-    list_subtitles_button: QPushButton
+    generatedsubs_check: QCheckBox
+    subs_format_combo: QComboBox
+    subs_lang_combo: QComboBox
+    subs_delay_spin: QSpinBox
+    list_subs_button: QPushButton
     format_stacked_widget: QStackedWidget
     format_type_combo: QComboBox
     format_quality_combo: QComboBox
@@ -442,7 +108,8 @@ class MainWindow(QMainWindow):
         self.create_mainwindow_tooltips()
 
         # Persistent settings object
-        self.settings = QSettings(SETTINGS_COMPANYNAME, SETTINGS_APPNAME)
+        self.settings = QSettings(SettingsConst.SETTINGS_COMPANYNAME,
+                                  SettingsConst.SETTINGS_APPNAME)
         # Used to store downloaded filenames from progress hook callback
         self.download_filenames = []
 
@@ -454,7 +121,7 @@ class MainWindow(QMainWindow):
         self.load_settings()
 
         # Possibly hide subtitles row
-        visible = self.downloadsubtitles_check.isChecked()
+        visible = self.downloadsubs_check.isChecked()
         self.main_layout.setRowVisible(self.subtitles_layout, visible)
 
     def create_mainwindow_widgets(self):
@@ -477,13 +144,13 @@ class MainWindow(QMainWindow):
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
         self.preferfreeformats_check = QCheckBox("Prefer free formats")
-        self.downloadsubtitles_check = QCheckBox("Download subtitles")
+        self.downloadsubs_check = QCheckBox("Download subtitles")
         self.consoleoutput_check = QCheckBox("Console output")
-        self.subtitles_generated = QCheckBox("Auto-generated subtitles")
-        self.subtitles_format_combo = QComboBox()
-        self.subtitles_languages_combo = QComboBox()
-        self.subtitles_delay_spin = QSpinBox()
-        self.list_subtitles_button = QPushButton("List subtitles")
+        self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
+        self.subs_format_combo = QComboBox()
+        self.subs_lang_combo = QComboBox()
+        self.subs_delay_spin = QSpinBox()
+        self.list_subs_button = QPushButton("List subtitles")
         self.subtitles_layout = QHBoxLayout()
         self.format_stacked_widget = QStackedWidget()
         self.format_type_combo = QComboBox()
@@ -508,7 +175,7 @@ class MainWindow(QMainWindow):
         # Set widget properties
 
         # Populate url type listbox
-        for label in url_type_labels:
+        for label in ComboBoxConst.URL_TYPE_LABELS:
             self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
         #  QLineEdit fields to expand to fill
@@ -538,19 +205,19 @@ class MainWindow(QMainWindow):
                                                  QSizePolicy.Policy.Fixed)
         # Prevent various other widgets from expanding (some of these don't
         # work)
-        widgets = [self.subtitles_format_combo, self.subtitles_languages_combo,
-                   self.list_subtitles_button, self.format_type_combo,
+        widgets = [self.subs_format_combo, self.subs_lang_combo,
+                   self.list_subs_button, self.format_type_combo,
                    self.format_quality_combo, self.format_audext_combo,
                    self.format_vidext_combo, self.format_audcodec_combo,
                    self.format_vidcodec_combo, self.format_merge_audio_combo,
-                   self.format_merge_video_combo, self.subtitles_delay_spin]
+                   self.format_merge_video_combo, self.subs_delay_spin]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
         # Set status QTextEdit to read only for status logs
         self.status_text.setReadOnly(True)
         # Set status to fix font family
-        font = QFont(MONOSPACE_FONT_NAME)
+        font = QFont(AppConst.MONOSPACE_FONT_NAME)
         font.setStyleHint(QFont.StyleHint.TypeWriter)
         font.setWeight(QFont.Weight.Black)
         self.status_text.setFont(font)
@@ -560,28 +227,28 @@ class MainWindow(QMainWindow):
         self.status_text.setAcceptRichText(True)
 
         # Populate subtitles combo boxes
-        for label, built_in in SUBTITLES_FORMAT_LIST:
-            self.subtitles_format_combo.addItem(label, built_in)
-        self.subtitles_languages_combo.addItem("All languages", "all")
-        for lang, lang_code in SUBTITLES_LANGUAGES_LIST:
-            self.subtitles_languages_combo.addItem(lang, lang_code)
+        for label, built_in in ComboBoxConst.SUBTITLES_FORMAT_LIST:
+            self.subs_format_combo.addItem(label, built_in)
+        self.subs_lang_combo.addItem("All languages", "all")
+        for lang, lang_code in ComboBoxConst.SUBTITLES_LANGUAGES_LIST:
+            self.subs_lang_combo.addItem(lang, lang_code)
 
         # Populate format selection combo boxes
-        for label, idx in FORMAT_TYPE_LIST:
+        for label, idx in ComboBoxConst.FORMAT_TYPE_LIST:
             self.format_type_combo.addItem(label, idx)
-        for idx, label in enumerate(FORMAT_LABELS_QUALITY_LIST):
+        for idx, label in enumerate(ComboBoxConst.FORMAT_LABELS_QUALITY_LIST):
             self.format_quality_combo.addItem(label, "." + str(idx + 1))
-        for ext in FORMAT_EXT_AUD_LIST:
+        for ext in ComboBoxConst.FORMAT_EXT_AUD_LIST:
             self.format_audext_combo.addItem(ext, ext)
-        for ext in FORMAT_EXT_VID_LIST:
+        for ext in ComboBoxConst.FORMAT_EXT_VID_LIST:
             self.format_vidext_combo.addItem(ext, ext)
-        for codec in FORMAT_CODEC_AUD_LIST:
+        for codec in ComboBoxConst.FORMAT_CODEC_AUD_LIST:
             self.format_audcodec_combo.addItem(codec, codec)
-        for label, codec in FORMAT_CODEC_VID_LIST:
+        for label, codec in ComboBoxConst.FORMAT_CODEC_VID_LIST:
             self.format_vidcodec_combo.addItem(label, codec)
-        for label, fstr in FORMAT_MERGE_AUD_LIST:
+        for label, fstr in ComboBoxConst.FORMAT_MERGE_AUD_LIST:
             self.format_merge_audio_combo.addItem(label, fstr)
-        for label, fstr in FORMAT_MERGE_VID_LIST:
+        for label, fstr in ComboBoxConst.FORMAT_MERGE_VID_LIST:
             self.format_merge_video_combo.addItem(label, fstr)
 
         # Populate dialog button box
@@ -624,20 +291,20 @@ class MainWindow(QMainWindow):
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
         switches_layout.addWidget(self.preferfreeformats_check)
-        # switches_layout.addWidget(self.downloadsubtitles_check)
+        # switches_layout.addWidget(self.downloadsubs_check)
         switches_layout.addWidget(self.consoleoutput_check)
         self.subtitles_layout = QHBoxLayout()
-        self.subtitles_layout.addWidget(self.subtitles_generated)
+        self.subtitles_layout.addWidget(self.generatedsubs_check)
         self.subtitles_layout.addWidget(QLabel("Format:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subtitles_format_combo)
+        self.subtitles_layout.addWidget(self.subs_format_combo)
         self.subtitles_layout.addWidget(QLabel("Language:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subtitles_languages_combo)
+        self.subtitles_layout.addWidget(self.subs_lang_combo)
         self.subtitles_layout.addWidget(QLabel("Delay:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subtitles_delay_spin)
-        self.subtitles_layout.addWidget(self.list_subtitles_button)
+        self.subtitles_layout.addWidget(self.subs_delay_spin)
+        self.subtitles_layout.addWidget(self.list_subs_button)
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
@@ -701,15 +368,15 @@ class MainWindow(QMainWindow):
             self.download_browse_button_clicked)
         self.ffmpeg_path_browse_button.clicked.connect(
             self.ffmpeg_browse_button_clicked)
-        self.downloadsubtitles_check.checkStateChanged.connect(
+        self.downloadsubs_check.checkStateChanged.connect(
             lambda checked: self.main_layout.setRowVisible(
                 self.subtitles_layout, checked == Qt.CheckState.Checked))
-        self.list_subtitles_button.clicked.connect(
+        self.list_subs_button.clicked.connect(
             lambda: self.download_subtitle_formats(self.url_text.text()))
         self.format_type_combo.currentIndexChanged.connect(
             self.format_type_combo_changed)
         self.format_string_help_button.clicked.connect(
-            lambda: QDesktopServices.openUrl(FORMAT_STRING_HELP_URL))
+            lambda: QDesktopServices.openUrl(AppConst.FORMAT_STRING_HELP_URL))
         self.close_button.clicked.connect(
             self.close)
         self.download_button.clicked.connect(
@@ -719,104 +386,49 @@ class MainWindow(QMainWindow):
         """Sets tooltips for main window widgets
         """
         # Set widget tooltips
-        self.url_type_combo.setToolTip(
-            "Select either a single URL to download or a URL list")
-        self.url_text.setToolTip(
-            "The URL of a page with a video to download")
-        self.list_formats_button.setToolTip(
-            "Retrieve the list of video and audio formats available for "
-            "this URL.")
-        self.list_path_text.setToolTip(
-            "The path to the list of URLs to download")
+        self.url_type_combo.setToolTip(ToolTips.TTT_URL_TYPE_COMBO)
+        self.url_text.setToolTip(ToolTips.TTT_URL_TEXT)
+        self.list_formats_button.setToolTip(ToolTips.TTT_LIST_PATH_TEXT)
+        self.list_path_text.setToolTip(ToolTips.TTT_LIST_PATH_TEXT)
         self.list_path_browse_button.setToolTip(
-            "Use dialog to browse to URL list path")
-        self.download_path_text.setToolTip(
-            "The path to the directory to download videos to")
+            ToolTips.TTT_LIST_PATH_BROSE_BUTTON)
+        self.download_path_text.setToolTip(ToolTips.TTT_DOWNLOAD_PATH_TEXT)
         self.download_path_browse_button.setToolTip(
-            "Use dialog to browse to download directory")
-        self.ffmpeg_path_text.setToolTip(
-            "Path to directory containing ffmpeg and ffprobe binaries. "
-            "ffmpeg is only required if you select format options that "
-            "require post processing.")
+            ToolTips.TTT_DOWNLOAD_PATH_BROWSE_BUTTON)
+        self.ffmpeg_path_text.setToolTip(ToolTips.TTT_FFMPEG_PATH_TEXT)
         self.ffmpeg_path_browse_button.setToolTip(
-            "Use fialog to browse to ffmpeg directory")
-        self.username_text.setToolTip(
-            "Username for authentication")
-        self.password_text.setToolTip(
-            "Password for authentication")
-        self.overwrite_check.setToolTip(
-            "Overwrite video files if they exist when downloading")
-        self.keepvideo_check.setToolTip(
-            "Keep video files after post processing")
+            ToolTips.TTT_FFMPEG_PATH_BROWSE_BUTTON)
+        self.username_text.setToolTip(ToolTips.TTT_USERNAME_TEXT)
+        self.password_text.setToolTip(ToolTips.TTT_PASSWORD_TEXT)
+        self.overwrite_check.setToolTip(ToolTips.TTT_OVERWRITE_CHECK)
+        self.keepvideo_check.setToolTip(ToolTips.TTT_KEEPVIDEO_CHECK)
         self.preferfreeformats_check.setToolTip(
-            "Whether to prefer video formats with free containers over "
-            "non-free ones of same quality")
-        self.downloadsubtitles_check.setToolTip(
-            "Download subtitles with video. More options will be revealed "
-            "when checked.")
-        self.consoleoutput_check.setToolTip(
-            "The yt_dlp library will output to the console that launched this "
-            "program. Useful for debugging.")
-        self.subtitles_generated.setToolTip(
-            "Download auto-generated caption text. If unchecked, actual "
-            "subtitles will be downloaded.")
-        self.subtitles_format_combo.setToolTip(
-            "The destination subtitle format. Some formats will be converted.")
-        self.subtitles_languages_combo.setToolTip(
-            "The languages of subtitles to download. The languages must be "
-            "available from the server.")
-        self.subtitles_delay_spin.setToolTip(
-            "The delay in seconds between subtitle retrieval. If too many "
-            "download requests happen too quickly, some sites will abort the "
-            "activity.")
-        self.list_subtitles_button.setToolTip(
-            "Attempt to retrieve a list of available subtitles from the "
-            "server.")
-        self.format_type_combo.setToolTip(
-            "Select which method of format selection to use")
-        self.format_quality_combo.setToolTip(
-            "Select the quality level to download. "
-            "Different quality levels may result in different file types. "
-            "Not all quality levels may be available.")
-        self.format_audext_combo.setToolTip(
-            "Select the audio file extension to download. "
-            "This does not guarantee a specific codec."
-            "Different sites will have different file types available and "
-            "may not offer all types.")
-        self.format_vidext_combo.setToolTip(
-            "Select the video file extension to download. "
-            "This does not guarantee a specific codec. "
-            "Different sites will have different file types available and "
-            "may not offer all types.")
+            ToolTips.TTT_PREFERFREEFORMATS_CHECK)
+        self.downloadsubs_check.setToolTip(ToolTips.TTT_DOWNLOADSUBS_CHECK)
+        self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
+        self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
+        self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
+        self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
+        self.subs_delay_spin.setToolTip(ToolTips.TTT_SUBS_DELAY_SPIN)
+        self.list_subs_button.setToolTip(ToolTips.TTT_LIST_SUBS_BUTTON)
+        self.format_type_combo.setToolTip(ToolTips.TTT_FORMAT_TYPE_COMBO)
+        self.format_quality_combo.setToolTip(ToolTips.TTT_FORMAT_QUALITY_COMBO)
+        self.format_audext_combo.setToolTip(ToolTips.TTT_FORMAT_AUDEXT_COMBO)
+        self.format_vidext_combo.setToolTip(ToolTips.TTT_FORMAT_VIDEXT_COMBO)
         self.format_audcodec_combo.setToolTip(
-            "Select the audio codec to download."
-            "Different sites will have different audio codecs available and "
-            "may not offer all types.")
+            ToolTips.TTT_FORMAT_AUDCODEC_COMBO)
         self.format_vidcodec_combo.setToolTip(
-            "Select the video codec to download."
-            "Different sites will have different video codecs available and "
-            "may not offer all types.")
+            ToolTips.TTT_FORMAT_VIDCODEC_COMBO)
         self.format_merge_audio_combo.setToolTip(
-            "The audio format or formats to be combined into the output file. "
-            "ffmpeg is required.")
+            ToolTips.TTT_FORMAT_MERGE_AUDIO_COMBO)
         self.format_merge_video_combo.setToolTip(
-            "The video format or formats to be combined into the output file. "
-            "ffmpeg is required.")
-        self.format_string_text.setToolTip(
-            "Enter the string representing the format to download. Click "
-            "the Help button for more information.")
+            ToolTips.TTT_FORMAT_MERGE_VIDIO_COMBO)
+        self.format_string_text.setToolTip(ToolTips.TTT_FORMAT_STRING_TEXT)
         self.format_string_help_button.setToolTip(
-            "Launches a browser directed to detailed information about "
-            "creating yt-dlp format strings.")
-        self.status_text.setToolTip(
-            "This window shows status text. You can pinch and zoom the text "
-            "in this window or hold ctrl and use the mouse wheel to change "
-            "the zoom factor, and copy text by dragging and then pressing "
-            "ctrl-c.")
-        self.close_button.setToolTip(
-            "Close this window")
-        self.download_button.setToolTip(
-            "Begin processing URL list and downloading video files")
+            ToolTips.TTT_FORMAT_STRING_HELP_BUTTON)
+        self.status_text.setToolTip(ToolTips.TTT_STATUS_TEXT)
+        self.close_button.setToolTip(ToolTips.TTT_CLOSE_BUTTON)
+        self.download_button.setToolTip(ToolTips.TTT_DOWNLOAD_BUTTON)
 
     @override
     def closeEvent(self, event):
@@ -839,7 +451,7 @@ class MainWindow(QMainWindow):
         if drag_url.isLocalFile():
             drag_file = QFileInfo(drag_url.toLocalFile())
             suffix = drag_file.suffix().lower()
-            if suffix in URLLIST_EXTENSIONS:
+            if suffix in AppConst.URLLIST_EXTENSIONS:
                 event.accept()
                 return
         event.ignore()
@@ -871,13 +483,13 @@ class MainWindow(QMainWindow):
         """Loads persistent settings
         """
         self.url_type_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_URLTYPE, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_URLTYPE, ""))
         self.url_text.setText(
-            self.settings.value(SETTINGS_VAL_URLTEXT, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_URLTEXT, ""))
         self.list_path_text.setText(
-            self.settings.value(SETTINGS_VAL_URLLIST, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_URLLIST, ""))
         self.download_path_text.setText(
-            self.settings.value(SETTINGS_VAL_DOWNLOADPATH, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""))
         # Default to ffmpeg in path
         ffmpeg_path = shutil.which("ffmpeg")
         if ffmpeg_path:
@@ -888,110 +500,110 @@ class MainWindow(QMainWindow):
             # ffmpeg executable not found in path
             ffmpeg_path = ""
         self.ffmpeg_path_text.setText(
-            self.settings.value(SETTINGS_VAL_FFMPEGPATH,
+            self.settings.value(SettingsConst.SETTINGS_VAL_FFMPEGPATH,
                                 ffmpeg_path))
         self.username_text.setText(
-            self.settings.value(SETTINGS_VAL_USERNAME, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_USERNAME, ""))
         self.password_text.setText(
-            self.settings.value(SETTINGS_VAL_PASSWORD, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_PASSWORD, ""))
         self.overwrite_check.setChecked(self.value_to_bool(
-            self.settings.value(SETTINGS_VAL_OVERWRITE)))
+            self.settings.value(SettingsConst.SETTINGS_VAL_OVERWRITE)))
         self.keepvideo_check.setChecked(self.value_to_bool(
-            self.settings.value(SETTINGS_VAL_KEEPVIDEO)))
+            self.settings.value(SettingsConst.SETTINGS_VAL_KEEPVIDEO)))
         self.preferfreeformats_check.setChecked(self.value_to_bool(
-            self.settings.value(SETTINGS_VAL_PREFERFREEFORMATS)))
-        self.downloadsubtitles_check.setChecked(self.value_to_bool(
-            self.settings.value(SETTINGS_VAL_DOWNLOADSUBTITLES)))
-        self.subtitles_generated.setChecked(self.value_to_bool(
-            self.settings.value(SETTINGS_VAL_SUBTITLESGENERATED)))
-        self.subtitles_format_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_SUBTITLEFORMAT))
-        self.subtitles_languages_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_SUBTITLELANGUAGE))
-        self.subtitles_delay_spin.setValue(
-            self.settings.value(SETTINGS_VAL_SUBTITLEDELAY, 0))
+            self.settings.value(SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS)))
+        self.downloadsubs_check.setChecked(self.value_to_bool(
+            self.settings.value(SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES)))
+        self.generatedsubs_check.setChecked(self.value_to_bool(
+            self.settings.value(SettingsConst.SETTINGS_VAL_AUTOGENSUBS)))
+        self.subs_format_combo.setCurrentText(
+            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT))
+        self.subs_lang_combo.setCurrentText(
+            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE))
+        self.subs_delay_spin.setValue(
+            self.settings.value(SettingsConst.SETTINGS_VAL_SUBTITLEDELAY, 0))
         self.format_type_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATTYPE, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATTYPE, ""))
         self.format_quality_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATQUALITY, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATQUALITY, ""))
         self.format_audext_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATAUDEXT, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATAUDEXT, ""))
         self.format_vidext_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATVIDEXT, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATVIDEXT, ""))
         self.format_audcodec_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATAUDCODEC, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATAUDCODEC, ""))
         self.format_vidcodec_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATVIDCODEC, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATVIDCODEC, ""))
         self.format_merge_audio_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATMERGEAUD, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""))
         self.format_merge_video_combo.setCurrentText(
-            self.settings.value(SETTINGS_VAL_FORMATMERGEVID, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""))
         self.format_string_text.setText(
-            self.settings.value(SETTINGS_VAL_FORMATSTRING, ""))
+            self.settings.value(SettingsConst.SETTINGS_VAL_FORMATSTRING, ""))
         # Restore widow size
         size = self.size()
-        width = int(self.settings.value(SETTINGS_VAL_WINDOWWIDTH,
+        width = int(self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
                                         size.width()))
-        height = int(self.settings.value(SETTINGS_VAL_WINDOWHEIGHT,
-                                         size.height()))
+        height = int(self.settings.value(
+            SettingsConst.SETTINGS_VAL_WINDOWHEIGHT, size.height()))
         self.resize(width, height)
 
     def save_settings(self):
         """Save persistent settingss
         """
-        self.settings.setValue(SETTINGS_VAL_URLTYPE,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLTYPE,
                                self.url_type_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_URLTEXT,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLTEXT,
                                self.url_text.text())
-        self.settings.setValue(SETTINGS_VAL_URLLIST,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_URLLIST,
                                self.list_path_text.text())
-        self.settings.setValue(SETTINGS_VAL_DOWNLOADPATH,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_DOWNLOADPATH,
                                self.download_path_text.text())
-        self.settings.setValue(SETTINGS_VAL_FFMPEGPATH,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FFMPEGPATH,
                                self.ffmpeg_path_text.text())
-        self.settings.setValue(SETTINGS_VAL_USERNAME,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_USERNAME,
                                self.username_text.text())
-        self.settings.setValue(SETTINGS_VAL_PASSWORD,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_PASSWORD,
                                self.password_text.text())
-        self.settings.setValue(SETTINGS_VAL_OVERWRITE,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_OVERWRITE,
                                self.overwrite_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_KEEPVIDEO,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_KEEPVIDEO,
                                self.keepvideo_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_PREFERFREEFORMATS,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS,
                                self.preferfreeformats_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_DOWNLOADSUBTITLES,
-                               self.downloadsubtitles_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_CONSOLEOUTPUT,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES,
+                               self.downloadsubs_check.isChecked())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT,
                                self.consoleoutput_check.isChecked())
-        self.settings.setValue(SETTINGS_VAL_SUBTITLESGENERATED,
-                               self.subtitles_generated.isChecked())
-        self.settings.setValue(SETTINGS_VAL_SUBTITLEFORMAT,
-                               self.subtitles_format_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_SUBTITLELANGUAGE,
-                               self.subtitles_languages_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_SUBTITLEDELAY,
-                               self.subtitles_delay_spin.value())
-        self.settings.setValue(SETTINGS_VAL_FORMATTYPE,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_AUTOGENSUBS,
+                               self.generatedsubs_check.isChecked())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT,
+                               self.subs_format_combo.currentText())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE,
+                               self.subs_lang_combo.currentText())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_SUBTITLEDELAY,
+                               self.subs_delay_spin.value())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATTYPE,
                                self.format_type_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATQUALITY,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATQUALITY,
                                self.format_quality_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATAUDEXT,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATAUDEXT,
                                self.format_audext_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATVIDEXT,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATVIDEXT,
                                self.format_vidext_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATAUDCODEC,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATAUDCODEC,
                                self.format_audcodec_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATVIDCODEC,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATVIDCODEC,
                                self.format_vidcodec_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATMERGEAUD,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATMERGEAUD,
                                self.format_merge_audio_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATMERGEVID,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATMERGEVID,
                                self.format_merge_video_combo.currentText())
-        self.settings.setValue(SETTINGS_VAL_FORMATSTRING,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_FORMATSTRING,
                                self.format_string_text.text())
-        self.settings.setValue(SETTINGS_VAL_WINDOWWIDTH,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
                                self.width())
-        self.settings.setValue(SETTINGS_VAL_WINDOWHEIGHT,
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
                                self.height())
 
     def list_formats_button_clicked(self):
@@ -1059,27 +671,28 @@ class MainWindow(QMainWindow):
             new_index (int): Index of newly selected item
         """
         type_id = self.format_type_combo.itemData(new_index)
-        if type_id in [FORMAT_TYPE_AUDVID_BY_QUA,
-                       FORMAT_TYPE_AUD_BY_QUA,
-                       FORMAT_TYPE_VID_BY_QUA]:
+        if type_id in [ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA,
+                       ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA,
+                       ComboBoxConst.FORMAT_TYPE_VID_BY_QUA]:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_quality_combo)
-        elif type_id == FORMAT_TYPE_AUD_BY_EXT:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_audext_combo)
-        elif type_id in [FORMAT_TYPE_VID_BY_EXT, FORMAT_TYPE_AUDVID_BY_EXT]:
+        elif type_id in [ComboBoxConst.FORMAT_TYPE_VID_BY_EXT,
+                         ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT]:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_vidext_combo)
-        elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_CODEC:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_audcodec_combo)
-        elif type_id == FORMAT_TYPE_VID_BY_CODEC:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_vidcodec_combo)
-        elif type_id == FORMAT_TYPE_MERGE:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_merge_layout_widget)
-        elif type_id == FORMAT_TYPE_RAWSTRING:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_RAWSTRING:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_string_layout_widget)
 
@@ -1095,7 +708,7 @@ class MainWindow(QMainWindow):
             return
         url_list = []
         url_type_index = self.url_type_combo.currentIndex()
-        if url_type_index == URL_TYPE_SINGLE:
+        if url_type_index == ComboBoxConst.URL_TYPE_SINGLE:
             url = self.url_text.text()
             if not url:
                 QMessageBox.warning(self, "Missing download URL",
@@ -1103,7 +716,7 @@ class MainWindow(QMainWindow):
                                     QMessageBox.StandardButton.Ok)
                 return
             url_list = [url]
-        elif url_type_index == URL_TYPE_LIST:
+        elif url_type_index == ComboBoxConst.URL_TYPE_LIST:
             file_info = QFileInfo(self.list_path_text.text())
             if not file_info.exists():
                 QMessageBox.warning(self, "Missing URL list",
@@ -1211,56 +824,56 @@ class MainWindow(QMainWindow):
             ydl_opts["keepvideo"] = True
         if self.preferfreeformats_check.isChecked():
             ydl_opts["prefer_free_formats"] = True
-        if self.downloadsubtitles_check.isChecked():
-            if self.subtitles_generated.isChecked():
+        if self.downloadsubs_check.isChecked():
+            if self.generatedsubs_check.isChecked():
                 ydl_opts["writeautomaticsub"] = True
             else:
                 ydl_opts["writesubtitles"] = True
-            subs_format = self.subtitles_format_combo.currentText()
-            if self.subtitles_format_combo.currentData():
+            subs_format = self.subs_format_combo.currentText()
+            if self.subs_format_combo.currentData():
                 ydl_opts["subtitlesformat"] = subs_format
             else:
                 ydl_opts["convertsubtitles"] = subs_format
-            subs_language = self.subtitles_languages_combo.currentData()
+            subs_language = self.subs_lang_combo.currentData()
             ydl_opts["subtitleslangs"] = [subs_language]
-            sleep_interval = self.subtitles_delay_spin.value()
+            sleep_interval = self.subs_delay_spin.value()
             ydl_opts["sleep_interval_subtitles"] = sleep_interval
 
         # Create format string
         format_str = ""
         type_id = self.format_type_combo.currentData()
-        if type_id in [FORMAT_TYPE_AUDVID_BY_QUA,
-                       FORMAT_TYPE_AUD_BY_QUA,
-                       FORMAT_TYPE_VID_BY_QUA]:
+        if type_id in [ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA,
+                       ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA,
+                       ComboBoxConst.FORMAT_TYPE_VID_BY_QUA]:
             quality_str = self.format_quality_combo.currentData()
-            if type_id == FORMAT_TYPE_AUDVID_BY_QUA:
+            if type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA:
                 format_str = "best" + quality_str
-            elif type_id == FORMAT_TYPE_AUD_BY_QUA:
+            elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA:
                 format_str = "bestaudio" + quality_str
-            elif type_id == FORMAT_TYPE_VID_BY_QUA:
+            elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_QUA:
                 format_str = "bestvideo" + quality_str
-        elif type_id == FORMAT_TYPE_AUDVID_BY_EXT:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT:
             ext = self.format_vidext_combo.currentData()
             format_str = ext
-        elif type_id == FORMAT_TYPE_AUD_BY_EXT:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT:
             ext = self.format_audext_combo.currentData()
             format_str = f"bestaudio[ext={ext}]"
-        elif type_id == FORMAT_TYPE_VID_BY_EXT:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_EXT:
             ext = self.format_vidext_combo.currentData()
             format_str = f"bestvideo[ext={ext}]"
-        elif type_id == FORMAT_TYPE_AUD_BY_CODEC:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_CODEC:
             codec = self.format_audcodec_combo.currentData()
             format_str = f"bestaudio[acodec^={codec}]"
-        elif type_id == FORMAT_TYPE_VID_BY_CODEC:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC:
             codec = self.format_vidcodec_combo.currentData()
             format_str = f"bestvideo[vcodec^={codec}]"
-        elif type_id == FORMAT_TYPE_MERGE:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
             audtype = self.format_merge_audio_combo.currentData()
             vidtype = self.format_merge_video_combo.currentData()
             format_str = f"{audtype}+{vidtype}"
             ydl_opts["allow_multiple_audio_streams"] = True
             ydl_opts["allow_multiple_video_streams"] = True
-        elif type_id == FORMAT_TYPE_RAWSTRING:
+        elif type_id == ComboBoxConst.FORMAT_TYPE_RAWSTRING:
             format_str = self.format_string_text.text()
         if format_str:
             message = f"Using format string: {format_str}"
@@ -1352,50 +965,6 @@ class MainWindow(QMainWindow):
         # Drive message loop
         QApplication.processEvents()
 
-    def table_add_row(self, table, fields, header=False):
-        """Adds a row to a QTextTable
-
-        Args:
-            table (QTextTable): Table to be modified
-            fields ([str]): List of fiends to add
-            header (bool): True if this is the header (Default: False)
-        """
-        cursor = QTextCursor()
-        if not header:
-            table.appendRows(1)
-        row = table.rows() - 1
-        for idx, field in enumerate(fields):
-            cell = table.cellAt(row, idx)
-            cursor = cell.firstCursorPosition()
-            if header:
-                fmt = cell.format()
-                fmt.setFontWeight(QFont.Weight.Bold)
-                fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
-                cell.setFormat(fmt)
-            if field:
-                cursor.insertText(str(field))
-
-    def table_create(self, name, headers):
-        """Creates a QTextDocument and a QTextTable with headers
-
-        Args:
-            name (str): Name of table for display
-            headers ([str]): Headers for table, also definess number of columns
-
-        Returns:
-            (QTextDocument, QTextTable): Document and table
-        """
-        text_doc = QTextDocument()
-        table_format = QTextTableFormat()
-        table_format.setCellPadding(len(headers))
-        table_format.setCellSpacing(0)
-        cursor = QTextCursor(text_doc)
-        table = cursor.insertTable(1, len(headers), table_format)
-        self.table_add_row(table, [name], True)
-        table.appendRows(1)
-        self.table_add_row(table, headers, True)
-        return text_doc, table
-
     def download_url_formats(self, url):
         """Download and display the formats avilable at url
 
@@ -1427,7 +996,7 @@ class MainWindow(QMainWindow):
 
             headers = ["ID", "Extension", "Audio codec", "Video codec",
                        "Resolution", "Bitrate", "Size", "Note"]
-            text_doc, table = self.table_create("File formats", headers)
+            text_doc, table = table_create("File formats", headers)
 
             for fmt in format_list:
                 # Tupple is key, is_numeric, suffix
@@ -1450,7 +1019,7 @@ class MainWindow(QMainWindow):
                         text += suffix
                     fields.append(text)
                 # Add fields to table
-                self.table_add_row(table, fields)
+                table_add_row(table, fields)
             # Add table to status window
             self.status_text.append(text_doc.toHtml())
 
@@ -1486,14 +1055,14 @@ class MainWindow(QMainWindow):
                 else:
                     subtitles_list = meta[key]
                     headers = ["Code", "Name", "Format"]
-                    text_doc, table = self.table_create(name, headers)
+                    text_doc, table = table_create(name, headers)
                     for key, value in subtitles_list.items():
                         for sub in value:
                             fields = []
                             fields.append(key)
                             fields.append(sub["name"] if "name" in sub else "")
                             fields.append(sub["ext"] if "ext" in sub else "")
-                            self.table_add_row(table, fields)
+                            table_add_row(table, fields)
                     # Add table to status window
                     self.status_text.append(text_doc.toHtml())
 
@@ -1509,7 +1078,7 @@ class MainWindow(QMainWindow):
         Returns:
             str: message with color escape codes removed
         """
-        regex = re.compile(REGEX_COLORSTRIP)
+        regex = re.compile(AppConst.REGEX_COLORSTRIP)
         return regex.sub("", message)
 
     def add_status_message(self, message):
