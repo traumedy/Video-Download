@@ -29,7 +29,7 @@ from yt_dlp import YoutubeDL, utils
 
 from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips
 from bookmark_html_parser import BookmarkHTMLParser
-from utils import table_add_row, table_create
+from utils import table_add_row, table_create, value_to_bool
 
 
 class MainWindow(QMainWindow):
@@ -50,17 +50,13 @@ class MainWindow(QMainWindow):
     ffmpeg_path_browse_button: QPushButton
     username_text: QLineEdit
     password_text: QLineEdit
+    specifyformat_check: QCheckBox
+    downloadsubs_check: QCheckBox
     overwrite_check: QCheckBox
     keepvideo_check: QCheckBox
     preferfreeformats_check: QCheckBox
-    downloadsubs_check: QCheckBox
     consoleoutput_check: QCheckBox
-    subtitles_layout: QHBoxLayout
-    generatedsubs_check: QCheckBox
-    subs_lang_combo: QComboBox
-    subs_format_combo: QComboBox
-    subs_delay_spin: QSpinBox
-    list_subs_button: QPushButton
+    format_layout: QHBoxLayout
     format_stacked_widget: QStackedWidget
     format_type_combo: QComboBox
     format_quality_combo: QComboBox
@@ -74,6 +70,12 @@ class MainWindow(QMainWindow):
     format_string_layout_widget: QWidget
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
+    subtitles_layout: QHBoxLayout
+    generatedsubs_check: QCheckBox
+    subs_lang_combo: QComboBox
+    subs_format_combo: QComboBox
+    subs_delay_spin: QSpinBox
+    list_subs_button: QPushButton
     status_text: QTextEdit
     file_progress: QProgressBar
     total_progress: QProgressBar
@@ -120,9 +122,11 @@ class MainWindow(QMainWindow):
         # Load persistent settings including stored window size
         self.load_settings()
 
-        # Possibly hide subtitles row
+        # Possibly hide formats and subtitles rows
         visible = self.downloadsubs_check.isChecked()
         self.main_layout.setRowVisible(self.subtitles_layout, visible)
+        visible = self.specifyformat_check.isChecked()
+        self.main_layout.setRowVisible(self.format_layout, visible)
 
     def create_mainwindow_widgets(self):
         """Create widgets for window
@@ -141,17 +145,13 @@ class MainWindow(QMainWindow):
         self.ffmpeg_path_browse_button = QPushButton("Browse...")
         self.username_text = QLineEdit()
         self.password_text = QLineEdit()
+        self.specifyformat_check = QCheckBox("Specify format")
+        self.downloadsubs_check = QCheckBox("Subtitles")
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepvideo_check = QCheckBox("Keep video")
         self.preferfreeformats_check = QCheckBox("Prefer free formats")
-        self.downloadsubs_check = QCheckBox("Download subtitles")
         self.consoleoutput_check = QCheckBox("Console output")
-        self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
-        self.subs_lang_combo = QComboBox()
-        self.subs_format_combo = QComboBox()
-        self.subs_delay_spin = QSpinBox()
-        self.list_subs_button = QPushButton("List subtitles")
-        self.subtitles_layout = QHBoxLayout()
+        self.format_layout = QHBoxLayout()
         self.format_stacked_widget = QStackedWidget()
         self.format_type_combo = QComboBox()
         self.format_quality_combo = QComboBox()
@@ -165,6 +165,12 @@ class MainWindow(QMainWindow):
         self.format_string_layout_widget = QWidget()
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
+        self.subtitles_layout = QHBoxLayout()
+        self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
+        self.subs_lang_combo = QComboBox()
+        self.subs_format_combo = QComboBox()
+        self.subs_delay_spin = QSpinBox()
+        self.list_subs_button = QPushButton("List subtitles")
         self.status_text = QTextEdit()
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
@@ -178,34 +184,24 @@ class MainWindow(QMainWindow):
         for label in ComboBoxConst.URL_TYPE_LABELS:
             self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
-        #  QLineEdit fields to expand to fill
-        self.list_path_text.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum)
-        self.list_path_browse_button.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum)
-        self.download_path_text.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Maximum)
-        self.download_path_browse_button.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum)
-        self.ffmpeg_path_text.setSizePolicy(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Maximum)
-        self.ffmpeg_path_browse_button.setSizePolicy(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Minimum)
-
+        # QLineEdit fields to expand to fill
+        # (These don't seem to work)
+        widgets = [self.list_path_text, self.download_path_text,
+                   self.ffmpeg_path_text]
+        for widget in widgets:
+            widget.setSizePolicy(QSizePolicy.Policy.Expanding,
+                                 QSizePolicy.Policy.Minimum)
         # Prevent QStackedWidgets from expanding vertically
-        self.url_stacked_widget.setSizePolicy(QSizePolicy.Policy.Expanding,
-                                              QSizePolicy.Policy.Fixed)
-        self.format_stacked_widget.setSizePolicy(QSizePolicy.Policy.Expanding,
-                                                 QSizePolicy.Policy.Fixed)
-        # Prevent various other widgets from expanding (some of these don't
-        # work)
-        widgets = [self.subs_lang_combo, self.subs_format_combo,
+        widgets = [self.url_stacked_widget, self.format_stacked_widget]
+        for widget in widgets:
+            widget.setSizePolicy(QSizePolicy.Policy.Expanding,
+                                 QSizePolicy.Policy.Fixed)
+        # Prevent various other widgets from expanding horizontally
+        # (some of these don't work)
+        widgets = [self.list_path_browse_button,
+                   self.download_path_browse_button,
+                   self.ffmpeg_path_browse_button,
+                   self.subs_lang_combo, self.subs_format_combo,
                    self.list_subs_button, self.format_type_combo,
                    self.format_quality_combo, self.format_audext_combo,
                    self.format_vidext_combo, self.format_audcodec_combo,
@@ -287,23 +283,13 @@ class MainWindow(QMainWindow):
         auth_layout.addWidget(QLabel("Password:"))
         auth_layout.addWidget(self.password_text)
         switches_layout = QHBoxLayout()
+        switches_layout.addWidget(self.specifyformat_check)
+        # Disable this widget to hide subtitles panel
+        switches_layout.addWidget(self.downloadsubs_check)
         switches_layout.addWidget(self.overwrite_check)
         switches_layout.addWidget(self.keepvideo_check)
         switches_layout.addWidget(self.preferfreeformats_check)
-        # switches_layout.addWidget(self.downloadsubs_check)
         switches_layout.addWidget(self.consoleoutput_check)
-        self.subtitles_layout = QHBoxLayout()
-        self.subtitles_layout.addWidget(self.generatedsubs_check)
-        self.subtitles_layout.addWidget(QLabel("Language:",
-                                        alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subs_lang_combo)
-        self.subtitles_layout.addWidget(QLabel("Format:",
-                                        alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subs_format_combo)
-        self.subtitles_layout.addWidget(QLabel("Delay:",
-                                        alignment=Qt.AlignmentFlag.AlignRight))
-        self.subtitles_layout.addWidget(self.subs_delay_spin)
-        self.subtitles_layout.addWidget(self.list_subs_button)
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
@@ -325,9 +311,21 @@ class MainWindow(QMainWindow):
         self.format_stacked_widget.addWidget(self.format_vidcodec_combo)
         self.format_stacked_widget.addWidget(self.format_merge_layout_widget)
         self.format_stacked_widget.addWidget(self.format_string_layout_widget)
-        format_type_layout = QHBoxLayout()
-        format_type_layout.addWidget(self.format_type_combo)
-        format_type_layout.addWidget(self.format_stacked_widget)
+        self.format_layout = QHBoxLayout()
+        self.format_layout.addWidget(self.format_type_combo)
+        self.format_layout.addWidget(self.format_stacked_widget)
+        self.subtitles_layout = QHBoxLayout()
+        self.subtitles_layout.addWidget(self.generatedsubs_check)
+        self.subtitles_layout.addWidget(QLabel("Language:",
+                                        alignment=Qt.AlignmentFlag.AlignRight))
+        self.subtitles_layout.addWidget(self.subs_lang_combo)
+        self.subtitles_layout.addWidget(QLabel("Format:",
+                                        alignment=Qt.AlignmentFlag.AlignRight))
+        self.subtitles_layout.addWidget(self.subs_format_combo)
+        self.subtitles_layout.addWidget(QLabel("Delay:",
+                                        alignment=Qt.AlignmentFlag.AlignRight))
+        self.subtitles_layout.addWidget(self.subs_delay_spin)
+        self.subtitles_layout.addWidget(self.list_subs_button)
 
         # By default the layout is too tall for the QStackedWidget
         url_layout.setContentsMargins(0, 0, 0, 0)
@@ -344,8 +342,8 @@ class MainWindow(QMainWindow):
         self.main_layout.addRow("FFMPEG path:", ffmpeg_layout)
         self.main_layout.addRow("Authentication:", auth_layout)
         self.main_layout.addRow("Switches:", switches_layout)
+        self.main_layout.addRow("Format selection:", self.format_layout)
         self.main_layout.addRow("Subtitles:", self.subtitles_layout)
-        self.main_layout.addRow("Format selection:", format_type_layout)
         self.main_layout.addRow(self.status_text)
         self.main_layout.addRow("File progress", self.file_progress)
         self.main_layout.addRow("Total progress", self.total_progress)
@@ -367,6 +365,9 @@ class MainWindow(QMainWindow):
             self.download_browse_button_clicked)
         self.ffmpeg_path_browse_button.clicked.connect(
             self.ffmpeg_browse_button_clicked)
+        self.specifyformat_check.checkStateChanged.connect(
+            lambda checked: self.main_layout.setRowVisible(
+                self.format_layout, checked == Qt.CheckState.Checked))
         self.downloadsubs_check.checkStateChanged.connect(
             lambda checked: self.main_layout.setRowVisible(
                 self.subtitles_layout, checked == Qt.CheckState.Checked))
@@ -399,11 +400,12 @@ class MainWindow(QMainWindow):
             ToolTips.TTT_FFMPEG_PATH_BROWSE_BUTTON)
         self.username_text.setToolTip(ToolTips.TTT_USERNAME_TEXT)
         self.password_text.setToolTip(ToolTips.TTT_PASSWORD_TEXT)
+        self.specifyformat_check.setToolTip(ToolTips.TTT_SPECIFYFORMAT_CHECK)
+        self.downloadsubs_check.setToolTip(ToolTips.TTT_DOWNLOADSUBS_CHECK)
         self.overwrite_check.setToolTip(ToolTips.TTT_OVERWRITE_CHECK)
         self.keepvideo_check.setToolTip(ToolTips.TTT_KEEPVIDEO_CHECK)
         self.preferfreeformats_check.setToolTip(
             ToolTips.TTT_PREFERFREEFORMATS_CHECK)
-        self.downloadsubs_check.setToolTip(ToolTips.TTT_DOWNLOADSUBS_CHECK)
         self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
         self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
         self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
@@ -470,14 +472,6 @@ class MainWindow(QMainWindow):
             return
         event.ignore()
 
-    @staticmethod
-    def value_to_bool(value):
-        """Helper function to convert QSettings.value() to bool
-        """
-        return value.lower() == 'true'\
-            if isinstance(value, str)\
-            else bool(value)
-
     def get_settings_widgets(self):
         """Returns list of widgets and their associated settings key string
             and their default values
@@ -505,12 +499,14 @@ class MainWindow(QMainWindow):
                 SettingsConst.SETTINGS_VAL_FFMPEGPATH, ffmpeg_path),
             (self.username_text, SettingsConst.SETTINGS_VAL_USERNAME, ""),
             (self.password_text, SettingsConst.SETTINGS_VAL_PASSWORD, ""),
+            (self.specifyformat_check,
+                SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, ""),
+            (self.downloadsubs_check,
+                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, ""),
             (self.overwrite_check, SettingsConst.SETTINGS_VAL_OVERWRITE, ""),
             (self.keepvideo_check, SettingsConst.SETTINGS_VAL_KEEPVIDEO, ""),
             (self.preferfreeformats_check,
                 SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, ""),
-            (self.downloadsubs_check,
-                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, ""),
             (self.consoleoutput_check,
                 SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, ""),
             (self.generatedsubs_check,
@@ -551,7 +547,7 @@ class MainWindow(QMainWindow):
                 widget.setCurrentText(self.settings.value(settings_key,
                                                           default))
             elif isinstance(widget, QCheckBox):
-                widget.setChecked(self.value_to_bool(
+                widget.setChecked(value_to_bool(
                                   self.settings.value(settings_key)))
             elif isinstance(widget, QSpinBox):
                 widget.setValue(self.settings.value(settings_key,
@@ -816,46 +812,47 @@ class MainWindow(QMainWindow):
             sleep_interval = self.subs_delay_spin.value()
             ydl_opts["sleep_interval_subtitles"] = sleep_interval
 
-        # Create format string
-        format_str = ""
-        type_id = self.format_type_combo.currentData()
-        if type_id in [ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA,
-                       ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA,
-                       ComboBoxConst.FORMAT_TYPE_VID_BY_QUA]:
-            quality_str = self.format_quality_combo.currentData()
-            if type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA:
-                format_str = "best" + quality_str
-            elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA:
-                format_str = "bestaudio" + quality_str
-            elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_QUA:
-                format_str = "bestvideo" + quality_str
-        elif type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT:
-            ext = self.format_vidext_combo.currentData()
-            format_str = ext
-        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT:
-            ext = self.format_audext_combo.currentData()
-            format_str = f"bestaudio[ext={ext}]"
-        elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_EXT:
-            ext = self.format_vidext_combo.currentData()
-            format_str = f"bestvideo[ext={ext}]"
-        elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_CODEC:
-            codec = self.format_audcodec_combo.currentData()
-            format_str = f"bestaudio[acodec^={codec}]"
-        elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC:
-            codec = self.format_vidcodec_combo.currentData()
-            format_str = f"bestvideo[vcodec^={codec}]"
-        elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
-            audtype = self.format_merge_audio_combo.currentData()
-            vidtype = self.format_merge_video_combo.currentData()
-            format_str = f"{audtype}+{vidtype}"
-            ydl_opts["allow_multiple_audio_streams"] = True
-            ydl_opts["allow_multiple_video_streams"] = True
-        elif type_id == ComboBoxConst.FORMAT_TYPE_RAWSTRING:
-            format_str = self.format_string_text.text()
-        if format_str:
-            message = f"Using format string: {format_str}"
-            self.add_status_message(message)
-            ydl_opts["format"] = format_str
+        if self.specifyformat_check.isChecked():
+            # Create format string
+            format_str = ""
+            type_id = self.format_type_combo.currentData()
+            if type_id in [ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA,
+                           ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA,
+                           ComboBoxConst.FORMAT_TYPE_VID_BY_QUA]:
+                quality_str = self.format_quality_combo.currentData()
+                if type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_QUA:
+                    format_str = "best" + quality_str
+                elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA:
+                    format_str = "bestaudio" + quality_str
+                elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_QUA:
+                    format_str = "bestvideo" + quality_str
+            elif type_id == ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT:
+                ext = self.format_vidext_combo.currentData()
+                format_str = ext
+            elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT:
+                ext = self.format_audext_combo.currentData()
+                format_str = f"bestaudio[ext={ext}]"
+            elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_EXT:
+                ext = self.format_vidext_combo.currentData()
+                format_str = f"bestvideo[ext={ext}]"
+            elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_CODEC:
+                codec = self.format_audcodec_combo.currentData()
+                format_str = f"bestaudio[acodec^={codec}]"
+            elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC:
+                codec = self.format_vidcodec_combo.currentData()
+                format_str = f"bestvideo[vcodec^={codec}]"
+            elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
+                audtype = self.format_merge_audio_combo.currentData()
+                vidtype = self.format_merge_video_combo.currentData()
+                format_str = f"{audtype}+{vidtype}"
+                ydl_opts["allow_multiple_audio_streams"] = True
+                ydl_opts["allow_multiple_video_streams"] = True
+            elif type_id == ComboBoxConst.FORMAT_TYPE_RAWSTRING:
+                format_str = self.format_string_text.text()
+            if format_str:
+                message = f"Using format string: {format_str}"
+                self.add_status_message(message)
+                ydl_opts["format"] = format_str
         return ydl_opts
 
     def download_url_list(self, url_list):
@@ -919,10 +916,14 @@ class MainWindow(QMainWindow):
             status = progress_dict["status"]
 
         if "downloaded_bytes" in progress_dict and\
-                "total_bytes" in progress_dict and\
                 "downloading" == status:
             file_bytes = progress_dict["downloaded_bytes"]
-            file_total = progress_dict["total_bytes"]
+            if "total_bytes" in progress_dict:
+                file_total = progress_dict["total_bytes"]
+            elif "total_bytes_estimate" in progress_dict:
+                file_total = progress_dict["total_bytes_estimate"]
+            else:
+                file_total = 1
             if file_bytes is not None and file_total:
                 value = int(100 * file_bytes / file_total)
                 self.file_progress.setValue(value)
@@ -935,6 +936,7 @@ class MainWindow(QMainWindow):
             if "finished" == status:
                 message = f"Finished with file {filename}"
                 self.add_status_message(message)
+                self.file_progress.setValue(100)
             elif "error" == status:
                 message = f"Error with file {filename}"
                 self.add_status_message(message)

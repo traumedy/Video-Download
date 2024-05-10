@@ -35,11 +35,12 @@ class SettingsConst:
     SETTINGS_VAL_FFMPEGPATH = "FfmpegPath"
     SETTINGS_VAL_USERNAME = "Username"
     SETTINGS_VAL_PASSWORD = "Password"
+    SETTINGS_VAL_SPECIFYFORMAT = "SpecifyFormat"
+    SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitles"
     SETTINGS_VAL_OVERWRITE = "Overwrite"
     SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
     SETTINGS_VAL_CONSOLEOUTPUT = "ConsoleOutput"
     SETTINGS_VAL_PREFERFREEFORMATS = "PreferFreeFormats"
-    SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitls"
     SETTINGS_VAL_SUBTITLEFORMAT = "SubtitleFormat"
     SETTINGS_VAL_AUTOGENSUBS = "SubtitlesGenerated"
     SETTINGS_VAL_SUBTITLELANGUAGE = "SubtitleLanguage"
@@ -232,13 +233,18 @@ class ToolTips:
     TTT_FFMPEG_PATH_BROWSE_BUTTON = "Use dialog to browse to ffmpeg directory"
     TTT_USERNAME_TEXT = "User name for authentication"
     TTT_PASSWORD_TEXT = "Password for authentication"
+    TTT_SPECIFYFORMAT_CHECK = "Specify the format(s) to download and " \
+        "optionally merge. If unchecked the highest quality format with " \
+        "audio and video will be downloaded. This might not be as high " \
+        "quality as specifying to merge the best audio only and video only " \
+        "formats."
+    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video. More options " \
+        "will be revealed when checked."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
         "downloading"
     TTT_KEEPVIDEO_CHECK = "Keep video files after post processing"
     TTT_PREFERFREEFORMATS_CHECK = "Whether to prefer video formats with " \
         "free containers over non-free ones of same quality"
-    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video. More options " \
-        "will be revealed when checked."
     TTT_CONSOLEOUTPUT_CHECK = "The yt_dlp library will output to the " \
         "console that launched this program. Useful for debugging."
     TTT_GENERATEDSUBS_CHECK = "Download auto-generated caption text. If" \

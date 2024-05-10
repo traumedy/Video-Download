@@ -55,3 +55,11 @@ def table_create(name, headers):
     table.appendRows(1)
     table_add_row(table, headers, True)
     return text_doc, table
+
+
+def value_to_bool(value):
+    """Helper function to convert QSettings.value() to bool
+    """
+    return value.lower() == 'true'\
+        if isinstance(value, str)\
+        else bool(value)

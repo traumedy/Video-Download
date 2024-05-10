@@ -3,6 +3,7 @@
 Description: GUI for downloading video URLs using `yt_dlp` library.  
 
 Author: Josh Buchbinder  
+Copyright 2024, Josh Buchbinder  
 
 ## General usage  
 
@@ -81,8 +82,11 @@ allowed to choose which folder of URLs to download.
 URL lists (html or txt files) can be dragged and dropped onto the window
 instead of typing or browsing for their their paths.  
 
-In `Format selection` specify `Audio+Video by quality` and `Best quality` to
-download the best quality file.  
+If `Specify format` is not checked, the best quality file that has audio
+and video will be downloaded. If no such format exists, the best audio only
+file will be merged with the best video only file. Checking this box and
+selecting `Merge formats` and selecting `Best audio` and `Best video` will
+result in the highest quality file available.  
 
 The "List formats" button can be used to list the available formats for a
 single URL. In `Format selection` you can specify `Raw format string` and
