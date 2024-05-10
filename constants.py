@@ -228,17 +228,17 @@ class ToolTips:
     TTT_DOWNLOAD_PATH_BROWSE_BUTTON = "Use dialog to browse to download " \
         "directory"
     TTT_FFMPEG_PATH_TEXT = "Path to directory containing ffmpeg and ffprobe " \
-        "binaries. ffmpeg is only required if you select format options " \
+        "binaries.\nffmpeg is only required if you select format options " \
         "that require post processing."
     TTT_FFMPEG_PATH_BROWSE_BUTTON = "Use dialog to browse to ffmpeg directory"
     TTT_USERNAME_TEXT = "User name for authentication"
     TTT_PASSWORD_TEXT = "Password for authentication"
     TTT_SPECIFYFORMAT_CHECK = "Specify the format(s) to download and " \
-        "optionally merge. If unchecked the highest quality format with " \
-        "audio and video will be downloaded. This might not be as high " \
-        "quality as specifying to merge the best audio only and video only " \
+        "optionally merge.\nIf unchecked the highest quality format with " \
+        "audio and video will be downloaded.\nThis might not be as high " \
+        "quality as specifying to merge\nthe best audio only and video only " \
         "formats."
-    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video. More options " \
+    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video.\nMore options " \
         "will be revealed when checked."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
         "downloading"
@@ -246,47 +246,49 @@ class ToolTips:
     TTT_PREFERFREEFORMATS_CHECK = "Whether to prefer video formats with " \
         "free containers over non-free ones of same quality"
     TTT_CONSOLEOUTPUT_CHECK = "The yt_dlp library will output to the " \
-        "console that launched this program. Useful for debugging."
-    TTT_GENERATEDSUBS_CHECK = "Download auto-generated caption text. If" \
+        "console that launched this program.\nUseful for debugging."
+    TTT_GENERATEDSUBS_CHECK = "Download auto-generated caption text.\nIf" \
         "unchecked, actual subtitles will be downloaded."
-    TTT_SUBS_LANG_COMBO = "The languages of subtitles to download. The " \
+    TTT_SUBS_LANG_COMBO = "The languages of subtitles to download.\nThe " \
         "languages must be available from the server."
-    TTT_SUBS_FORMAT_COMBO = "The destination subtitle format. Some formats " \
+    TTT_SUBS_FORMAT_COMBO = "The destination subtitle format.\nSome formats " \
         "will be converted."
-    TTT_SUBS_DELAY_SPIN = "The delay in seconds between subtitle retrieval. " \
-        "If too many download requests happen too quickly, some sites will " \
-        "abort the activity."
+    TTT_SUBS_DELAY_SPIN = "The delay in seconds between subtitle " \
+        "retrieval.\nIf too many download requests happen too quickly,\n" \
+        "some sites will abort the activity."
     TTT_LIST_SUBS_BUTTON = "Attempt to retrieve a list of available " \
         "subtitles from the server."
     TTT_FORMAT_TYPE_COMBO = "Select which method of format selection to use"
-    TTT_FORMAT_QUALITY_COMBO = "Select the quality level to download. " \
-        "Different quality levels may result in different file types. " \
+    TTT_FORMAT_QUALITY_COMBO = "Select the quality level to download.\n" \
+        "Different quality levels may result in different file types.\n" \
         "Not all quality levels may be available."
     TTT_FORMAT_AUDEXT_COMBO = "Select the audio file extension to " \
-        "download. This does not guarantee a specific codec. Different " \
-        "sites will have different file types available and may not offer " \
+        "download. This does not guarantee a specific codec.\nDifferent " \
+        "sites will have different file types\navailable and may not offer " \
         "all types."
-    TTT_FORMAT_VIDEXT_COMBO = "Select the video file extension to download. " \
-        "This does not guarantee a specific codec. Different sites will " \
+    TTT_FORMAT_VIDEXT_COMBO = "Select the video file extension to download.\n" \
+        "This does not guarantee a specific codec.\nDifferent sites will " \
         "have different file types available and may not offer all types."
-    TTT_FORMAT_AUDCODEC_COMBO = "Select the audio codec to download." \
+    TTT_FORMAT_AUDCODEC_COMBO = "Select the audio codec to download.\n" \
         "Different sites will have different audio codecs available and " \
         "may not offer all types."
-    TTT_FORMAT_VIDCODEC_COMBO = "Select the video codec to download." \
+    TTT_FORMAT_VIDCODEC_COMBO = "Select the video codec to download.\n" \
         "Different sites will have different video codecs available and " \
         "may not offer all types."
     TTT_FORMAT_MERGE_AUDIO_COMBO = "The audio format or formats to be " \
-        "combined into the output file. ffmpeg is required."
+        "combined into the output file.\nffmpeg is required."
     TTT_FORMAT_MERGE_VIDIO_COMBO = "The video format or formats to be " \
-        "combined into the output file. ffmpeg is required."
+        "combined into the output file.\nffmpeg is required."
     TTT_FORMAT_STRING_TEXT = "Enter the string representing the format to " \
-        "download. Click the Help button for more information."
+        "download.\nClick the Help button for more information on format " \
+        "strings.\nYou can also use the `List format` button and specify " \
+        "the ID of a specific format listed in the table."
     TTT_FORMAT_STRING_HELP_BUTTON = "Launches a browser directed to " \
         "detailed information about creating yt-dlp format strings."
-    TTT_STATUS_TEXT = "This window shows status text. You can pinch and " \
-        "zoom the text in this window or hold ctrl and use the mouse wheel " \
-        "to change the zoom factor, and copy text by dragging and then " \
-        "pressing ctrl-c."
+    TTT_STATUS_TEXT = "This window shows status text.\nYou can pinch and " \
+        "zoom the text in this window or\nhold ctrl and use the mouse wheel " \
+        "to change the zoom factor,\nand copy text by dragging and then " \
+        "pressing CTRL-C."
     TTT_CLOSE_BUTTON = "Close this window"
-    TTT_DOWNLOAD_BUTTON = "Begin processing URL list and downloading video " \
+    TTT_DOWNLOAD_BUTTON = "Begin downloading and processing video " \
         "files"
