@@ -256,6 +256,10 @@ class MainWindow(QMainWindow):
         for label, fstr in ComboBoxConst.FORMAT_MERGE_VID_LIST:
             self.format_merge_video_combo.addItem(label, fstr)
 
+        # Set progress bars display text formats
+        self.file_progress.setFormat("%vMb/%mMb %p%")
+        self.total_progress.setFormat("%v/%m")
+
         # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
                                         QDialogButtonBox.ButtonRole.RejectRole)
@@ -911,16 +915,14 @@ class MainWindow(QMainWindow):
         count = 0
         ydl_opts = self.create_ydl_download_options()
 
-        # Reset progress bars
-        self.file_progress.setRange(0, 100)
+        # Reset total progress bar
         self.file_progress.setValue(0)
+        self.file_progress.setTextVisible(False)
         self.total_progress.setRange(0, len(url_list))
         self.total_progress.setValue(0)
-        self.total_progress.setFormat("%v/%m")
 
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
-            self.file_progress.setValue(0)
             ydl.add_progress_hook(self.ydl_download_progress_hook)
             for url in url_list:
                 message = f"Trying download of URL {url}"
@@ -957,19 +959,21 @@ class MainWindow(QMainWindow):
         status = ""
         if "status" in progress_dict:
             status = progress_dict["status"]
+        file_bytes = progress_dict["downloaded_bytes"]
+        file_total = None
+        if "total_bytes" in progress_dict:
+            file_total = progress_dict["total_bytes"]
+        elif "total_bytes_estimate" in progress_dict:
+            file_total = progress_dict["total_bytes_estimate"]
 
         if "downloaded_bytes" in progress_dict and\
                 "downloading" == status:
-            file_bytes = progress_dict["downloaded_bytes"]
-            if "total_bytes" in progress_dict:
-                file_total = progress_dict["total_bytes"]
-            elif "total_bytes_estimate" in progress_dict:
-                file_total = progress_dict["total_bytes_estimate"]
-            else:
-                file_total = 1
-            if file_bytes is not None and file_total:
-                value = int(100 * file_bytes / file_total)
-                self.file_progress.setValue(value)
+            if file_bytes is not None and file_total is not None:
+                pos_value = file_bytes / 1024 / 1024
+                pos_max = file_total / 1024 / 1024
+                self.file_progress.setTextVisible(True)
+                self.file_progress.setValue(pos_value)
+                self.file_progress.setMaximum(pos_max)
         if "filename" in progress_dict:
             filename = progress_dict["filename"]
             if filename not in self.download_filenames:
@@ -979,7 +983,9 @@ class MainWindow(QMainWindow):
             if "finished" == status:
                 message = f"Finished with file {filename}"
                 self.add_status_message(message)
-                self.file_progress.setValue(100)
+                pos_max = file_total / 1024 / 1024
+                self.file_progress.setMaximum(pos_max)
+                self.file_progress.setValue(pos_max)
             elif "error" == status:
                 message = f"Error with file {filename}"
                 self.add_status_message(message)
@@ -1089,9 +1095,9 @@ class MainWindow(QMainWindow):
                             table_add_row(table, fields)
                     # Add table to status window
                     self.status_text.append(text_doc.toHtml())
-
             parse_subs(self, "automatic_captions", "Auto-generated captions")
             parse_subs(self, "subtitles", "Subtitles")
+        self.enable_active_buttons(True)
 
     def strip_color_codes(self, message):
         """Removes console color escape codes from string
