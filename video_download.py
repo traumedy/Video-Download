@@ -59,10 +59,15 @@ class MainWindow(QMainWindow):
     format_layout: QHBoxLayout
     format_stacked_widget: QStackedWidget
     format_type_combo: QComboBox
+    format_quality_layout_widget: QWidget
     format_quality_combo: QComboBox
+    format_audext_layout_widget: QWidget
     format_audext_combo: QComboBox
+    format_vidext_layout_widget: QWidget
     format_vidext_combo: QComboBox
+    format_audcodec_layout_widget: QWidget
     format_audcodec_combo: QComboBox
+    format_vidcodec_layout_widget: QWidget
     format_vidcodec_combo: QComboBox
     format_merge_layout_widget: QWidget
     format_merge_audio_combo: QComboBox
@@ -154,10 +159,15 @@ class MainWindow(QMainWindow):
         self.format_layout = QHBoxLayout()
         self.format_stacked_widget = QStackedWidget()
         self.format_type_combo = QComboBox()
+        self.format_quality_layout_widget = QWidget()
         self.format_quality_combo = QComboBox()
+        self.format_audext_layout_widget = QWidget()
         self.format_audext_combo = QComboBox()
+        self.format_vidext_layout_widget = QWidget()
         self.format_vidext_combo = QComboBox()
+        self.format_audcodec_layout_widget = QWidget()
         self.format_audcodec_combo = QComboBox()
+        self.format_vidcodec_layout_widget = QWidget()
         self.format_vidcodec_combo = QComboBox()
         self.format_merge_layout_widget = QWidget()
         self.format_merge_audio_combo = QComboBox()
@@ -290,6 +300,34 @@ class MainWindow(QMainWindow):
         switches_layout.addWidget(self.keepvideo_check)
         switches_layout.addWidget(self.preferfreeformats_check)
         switches_layout.addWidget(self.consoleoutput_check)
+        format_quality_layout = QHBoxLayout(
+            self.format_quality_layout_widget)
+        format_quality_layout.addWidget(QLabel("Quality:"),
+                                        alignment=Qt.AlignmentFlag.AlignRight)
+        format_quality_layout.addWidget(self.format_quality_combo,
+                                        alignment=Qt.AlignmentFlag.AlignLeft)
+        format_audext_layout = QHBoxLayout(self.format_audext_layout_widget)
+        format_audext_layout.addWidget(QLabel("File extension:"),
+                                       alignment=Qt.AlignmentFlag.AlignRight)
+        format_audext_layout.addWidget(self.format_audext_combo,
+                                       alignment=Qt.AlignmentFlag.AlignLeft)
+        format_vidext_layout = QHBoxLayout(self.format_vidext_layout_widget)
+        format_vidext_layout.addWidget(QLabel("Video extension:"),
+                                       alignment=Qt.AlignmentFlag.AlignRight)
+        format_vidext_layout.addWidget(self.format_vidext_combo,
+                                       alignment=Qt.AlignmentFlag.AlignLeft)
+        format_audcodec_layout = QHBoxLayout(
+            self.format_audcodec_layout_widget)
+        format_audcodec_layout.addWidget(QLabel("Audio codec:"),
+                                         alignment=Qt.AlignmentFlag.AlignRight)
+        format_audcodec_layout.addWidget(self.format_audcodec_combo,
+                                         alignment=Qt.AlignmentFlag.AlignLeft)
+        format_vidcodec_layout = QHBoxLayout(
+            self.format_vidcodec_layout_widget)
+        format_vidcodec_layout.addWidget(QLabel("Video codec:"),
+                                         alignment=Qt.AlignmentFlag.AlignRight)
+        format_vidcodec_layout.addWidget(self.format_vidcodec_combo,
+                                         alignment=Qt.AlignmentFlag.AlignLeft)
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
@@ -304,11 +342,13 @@ class MainWindow(QMainWindow):
         format_merge_layout.addWidget(QLabel("Video:"),
                                       alignment=Qt.AlignmentFlag.AlignRight)
         format_merge_layout.addWidget(self.format_merge_video_combo)
-        self.format_stacked_widget.addWidget(self.format_quality_combo)
-        self.format_stacked_widget.addWidget(self.format_audext_combo)
-        self.format_stacked_widget.addWidget(self.format_vidext_combo)
-        self.format_stacked_widget.addWidget(self.format_audcodec_combo)
-        self.format_stacked_widget.addWidget(self.format_vidcodec_combo)
+        self.format_stacked_widget.addWidget(self.format_quality_layout_widget)
+        self.format_stacked_widget.addWidget(self.format_audext_layout_widget)
+        self.format_stacked_widget.addWidget(self.format_vidext_layout_widget)
+        self.format_stacked_widget.addWidget(
+            self.format_audcodec_layout_widget)
+        self.format_stacked_widget.addWidget(
+            self.format_vidcodec_layout_widget)
         self.format_stacked_widget.addWidget(self.format_merge_layout_widget)
         self.format_stacked_widget.addWidget(self.format_string_layout_widget)
         self.format_layout = QHBoxLayout()
@@ -328,10 +368,12 @@ class MainWindow(QMainWindow):
         self.subtitles_layout.addWidget(self.list_subs_button)
 
         # By default the layout is too tall for the QStackedWidget
-        url_layout.setContentsMargins(0, 0, 0, 0)
-        list_path_layout.setContentsMargins(0, 0, 0, 0)
-        format_string_layout.setContentsMargins(0, 0, 0, 0)
-        format_merge_layout.setContentsMargins(0, 0, 0, 0)
+        layouts = [url_layout, list_path_layout, format_quality_layout,
+                   format_audext_layout, format_vidext_layout,
+                   format_audcodec_layout, format_vidcodec_layout,
+                   format_merge_layout, format_string_layout]
+        for layout in layouts:
+            layout.setContentsMargins(0, 0, 0, 0)
 
         # Use Form Layout for window
         self.main_layout = QFormLayout()
@@ -648,20 +690,20 @@ class MainWindow(QMainWindow):
                        ComboBoxConst.FORMAT_TYPE_AUD_BY_QUA,
                        ComboBoxConst.FORMAT_TYPE_VID_BY_QUA]:
             self.format_stacked_widget.setCurrentWidget(
-                self.format_quality_combo)
+                self.format_quality_layout_widget)
         elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT:
             self.format_stacked_widget.setCurrentWidget(
-                self.format_audext_combo)
+                self.format_audext_layout_widget)
         elif type_id in [ComboBoxConst.FORMAT_TYPE_VID_BY_EXT,
                          ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT]:
             self.format_stacked_widget.setCurrentWidget(
-                self.format_vidext_combo)
+                self.format_vidext_layout_widget)
         elif type_id == ComboBoxConst.FORMAT_TYPE_AUD_BY_CODEC:
             self.format_stacked_widget.setCurrentWidget(
-                self.format_audcodec_combo)
+                self.format_audcodec_layout_widget)
         elif type_id == ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC:
             self.format_stacked_widget.setCurrentWidget(
-                self.format_vidcodec_combo)
+                self.format_vidcodec_layout_widget)
         elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
             self.format_stacked_widget.setCurrentWidget(
                 self.format_merge_layout_widget)
@@ -861,12 +903,6 @@ class MainWindow(QMainWindow):
         Args:
             url_list ([str]): List of URLs to download
         """
-        # Reset progress bars
-        self.file_progress.setRange(0, 100)
-        self.file_progress.setValue(0)
-        self.total_progress.setRange(0, len(url_list))
-        self.total_progress.setValue(0)
-
         # Disable widgets that would interfere with processing
         self.enable_active_buttons(False)
 
@@ -874,6 +910,13 @@ class MainWindow(QMainWindow):
         self.download_filenames = []
         count = 0
         ydl_opts = self.create_ydl_download_options()
+
+        # Reset progress bars
+        self.file_progress.setRange(0, 100)
+        self.file_progress.setValue(0)
+        self.total_progress.setRange(0, len(url_list))
+        self.total_progress.setValue(0)
+        self.total_progress.setFormat("%v/%m")
 
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
