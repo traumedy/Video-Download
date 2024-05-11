@@ -87,6 +87,8 @@ class MainWindow(QMainWindow):
     close_button: QPushButton
     download_button: QPushButton
     bottom_buttonbox: QDialogButtonBox
+    cancel_button: QPushButton
+    cancel_flag: bool
     settings: QSettings
 
     def __init__(self):
@@ -119,6 +121,9 @@ class MainWindow(QMainWindow):
                                   SettingsConst.SETTINGS_APPNAME)
         # Used to store downloaded filenames from progress hook callback
         self.download_filenames = []
+
+        # Used to detect cancel request
+        self.cancel_flag = False
 
         # Set minimum window size
         size = self.size()
@@ -184,6 +189,7 @@ class MainWindow(QMainWindow):
         self.status_text = QTextEdit()
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
+        self.cancel_button = QPushButton("Cancel")
         self.close_button = QPushButton("Close")
         self.download_button = QPushButton("Download videos")
         self.bottom_buttonbox = QDialogButtonBox()
@@ -259,6 +265,9 @@ class MainWindow(QMainWindow):
         # Set progress bars display text formats
         self.file_progress.setFormat("%vMb/%mMb %p%")
         self.total_progress.setFormat("%v/%m")
+
+        # Hide cancel button
+        self.cancel_button.setVisible(False)
 
         # Populate dialog button box
         self.bottom_buttonbox.addButton(self.close_button,
@@ -394,7 +403,7 @@ class MainWindow(QMainWindow):
         self.main_layout.addRow("File progress", self.file_progress)
         self.main_layout.addRow("Total progress", self.total_progress)
         self.main_layout.addRow(QLabel(""))
-        self.main_layout.addRow(self.bottom_buttonbox)
+        self.main_layout.addRow(self.cancel_button, self.bottom_buttonbox)
 
         return self.main_layout
 
@@ -423,10 +432,9 @@ class MainWindow(QMainWindow):
             self.format_type_combo_changed)
         self.format_string_help_button.clicked.connect(
             lambda: QDesktopServices.openUrl(AppConst.FORMAT_STRING_HELP_URL))
-        self.close_button.clicked.connect(
-            self.close)
-        self.download_button.clicked.connect(
-            self.download_button_clicked)
+        self.cancel_button.clicked.connect(self.cancel_button_clicked)
+        self.close_button.clicked.connect(self.close)
+        self.download_button.clicked.connect(self.download_button_clicked)
 
     def create_mainwindow_tooltips(self):
         """Sets tooltips for main window widgets
@@ -484,6 +492,7 @@ class MainWindow(QMainWindow):
         Args:
             event (PySide6.QtGui.QCloseEvent): Event type
         """
+        self.cancel_flag = True
         self.save_settings()
         event.accept()
 
@@ -715,6 +724,12 @@ class MainWindow(QMainWindow):
             self.format_stacked_widget.setCurrentWidget(
                 self.format_string_layout_widget)
 
+    def cancel_button_clicked(self):
+        """Called when cancel button is clicked
+        """
+        self.cancel_flag = True
+        self.add_status_message("Canceling...")
+
     def download_button_clicked(self):
         """Called when download button is clicked
         """
@@ -899,6 +914,9 @@ class MainWindow(QMainWindow):
                 message = f"Using format string: {format_str}"
                 self.add_status_message(message)
                 ydl_opts["format"] = format_str
+        # Match hook used for aborting
+        ydl_opts["match_filter"] = self.match_filter
+        ydl_opts["postprocessor_hooks"] = [self.ydl_postprocessor_hook]
         return ydl_opts
 
     def download_url_list(self, url_list):
@@ -921,10 +939,15 @@ class MainWindow(QMainWindow):
         self.total_progress.setRange(0, len(url_list))
         self.total_progress.setValue(0)
 
+        # Unhide cancel button
+        self.cancel_button.setVisible(True)
+
         # Perform downloads
         with YoutubeDL(ydl_opts) as ydl:
             ydl.add_progress_hook(self.ydl_download_progress_hook)
             for url in url_list:
+                if self.cancel_flag:
+                    break
                 message = f"Trying download of URL {url}"
                 self.add_status_message(message)
                 try:
@@ -939,6 +962,8 @@ class MainWindow(QMainWindow):
 
         # Reenable widgets
         self.enable_active_buttons(True)
+        self.cancel_flag = False
+        self.cancel_button.setVisible(False)
 
         # Display summary message box
         message = f"{len(url_list)} URLs processed"
@@ -950,24 +975,42 @@ class MainWindow(QMainWindow):
         dlg.setText(message)
         dlg.exec()
 
+    def match_filter(self, info_dict):
+        """Callback for selecting which files to download.
+        This is just being used to attempt to abort downloads,
+        which doesn't seem to work. 
+
+        Args:
+            info_dict ({str:val}): info_dict
+
+        Raises:
+            utils.DownloadCancelled: About download
+
+        Returns:
+            str: Returns string to skip file, None to download
+        """
+        # Drive message loop
+        QApplication.processEvents()
+        if self.cancel_flag:
+            self.add_status_message("Sending abort")
+            raise utils.DownloadCancelled("Aborted")
+        return None
+
     def ydl_download_progress_hook(self, progress_dict):
         """Callback function for download progress
 
         Args:
             progress_dict ({str:str}): progress dictionary
         """
-        status = ""
-        if "status" in progress_dict:
-            status = progress_dict["status"]
-        file_bytes = progress_dict["downloaded_bytes"]
-        file_total = None
-        if "total_bytes" in progress_dict:
-            file_total = progress_dict["total_bytes"]
-        elif "total_bytes_estimate" in progress_dict:
-            file_total = progress_dict["total_bytes_estimate"]
+        # Drive message loop
+        QApplication.processEvents()
+        status = progress_dict.get("status", None)
+        file_bytes = progress_dict.get("downloaded_bytes", None)
+        file_total = progress_dict.get("total_bytes", None)
+        if not file_total:
+            file_total = progress_dict.get("total_bytes_estimate", None)
 
-        if "downloaded_bytes" in progress_dict and\
-                "downloading" == status:
+        if "downloading" == status:
             if file_bytes is not None and file_total is not None:
                 pos_value = file_bytes / 1024 / 1024
                 pos_max = file_total / 1024 / 1024
@@ -983,15 +1026,30 @@ class MainWindow(QMainWindow):
             if "finished" == status:
                 message = f"Finished with file {filename}"
                 self.add_status_message(message)
-                pos_max = file_total / 1024 / 1024
-                self.file_progress.setMaximum(pos_max)
-                self.file_progress.setValue(pos_max)
+                if file_total:
+                    pos_max = file_total / 1024 / 1024
+                    self.file_progress.setMaximum(pos_max)
+                    self.file_progress.setValue(pos_max)
             elif "error" == status:
                 message = f"Error with file {filename}"
                 self.add_status_message(message)
 
-        # Drive message loop
-        QApplication.processEvents()
+    def ydl_postprocessor_hook(self, hook_dict):
+        """Callback function for postprocessing progress info
+
+        Args:
+            hook_dict ({str, ???}): Info about callback and file info
+        """
+        status = hook_dict.get("status", None)
+        info_dict = hook_dict.get("info_dict", {})
+        filename = info_dict.get("filename", "[UNKNOWN]")
+        message = ""
+        if "started" == status:
+            message = f"Starting postprocessing of {filename}"
+        elif "finished" == status:
+            message = f"Finished postprocessing of {filename}"
+        if message:
+            self.add_status_message(message)
 
     def download_url_formats(self, url):
         """Download and display the formats avilable at url
