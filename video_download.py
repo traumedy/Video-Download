@@ -915,7 +915,6 @@ class MainWindow(QMainWindow):
                 self.add_status_message(message)
                 ydl_opts["format"] = format_str
         # Match hook used for aborting
-        ydl_opts["match_filter"] = self.match_filter
         ydl_opts["postprocessor_hooks"] = [self.ydl_postprocessor_hook]
         return ydl_opts
 
@@ -957,6 +956,11 @@ class MainWindow(QMainWindow):
                     errors.append(error_message)
                     message = f"Download error: {error_message}"
                     self.add_status_message(message)
+                except utils.DownloadCancelled as e:
+                    error_message = str(e)
+                    errors.append(error_message)
+                    message = f"Download canceled: {error_message}"
+                    self.add_status_message(message)
                 count += 1
                 self.total_progress.setValue(count)
 
@@ -975,27 +979,6 @@ class MainWindow(QMainWindow):
         dlg.setText(message)
         dlg.exec()
 
-    def match_filter(self, info_dict):
-        """Callback for selecting which files to download.
-        This is just being used to attempt to abort downloads,
-        which doesn't seem to work. 
-
-        Args:
-            info_dict ({str:val}): info_dict
-
-        Raises:
-            utils.DownloadCancelled: About download
-
-        Returns:
-            str: Returns string to skip file, None to download
-        """
-        # Drive message loop
-        QApplication.processEvents()
-        if self.cancel_flag:
-            self.add_status_message("Sending abort")
-            raise utils.DownloadCancelled("Aborted")
-        return None
-
     def ydl_download_progress_hook(self, progress_dict):
         """Callback function for download progress
 
@@ -1004,6 +987,8 @@ class MainWindow(QMainWindow):
         """
         # Drive message loop
         QApplication.processEvents()
+        if self.cancel_flag:
+            raise utils.DownloadCancelled("Aborted")
         status = progress_dict.get("status", None)
         file_bytes = progress_dict.get("downloaded_bytes", None)
         file_total = progress_dict.get("total_bytes", None)
