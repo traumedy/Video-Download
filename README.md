@@ -92,7 +92,9 @@ result in the highest quality file available.
 
 The "List formats" button can be used to list the available formats for a
 single URL. In `Format selection` you can specify `Raw format string` and
-enter the `ID` shown for a format to download that specific format.  
+enter the `ID` shown for a format to download that specific format. Blue
+links in the format list can be clicked on to select those formats in the
+format selection settings.  
 
 ## Notes  
 

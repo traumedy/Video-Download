@@ -6,9 +6,8 @@
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
-from PySide6.QtGui import QTextTableCell, QTextCursor
 from PySide6.QtGui import QFont, QBrush, QColor
-from PySide6.QtGui import QTextDocument, QTextTable, QTextTableFormat
+from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat
 
 
 def table_add_row(table, fields, header=False):
@@ -16,7 +15,7 @@ def table_add_row(table, fields, header=False):
 
     Args:
         table (QTextTable): Table to be modified
-        fields ([str]): List of fiends to add
+        fields ([(str, str)]): List of fiends to add (text, link)
         header (bool): True if this is the header (Default: False)
     """
     cursor = QTextCursor()
@@ -31,8 +30,18 @@ def table_add_row(table, fields, header=False):
             fmt.setFontWeight(QFont.Weight.Bold)
             fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
             cell.setFormat(fmt)
-        if field:
-            cursor.insertText(str(field))
+        if field[0]:
+            if field[1]:
+                # Link
+                txt_fmt = cursor.charFormat()
+                txt_fmt.setAnchor(True)
+                txt_fmt.setAnchorHref(field[1])
+                # txt_fmt.setAnchorNames([str(field[0])])
+                # txt_fmt.setToolTip("TEST")
+                cursor.insertText(str(field[0]), txt_fmt)
+            else:
+                # Plain text
+                cursor.insertText(str(field[0]))
 
 
 def table_create(name, headers):
@@ -51,9 +60,10 @@ def table_create(name, headers):
     table_format.setCellSpacing(0)
     cursor = QTextCursor(text_doc)
     table = cursor.insertTable(1, len(headers), table_format)
-    table_add_row(table, [name], True)
+    table_add_row(table, [(name, None)], True)
     table.appendRows(1)
-    table_add_row(table, headers, True)
+    tuple_list = [(header, None) for header in headers]
+    table_add_row(table, tuple_list, True)
     return text_doc, table
 
 

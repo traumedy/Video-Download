@@ -36,6 +36,7 @@ class SettingsConst:
     SETTINGS_VAL_USERNAME = "Username"
     SETTINGS_VAL_PASSWORD = "Password"
     SETTINGS_VAL_SPECIFYFORMAT = "SpecifyFormat"
+    SETTINGS_VAL_SPECIFYRES = "SpecifyResolution"
     SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitles"
     SETTINGS_VAL_OVERWRITE = "Overwrite"
     SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
@@ -54,6 +55,7 @@ class SettingsConst:
     SETTINGS_VAL_FORMATMERGEAUD = "FormatMergeAud"
     SETTINGS_VAL_FORMATMERGEVID = "FormatMergeVid"
     SETTINGS_VAL_FORMATSTRING = "FormatString"
+    SETTINGS_VAL_RESHEIGHT = "ResolutionHeight"
     SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 
@@ -213,6 +215,16 @@ class ComboBoxConst:
                              ("Extension flv", "bv*[ext=flv]"),
                              ("Extension 3gp", "bv*[ext=3gp]")]
 
+    FORMAT_RESOLUTION_LIST = [("8K (4320)", 4320),
+                              ("UHD (2160)", 2160),
+                              ("QHD (1440)", 1440),
+                              ("FHD (1080)", 1080),
+                              ("HD (720)", 720),
+                              ("SD (480)", 480),
+                              ("360", 360),
+                              ("240", 240),
+                              ("144", 144)]
+
 
 class ToolTips:
     """Strings for widgt tooltips
@@ -238,11 +250,16 @@ class ToolTips:
         "audio and video will be downloaded.\nThis might not be as high " \
         "quality as specifying to merge\nthe best audio only and video only " \
         "formats."
+    TTT_SPECIFYRES_CHECK = "Specify the maximum video resolution height " \
+        "to download.\nIf not checked, the highest resolution video will " \
+        "be downloaded."
+    TTT_RESOLUTION_COMBO = "Select the highest resolution to download.\n" \
+        "The highest resolution below or equal to this will be downloaded."
     TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video.\nMore options " \
         "will be revealed when checked."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
         "downloading"
-    TTT_KEEPVIDEO_CHECK = "Keep video files after post processing"
+    TTT_KEEPVIDEO_CHECK = "Keep media files after post processing"
     TTT_PREFERFREEFORMATS_CHECK = "Whether to prefer video formats with " \
         "free containers over non-free ones of same quality"
     TTT_CONSOLEOUTPUT_CHECK = "The yt_dlp library will output to the " \
@@ -266,9 +283,10 @@ class ToolTips:
         "download. This does not guarantee a specific codec.\nDifferent " \
         "sites will have different file types\navailable and may not offer " \
         "all types."
-    TTT_FORMAT_VIDEXT_COMBO = "Select the video file extension to download.\n" \
-        "This does not guarantee a specific codec.\nDifferent sites will " \
-        "have different file types available and may not offer all types."
+    TTT_FORMAT_VIDEXT_COMBO = "Select the video file extension to " \
+        "download.\nThis does not guarantee a specific codec.\n" \
+        "Different sites will have different file types available " \
+        "and may not offer all types."
     TTT_FORMAT_AUDCODEC_COMBO = "Select the audio codec to download.\n" \
         "Different sites will have different audio codecs available and " \
         "may not offer all types."
@@ -288,7 +306,20 @@ class ToolTips:
     TTT_STATUS_TEXT = "This window shows status text.\nYou can pinch and " \
         "zoom the text in this window or\nhold ctrl and use the mouse wheel " \
         "to change the zoom factor,\nand copy text by dragging and then " \
-        "pressing CTRL-C."
+        "pressing CTRL-C.\nClicking on a blue link will select that format " \
+        "in the format selection options."
     TTT_CLOSE_BUTTON = "Close this window"
     TTT_DOWNLOAD_BUTTON = "Begin downloading and processing video " \
         "files"
+
+
+class LinkIds:
+    """String constants for link IDs
+    """
+    LINKID_FORMATID = "formatid"
+    LINKID_FILEEXT = "vidextension"
+    LINKID_AUDIOCODEC = "audiocodec"
+    LINKID_VIDEOCODEC = "videocodec"
+    LINKID_SUBLANGUAGE = "sublanguage"
+    LINKID_SUBEXTENSION = "subextension"
+    LINKID_RESOLUTION = "resolution"
