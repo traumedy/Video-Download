@@ -96,7 +96,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         # Set title text for window
-        self.setWindowTitle("Video URL downloader")
+        self.setWindowTitle(f"Video URL downloader v{__version__}")
 
         # Set an icon for our window
         pixmapi = QStyle.StandardPixmap.SP_DialogSaveButton
