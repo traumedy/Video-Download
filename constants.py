@@ -54,6 +54,7 @@ class SettingsConst:
     SETTINGS_VAL_FORMATVIDCODEC = "FormatVidCodec"
     SETTINGS_VAL_FORMATMERGEAUD = "FormatMergeAud"
     SETTINGS_VAL_FORMATMERGEVID = "FormatMergeVid"
+    SETTINGS_VAL_FORMATMERGECONTAINER = "FormatMergeContainer"
     SETTINGS_VAL_FORMATSTRING = "FormatString"
     SETTINGS_VAL_RESHEIGHT = "ResolutionHeight"
     SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
@@ -214,6 +215,7 @@ class ComboBoxConst:
                              ("Extension webm", "bv*[ext=webm]"),
                              ("Extension flv", "bv*[ext=flv]"),
                              ("Extension 3gp", "bv*[ext=3gp]")]
+    FORMAT_MERGE_OUTPUT_LIST = ["mkv", "mp4", "webm"]
 
     FORMAT_RESOLUTION_LIST = [("8K (4320)", 4320),
                               ("UHD (2160)", 2160),
@@ -297,6 +299,8 @@ class ToolTips:
         "combined into the output file.\nffmpeg is required."
     TTT_FORMAT_MERGE_VIDIO_COMBO = "The video format or formats to be " \
         "combined into the output file.\nffmpeg is required."
+    TTT_FORMAT_MARGE_CONTAINER_COMBO = "The output format for the merged " \
+        "video file.\nffmpeg is required."
     TTT_FORMAT_STRING_TEXT = "Enter the string representing the format to " \
         "download.\nClick the Help button for more information on format " \
         "strings.\nYou can also use the `List format` button and specify " \
