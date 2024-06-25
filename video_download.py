@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 import sys
 import shutil
@@ -72,6 +72,7 @@ class MainWindow(QMainWindow):
     format_merge_layout_widget: QWidget
     format_merge_audio_combo: QComboBox
     format_merge_video_combo: QComboBox
+    format_marge_container_combo: QComboBox
     format_string_layout_widget: QWidget
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
@@ -182,6 +183,7 @@ class MainWindow(QMainWindow):
         self.format_merge_layout_widget = QWidget()
         self.format_merge_audio_combo = QComboBox()
         self.format_merge_video_combo = QComboBox()
+        self.format_marge_container_combo = QComboBox()
         self.format_string_layout_widget = QWidget()
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
@@ -229,8 +231,9 @@ class MainWindow(QMainWindow):
                    self.format_quality_combo, self.format_audext_combo,
                    self.format_vidext_combo, self.format_audcodec_combo,
                    self.format_vidcodec_combo, self.format_merge_audio_combo,
-                   self.format_merge_video_combo, self.resolution_combo,
-                   self.subs_delay_spin]
+                   self.format_merge_video_combo,
+                   self.format_marge_container_combo,
+                   self.resolution_combo, self.subs_delay_spin]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
@@ -269,6 +272,8 @@ class MainWindow(QMainWindow):
             self.format_merge_audio_combo.addItem(label, fstr)
         for label, fstr in ComboBoxConst.FORMAT_MERGE_VID_LIST:
             self.format_merge_video_combo.addItem(label, fstr)
+        for ext in ComboBoxConst.FORMAT_MERGE_OUTPUT_LIST:
+            self.format_marge_container_combo.addItem(ext, ext)
 
         # Populate resolution combobox
         for label, res in ComboBoxConst.FORMAT_RESOLUTION_LIST:
@@ -367,6 +372,9 @@ class MainWindow(QMainWindow):
         format_merge_layout.addWidget(QLabel("Video:"),
                                       alignment=Qt.AlignmentFlag.AlignRight)
         format_merge_layout.addWidget(self.format_merge_video_combo)
+        format_merge_layout.addWidget(QLabel("Output format:"),
+                                      alignment=Qt.AlignmentFlag.AlignRight)
+        format_merge_layout.addWidget(self.format_marge_container_combo)
         self.format_stacked_widget.addWidget(self.format_quality_layout_widget)
         self.format_stacked_widget.addWidget(self.format_audext_layout_widget)
         self.format_stacked_widget.addWidget(self.format_vidext_layout_widget)
@@ -494,6 +502,8 @@ class MainWindow(QMainWindow):
             ToolTips.TTT_FORMAT_MERGE_AUDIO_COMBO)
         self.format_merge_video_combo.setToolTip(
             ToolTips.TTT_FORMAT_MERGE_VIDIO_COMBO)
+        self.format_marge_container_combo.setToolTip(
+            ToolTips.TTT_FORMAT_MARGE_CONTAINER_COMBO)
         self.format_string_text.setToolTip(ToolTips.TTT_FORMAT_STRING_TEXT)
         self.format_string_help_button.setToolTip(
             ToolTips.TTT_FORMAT_STRING_HELP_BUTTON)
@@ -664,6 +674,8 @@ class MainWindow(QMainWindow):
                 SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""),
             (self.format_merge_video_combo,
                 SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""),
+            (self.format_marge_container_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGECONTAINER, ""),
             (self.format_string_text,
                 SettingsConst.SETTINGS_VAL_FORMATSTRING, "")]
 
@@ -981,7 +993,9 @@ class MainWindow(QMainWindow):
             elif type_id == ComboBoxConst.FORMAT_TYPE_MERGE:
                 audtype = self.format_merge_audio_combo.currentData()
                 vidtype = self.format_merge_video_combo.currentData()
+                output_ext = self.format_marge_container_combo.currentData()
                 format_str = f"{audtype}+{vidtype}"
+                ydl_opts["merge_output_format"] = output_ext
                 ydl_opts["allow_multiple_audio_streams"] = True
                 ydl_opts["allow_multiple_video_streams"] = True
             elif type_id == ComboBoxConst.FORMAT_TYPE_RAWSTRING:
