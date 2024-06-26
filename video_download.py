@@ -25,7 +25,8 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QStyle
 from PySide6.QtWidgets import QSizePolicy, QStackedWidget
 from yt_dlp import YoutubeDL, utils
 
-from custom_widgets import ClickableTextEdit, ComboBoxExt
+from comboboxext import ComboBoxExt
+from status_window import StatusWindow
 from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips, LinkIds
 from bookmark_html_parser import BookmarkHTMLParser
 from doc_table import DocTable
@@ -82,10 +83,11 @@ class MainWindow(QMainWindow):
     subtitles_layout: QHBoxLayout
     generatedsubs_check: QCheckBox
     subs_lang_combo: ComboBoxExt
+    subs_clear_pushbutton: QPushButton
     subs_format_combo: QComboBox
     subs_delay_spin: QSpinBox
     list_subs_button: QPushButton
-    status_text: ClickableTextEdit
+    status_text: StatusWindow
     file_progress: QProgressBar
     total_progress: QProgressBar
     close_button: QPushButton
@@ -192,11 +194,12 @@ class MainWindow(QMainWindow):
         self.resolution_combo = ComboBoxExt()
         self.subtitles_layout = QHBoxLayout()
         self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
-        self.subs_lang_combo = ComboBoxExt()
+        self.subs_lang_combo = ComboBoxExt(checkboxes=True)
+        self.subs_clear_pushbutton = QPushButton("Clear")
         self.subs_format_combo = QComboBox()
         self.subs_delay_spin = QSpinBox()
         self.list_subs_button = QPushButton("List subtitles")
-        self.status_text = ClickableTextEdit(self.status_click_callback)
+        self.status_text = StatusWindow(self.status_click_callback)
         self.file_progress = QProgressBar()
         self.total_progress = QProgressBar()
         self.cancel_button = QPushButton("Cancel")
@@ -226,7 +229,7 @@ class MainWindow(QMainWindow):
         # (some of these don't work)
         widgets = [self.list_path_browse_button,
                    self.download_path_browse_button,
-                   self.ffmpeg_path_browse_button,
+                   self.ffmpeg_path_browse_button, self.subs_clear_pushbutton,
                    self.subs_lang_combo, self.subs_format_combo,
                    self.list_subs_button, self.format_type_combo,
                    self.format_quality_combo, self.format_audext_combo,
@@ -389,9 +392,11 @@ class MainWindow(QMainWindow):
         self.format_layout.addWidget(self.format_stacked_widget)
         self.resolution_layout.addWidget(self.resolution_combo)
         self.subtitles_layout.addWidget(self.generatedsubs_check)
-        self.subtitles_layout.addWidget(QLabel("Language:",
+        self.subtitles_layout.addWidget(QLabel("Languages:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
         self.subtitles_layout.addWidget(self.subs_lang_combo)
+        self.subtitles_layout.addWidget(self.subs_clear_pushbutton,
+                                        alignment=Qt.AlignmentFlag.AlignLeft)
         self.subtitles_layout.addWidget(QLabel("Format:",
                                         alignment=Qt.AlignmentFlag.AlignRight))
         self.subtitles_layout.addWidget(self.subs_format_combo)
@@ -450,6 +455,8 @@ class MainWindow(QMainWindow):
         self.downloadsubs_check.checkStateChanged.connect(
             lambda checked: self.main_layout.setRowVisible(
                 self.subtitles_layout, checked == Qt.CheckState.Checked))
+        self.subs_clear_pushbutton.clicked.connect(
+            lambda: self.subs_lang_combo.check_all(False))
         self.list_subs_button.clicked.connect(
             lambda: self.download_subtitle_formats(self.url_text.text()))
         self.format_type_combo.currentIndexChanged.connect(
@@ -488,6 +495,7 @@ class MainWindow(QMainWindow):
         self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
         self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
         self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
+        self.subs_clear_pushbutton.setToolTip(ToolTips.TTT_SUBS_CLEAR_BUTTON)
         self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
         self.subs_delay_spin.setToolTip(ToolTips.TTT_SUBS_DELAY_SPIN)
         self.list_subs_button.setToolTip(ToolTips.TTT_LIST_SUBS_BUTTON)
@@ -566,18 +574,18 @@ class MainWindow(QMainWindow):
             ident = parts[0]
             value = parts[1]
             if ident == LinkIds.LINKID_FORMATID:
-                self.format_type_combo.setCurrentData(
+                self.format_type_combo.set_current_data(
                        ComboBoxConst.FORMAT_TYPE_RAWSTRING)
                 self.specifyformat_check.setChecked(True)
                 self.format_string_text.setText(value)
             elif ident == LinkIds.LINKID_FILEEXT:
                 if value in ComboBoxConst.FORMAT_EXT_VID_LIST:
-                    self.format_type_combo.setCurrentData(
+                    self.format_type_combo.set_current_data(
                         ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT)
                     self.specifyformat_check.setChecked(True)
                     self.format_vidext_combo.setCurrentText(value)
                 elif value in ComboBoxConst.FORMAT_EXT_AUD_LIST:
-                    self.format_type_combo.setCurrentData(
+                    self.format_type_combo.set_current_data(
                         ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT)
                     self.specifyformat_check.setChecked(True)
                     self.format_audext_combo.setCurrentText(value)
@@ -591,12 +599,12 @@ class MainWindow(QMainWindow):
                 if dotpos != -1:
                     value = value[0:dotpos]
                 # TODO
-                # if self.format_vidcodec_combo.setCurrentData(value):
+                # if self.format_vidcodec_combo.set_current_data(value):
                 #     self.specifyformat_check.setChecked(True)
-                #     self.format_type_combo.setCurrentData(
+                #     self.format_type_combo.set_current_data(
                 #        ComboBoxConst.FORMAT_TYPE_VID_BY_CODEC)
             elif ident == LinkIds.LINKID_SUBLANGUAGE:
-                if self.subs_lang_combo.setCurrentData(value):
+                if self.subs_lang_combo.check_item_by_data(value, True):
                     self.downloadsubs_check.setChecked(True)
             elif ident == LinkIds.LINKID_SUBEXTENSION:
                 self.subs_format_combo.setCurrentText(value)
@@ -605,7 +613,7 @@ class MainWindow(QMainWindow):
                 if xpos != -1:
                     value = value[xpos + 1:]
                 try:
-                    if self.resolution_combo.setCurrentNearestData(int(value)):
+                    if self.resolution_combo.set_current_data_lte(int(value)):
                         self.specifyres_check.setChecked(True)
                 except ValueError:
                     pass
@@ -687,6 +695,14 @@ class MainWindow(QMainWindow):
         for widget, settings_key, default in widgets:
             if isinstance(widget, QLineEdit):
                 widget.setText(self.settings.value(settings_key, default))
+            elif isinstance(widget, ComboBoxExt):
+                if widget.has_checkboxes():
+                    checked_items = self.settings.value(
+                        settings_key, default).split("|")
+                    widget.check_items_by_text(checked_items, True)
+                else:
+                    widget.setCurrentText(self.settings.value(settings_key,
+                                                              default))
             elif isinstance(widget, QComboBox):
                 widget.setCurrentText(self.settings.value(settings_key,
                                                           default))
@@ -711,6 +727,13 @@ class MainWindow(QMainWindow):
         for widget, settings_key, _ in widgets:
             if isinstance(widget, QLineEdit):
                 self.settings.setValue(settings_key, widget.text())
+            elif isinstance(widget, ComboBoxExt):
+                if widget.has_checkboxes():
+                    checked_items = widget.checked_items_text()
+                    self.settings.setValue(settings_key,
+                                           "|".join(checked_items))
+                else:
+                    self.settings.setValue(settings_key, widget.currentText())
             elif isinstance(widget, QComboBox):
                 self.settings.setValue(settings_key, widget.currentText())
             elif isinstance(widget, QCheckBox):
@@ -952,8 +975,8 @@ class MainWindow(QMainWindow):
                 ydl_opts["writeautomaticsub"] = True
             else:
                 ydl_opts["writesubtitles"] = True
-            subs_language = self.subs_lang_combo.currentData()
-            ydl_opts["subtitleslangs"] = [subs_language]
+            subs_languages = self.subs_lang_combo.checked_items_data()
+            ydl_opts["subtitleslangs"] = subs_languages
             subs_format = self.subs_format_combo.currentText()
             if self.subs_format_combo.currentData():
                 ydl_opts["subtitlesformat"] = subs_format
