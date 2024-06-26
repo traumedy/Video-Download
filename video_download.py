@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 import sys
 import shutil
@@ -28,7 +28,8 @@ from yt_dlp import YoutubeDL, utils
 from custom_widgets import ClickableTextEdit, ComboBoxExt
 from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips, LinkIds
 from bookmark_html_parser import BookmarkHTMLParser
-from utils import table_add_row, table_create, value_to_bool
+from doc_table import DocTable
+from utils import value_to_bool
 
 
 class MainWindow(QMainWindow):
@@ -1162,7 +1163,7 @@ class MainWindow(QMainWindow):
 
             headers = ["ID", "Extension", "Audio codec", "Video codec",
                        "Resolution", "Bitrate", "Size", "Note"]
-            text_doc, table = table_create("File formats", headers)
+            table = DocTable("File formats", headers)
 
             for fmt in format_list:
                 # Tupple is key, is_numeric, suffix
@@ -1190,9 +1191,9 @@ class MainWindow(QMainWindow):
                             link = linkid + ":" + text
                     fields.append((text, link))
                 # Add fields to table
-                table_add_row(table, fields)
+                table.add_row(fields)
             # Add table to status window
-            self.status_text.append_safe(text_doc.toHtml())
+            self.status_text.append_safe(table.to_html())
 
         # Reenable widgets that would interfere with processing
         self.enable_active_buttons(True)
@@ -1228,7 +1229,7 @@ class MainWindow(QMainWindow):
                 else:
                     subtitles_list = meta[key]
                     headers = ["Code", "Name", "Format"]
-                    text_doc, table = table_create(name, headers)
+                    table = DocTable(name, headers)
                     for key, value in subtitles_list.items():
                         for sub in value:
                             fields = []
@@ -1239,9 +1240,9 @@ class MainWindow(QMainWindow):
                             ext = sub["ext"] if "ext" in sub else ""
                             link = LinkIds.LINKID_SUBEXTENSION + ":" + ext
                             fields.append((ext, link))
-                            table_add_row(table, fields)
+                            table.add_row(fields)
                     # Add table to status window
-                    self.status_text.append_safe(text_doc.toHtml())
+                    self.status_text.append_safe(table.to_html())
             parse_subs(self, "automatic_captions", "Auto-generated captions")
             parse_subs(self, "subtitles", "Subtitles")
         self.enable_active_buttons(True)
