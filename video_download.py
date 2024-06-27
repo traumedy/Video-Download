@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
 import sys
 import shutil
@@ -195,7 +195,7 @@ class MainWindow(QMainWindow):
         self.subtitles_layout = QHBoxLayout()
         self.generatedsubs_check = QCheckBox("Auto-generated subtitles")
         self.subs_lang_combo = ComboBoxExt(checkboxes=True)
-        self.subs_clear_pushbutton = QPushButton("Clear")
+        self.subs_clear_pushbutton = QPushButton("Clear list")
         self.subs_format_combo = QComboBox()
         self.subs_delay_spin = QSpinBox()
         self.list_subs_button = QPushButton("List subtitles")
@@ -719,6 +719,9 @@ class MainWindow(QMainWindow):
         height = int(self.settings.value(
             SettingsConst.SETTINGS_VAL_WINDOWHEIGHT, size.height()))
         self.resize(width, height)
+        state = self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWSTATE,
+                                    Qt.WindowState.WindowNoState)
+        self.setWindowState(state)
 
     def save_settings(self):
         """Save persistent settingss
@@ -740,11 +743,15 @@ class MainWindow(QMainWindow):
                 self.settings.setValue(settings_key, widget.isChecked())
             elif isinstance(widget, QSpinBox):
                 self.settings.setValue(settings_key, widget.value())
-        # Save size of main window
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
-                               self.width())
-        self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
-                               self.height())
+        # Save size and state of main window
+        state = self.windowState()
+        if not state & Qt.WindowState.WindowMaximized:
+            self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
+                                   self.width())
+            self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
+                                   self.height())
+        self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWSTATE,
+                               state)
 
     def list_formats_button_clicked(self):
         """Called when list formats button is clicked

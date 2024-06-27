@@ -57,6 +57,7 @@ class SettingsConst:
     SETTINGS_VAL_FORMATMERGECONTAINER = "FormatMergeContainer"
     SETTINGS_VAL_FORMATSTRING = "FormatString"
     SETTINGS_VAL_RESHEIGHT = "ResolutionHeight"
+    SETTINGS_VAL_WINDOWSTATE = "WindowState"
     SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 
