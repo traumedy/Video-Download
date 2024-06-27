@@ -9,7 +9,7 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 from overrides import override
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QStandardItemModel
-from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QComboBox, QLineEdit
 
 
 class ComboBoxExt(QComboBox):
@@ -22,6 +22,12 @@ class ComboBoxExt(QComboBox):
         if checkboxes:
             self.view().pressed.connect(self.item_pressed)
             self.setModel(QStandardItemModel(self))
+            self.line_edit = QLineEdit()
+            self.line_edit.setReadOnly(True)
+            self.setLineEdit(self.line_edit)
+            self.update_edit_text()
+            self.currentTextChanged.connect(
+                lambda _: self.update_edit_text())
 
     def flags(self, index):
         """Returns flags for widget
@@ -85,6 +91,7 @@ class ComboBoxExt(QComboBox):
             else Qt.Unchecked
         item.setCheckState(state)
         self._changed = True
+        self.update_edit_text()
 
     def set_current_data(self, data):
         """Select item by data
@@ -171,6 +178,7 @@ class ComboBoxExt(QComboBox):
         if item:
             state = Qt.Checked if checked else Qt.Unchecked
             item.setCheckState(state)
+            self.update_edit_text()
             return True
         return False
 
@@ -187,6 +195,7 @@ class ComboBoxExt(QComboBox):
         item_index = self.findText(text)
         if item_index != -1:
             self.check_item_by_index(item_index, checked)
+            self.update_edit_text()
             return True
         return False
 
@@ -203,6 +212,7 @@ class ComboBoxExt(QComboBox):
         item_index = self.findData(data)
         if item_index != -1:
             self.check_item_by_index(item_index, checked)
+            self.update_edit_text()
             return True
         return False
 
@@ -235,3 +245,35 @@ class ComboBoxExt(QComboBox):
         for i in range(0, self.count()):
             self.check_item_by_index(i, checked)
 
+    def is_item_checked(self, index):
+        """Returns True if an item at an index exists and is checked
+
+        Args:
+            index (int): Index of item
+
+        Returns:
+            bool: True if item is checked
+        """
+        item = self.model().item(index, 0)
+        if item and item.checkState() == Qt.Checked:
+            return True
+        return False
+
+    def checked_count(self):
+        """Returns the number of checked items
+
+        Returns:
+            int: The count of checked items
+        """
+        count = 0
+        for i in range(0, self.count()):
+            if self.is_item_checked(i):
+                count += 1
+        return count
+
+    def update_edit_text(self):
+        """Updates the edit text to display the selected count
+        """
+        count = self.checked_count()
+        text = f"{count} item{"" if count == 1 else "s"} selected"
+        self.line_edit.setText(text)

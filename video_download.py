@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 import sys
 import shutil
