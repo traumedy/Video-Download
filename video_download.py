@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 import sys
 import shutil
@@ -413,7 +413,7 @@ class MainWindow(QMainWindow):
         self.subtitles_layout.addWidget(QLabel("Download format:"), 1, 4,
                                         alignment=Qt.AlignmentFlag.AlignRight)
         self.subtitles_layout.addWidget(self.subs_format_combo, 1, 5)
-        self.subtitles_layout.addWidget(QLabel("Convert format:"), 2, 4,
+        self.subtitles_layout.addWidget(QLabel("Convert to format:"), 2, 4,
                                         alignment=Qt.AlignmentFlag.AlignRight)
         self.subtitles_layout.addWidget(self.subs_cnvt_combo, 2, 5)
         self.subtitles_layout.addWidget(QLabel("Download delay:"), 2, 6,
@@ -1077,7 +1077,8 @@ class MainWindow(QMainWindow):
             if resdata:
                 sort_str = f"res:{resdata}"
                 ydl_opts["format_sort"] = [sort_str]
-        # Match hook used for aborting
+                message = f"Using format sort string: {sort_str}"
+                self.add_status_message(message)
         ydl_opts["postprocessor_hooks"] = [self.ydl_postprocessor_hook]
         return ydl_opts
 
