@@ -39,10 +39,12 @@ class SettingsConst:
     SETTINGS_VAL_SPECIFYRES = "SpecifyResolution"
     SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitles"
     SETTINGS_VAL_OVERWRITE = "Overwrite"
-    SETTINGS_VAL_KEEPVIDEO = "KeepVideo"
+    SETTINGS_VAL_KEEPFILES = "KeepFiles"
     SETTINGS_VAL_CONSOLEOUTPUT = "ConsoleOutput"
     SETTINGS_VAL_PREFERFREEFORMATS = "PreferFreeFormats"
     SETTINGS_VAL_SUBTITLEFORMAT = "SubtitleFormat"
+    SETTINGS_VAL_SUBTITLECONVERT = "SubtitleConvert"
+    SETTINGS_VAL_SUBTITLEMERGE = "SubtitleMerge"
     SETTINGS_VAL_AUTOGENSUBS = "SubtitlesGenerated"
     SETTINGS_VAL_SUBTITLELANGUAGE = "SubtitleLanguage"
     SETTINGS_VAL_SUBTITLEDELAY = "SubtitleDelay"
@@ -69,9 +71,9 @@ class ComboBoxConst:
     URL_TYPE_SINGLE = 0
     URL_TYPE_LIST = 1
 
-    SUBTITLES_FORMAT_LIST = [("vtt", True), ("ttml", True), ("srv3", True),
-                             ("srv2", True), ("srv1", True), ("json3", True),
-                             ("ass", False), ("lrc", False), ("srt", False)]
+    SUBTITLES_DOWNFMT_LIST = ["vtt", "ttml", "srv3", "srv2", "srv1", "json3"]
+    SUBTITLES_CNVTFMT_LIST = [("None", ""), ("ass", "ass"),
+                              ("lrc", "lrc"), ("srt","srt")]
     SUBTITLES_LANGUAGES_LIST = [("Afrikaans", "af"), ("Akan", "ak"),
                                 ("Albanian", "sq"), ("Amharic", "am"),
                                 ("Arabic", "ar"), ("Armenian", "hy"),
@@ -260,25 +262,29 @@ class ToolTips:
     TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video.\nMore options " \
         "will be revealed when checked."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
-        "downloading"
-    TTT_KEEPVIDEO_CHECK = "Keep media files after post processing"
+        "downloading."
+    TTT_KEEPFILES_CHECK = "Keep media files after post processing."
     TTT_PREFERFREEFORMATS_CHECK = "Whether to prefer video formats with " \
-        "free containers over non-free ones of same quality"
+        "free containers over non-free ones of same quality."
     TTT_CONSOLEOUTPUT_CHECK = "The yt_dlp library will output to the " \
         "console that launched this program.\nUseful for debugging."
-    TTT_GENERATEDSUBS_CHECK = "Download auto-generated caption text.\nIf" \
-        "unchecked, actual subtitles will be downloaded."
+    TTT_GENERATEDSUBS_CHECK = "Download automatically generated caption " \
+        "text.\nIf unchecked, user supplied subtitles will be downloaded " \
+        "if available."
     TTT_SUBS_LANG_COMBO = "The languages of subtitles to download.\nThe " \
         "languages must be available from the server."
     TTT_SUBS_CLEAR_BUTTON = "Clears all checked subtitle languages."
     TTT_SUBS_FORMAT_COMBO = "The destination subtitle format.\nSome formats " \
         "will be converted."
+    TTT_SUBS_CONVERT_COMBO = "The optional format to convert the downloaded " \
+        "subtitles to."
+    TTT_SUBS_MERGE_CHECK = "Merge subtitles into output video file."
     TTT_SUBS_DELAY_SPIN = "The delay in seconds between subtitle " \
-        "retrieval.\nIf too many download requests happen too quickly,\n" \
+        "retrievals.\nIf too many download requests happen too quickly, \n" \
         "some sites will abort the activity."
     TTT_LIST_SUBS_BUTTON = "Attempt to retrieve a list of available " \
         "subtitles from the server."
-    TTT_FORMAT_TYPE_COMBO = "Select which method of format selection to use"
+    TTT_FORMAT_TYPE_COMBO = "Select which method of format selection to use."
     TTT_FORMAT_QUALITY_COMBO = "Select the quality level to download.\n" \
         "Different quality levels may result in different file types.\n" \
         "Not all quality levels may be available."
@@ -313,9 +319,9 @@ class ToolTips:
         "to change the zoom factor,\nand copy text by dragging and then " \
         "pressing CTRL-C.\nClicking on a blue link will select that format " \
         "in the format selection options."
-    TTT_CLOSE_BUTTON = "Close this window"
-    TTT_DOWNLOAD_BUTTON = "Begin downloading and processing video " \
-        "files"
+    TTT_CLOSE_BUTTON = "Close this window."
+    TTT_DOWNLOAD_BUTTON = "Begin downloading and processing " \
+        "files."
 
 
 class LinkIds:
