@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
         widgets = [self.list_path_browse_button,
                    self.download_path_browse_button,
                    self.ffmpeg_path_browse_button, self.subs_clear_pushbutton,
-                   self.subs_all_pushbutton, 
+                   self.subs_all_pushbutton,
                    self.subs_lang_combo, self.subs_format_combo,
                    self.subs_cnvt_combo,
                    self.list_subs_button, self.format_type_combo,

@@ -255,9 +255,7 @@ class ComboBoxExt(QComboBox):
             bool: True if item is checked
         """
         item = self.model().item(index, 0)
-        if item and item.checkState() == Qt.Checked:
-            return True
-        return False
+        return item and item.checkState() == Qt.Checked
 
     def checked_count(self):
         """Returns the number of checked items
@@ -265,11 +263,7 @@ class ComboBoxExt(QComboBox):
         Returns:
             int: The count of checked items
         """
-        count = 0
-        for i in range(0, self.count()):
-            if self.is_item_checked(i):
-                count += 1
-        return count
+        return sum(self.is_item_checked(i) for i in range(self.count()))
 
     def update_edit_text(self):
         """Updates the edit text to display the selected count
