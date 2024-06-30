@@ -9,14 +9,13 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.2"
+__version__ = "0.4.3"
 
 import sys
 import shutil
-import re
 from overrides import override
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
-from PySide6.QtGui import QDesktopServices, QFont
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QGridLayout, QTextEdit
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
@@ -54,6 +53,7 @@ class MainWindow(QMainWindow):
     specifyformat_check: QCheckBox
     specifyres_check: QCheckBox
     downloadsubs_check: QCheckBox
+    autoscroll_check: QCheckBox
     overwrite_check: QCheckBox
     keepfiles_check: QCheckBox
     preferfreeformats_check: QCheckBox
@@ -141,6 +141,9 @@ class MainWindow(QMainWindow):
         # Load persistent settings including stored window size
         self.load_settings()
 
+        # Set status window auto-scroll state
+        self.status_text.set_autoscroll(self.autoscroll_check.isChecked())
+
         # Possibly hide formats and subtitles rows
         visible = self.downloadsubs_check.isChecked()
         self.main_layout.setRowVisible(self.subtitles_layout, visible)
@@ -169,6 +172,7 @@ class MainWindow(QMainWindow):
         self.specifyformat_check = QCheckBox("Specify format")
         self.specifyres_check = QCheckBox("Specify resolution")
         self.downloadsubs_check = QCheckBox("Download subtitles")
+        self.autoscroll_check = QCheckBox("Auto-scroll status window")
         self.overwrite_check = QCheckBox("Overwrite")
         self.keepfiles_check = QCheckBox("Keep files")
         self.preferfreeformats_check = QCheckBox("Prefer free formats")
@@ -249,17 +253,6 @@ class MainWindow(QMainWindow):
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
-        # Set status text box to read only for status logs
-        self.status_text.setReadOnly(True)
-        # Set status text default font to monospace
-        font = QFont(AppConst.MONOSPACE_FONT_NAME)
-        font.setStyleHint(QFont.StyleHint.TypeWriter)
-        font.setWeight(QFont.Weight.Black)
-        self.status_text.setFont(font)
-        # Set status window to not wrap text
-        self.status_text.setLineWrapMode(QTextEdit.LineWrapMode.NoWrap)
-        # Set to accept rich text
-        self.status_text.setAcceptRichText(True)
 
         # Populate subtitles combo boxes
         for lang, lang_code in ComboBoxConst.SUBTITLES_LANGUAGES_LIST:
@@ -340,6 +333,7 @@ class MainWindow(QMainWindow):
         switches_layout.addWidget(self.specifyres_check, 2, 1)
         # Disable this widget to hide subtitles panel
         switches_layout.addWidget(self.downloadsubs_check, 1, 2)
+        switches_layout.addWidget(self.autoscroll_check, 2, 2)
         switches_layout.addWidget(self.overwrite_check, 1, 3)
         switches_layout.addWidget(self.keepfiles_check, 2, 3)
         switches_layout.addWidget(self.preferfreeformats_check, 1, 4)
@@ -471,6 +465,9 @@ class MainWindow(QMainWindow):
         self.downloadsubs_check.checkStateChanged.connect(
             lambda checked: self.main_layout.setRowVisible(
                 self.subtitles_layout, checked == Qt.CheckState.Checked))
+        self.autoscroll_check.checkStateChanged.connect(
+            lambda checked: self.status_text.set_autoscroll(
+                checked == Qt.CheckState.Checked))
         self.subs_all_pushbutton.clicked.connect(
             lambda: self.subs_lang_combo.check_all(True))
         self.subs_clear_pushbutton.clicked.connect(
@@ -506,6 +503,7 @@ class MainWindow(QMainWindow):
         self.specifyformat_check.setToolTip(ToolTips.TTT_SPECIFYFORMAT_CHECK)
         self.specifyres_check.setToolTip(ToolTips.TTT_SPECIFYRES_CHECK)
         self.downloadsubs_check.setToolTip(ToolTips.TTT_DOWNLOADSUBS_CHECK)
+        self.autoscroll_check.setToolTip(ToolTips.TTT_AUTOSCROLL_CHECK)
         self.overwrite_check.setToolTip(ToolTips.TTT_OVERWRITE_CHECK)
         self.keepfiles_check.setToolTip(ToolTips.TTT_KEEPFILES_CHECK)
         self.preferfreeformats_check.setToolTip(
@@ -673,6 +671,8 @@ class MainWindow(QMainWindow):
                 SettingsConst.SETTINGS_VAL_RESHEIGHT, ""),
             (self.downloadsubs_check,
                 SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, ""),
+            (self.autoscroll_check,
+                SettingsConst.SETTINGS_VAL_AUTOSCROLLSTATUS, ""),
             (self.overwrite_check, SettingsConst.SETTINGS_VAL_OVERWRITE, ""),
             (self.keepfiles_check, SettingsConst.SETTINGS_VAL_KEEPFILES, ""),
             (self.preferfreeformats_check,
@@ -1261,7 +1261,7 @@ class MainWindow(QMainWindow):
                 # Add fields to table
                 table.add_row(fields)
             # Add table to status window
-            self.status_text.append_safe(table.to_html())
+            self.status_text.append_html(table.to_html())
 
         # Reenable widgets that would interfere with processing
         self.enable_active_buttons(True)
@@ -1290,6 +1290,12 @@ class MainWindow(QMainWindow):
                 return
 
             def parse_subs(self, key, name):
+                """Parses subtitle metadata
+
+                Args:
+                    key (str): Key name to parse
+                    name (str): Description of this subtitle
+                """
                 if key not in meta or not isinstance(meta[key],
                                                      dict) or not meta[key]:
                     self.add_status_message("This video seems to contain no "
@@ -1299,33 +1305,24 @@ class MainWindow(QMainWindow):
                     headers = ["Code", "Name", "Format"]
                     table = DocTable(name, headers)
                     for key, value in subtitles_list.items():
+                        fields = []
+                        link = LinkIds.LINKID_SUBLANGUAGE + ":" + key
+                        fields.append((key, link))
+                        extensions = []
+                        name = ""
                         for sub in value:
-                            fields = []
-                            link = LinkIds.LINKID_SUBLANGUAGE + ":" + key
-                            fields.append((key, link))
-                            fields.append(
-                                (sub["name"] if "name" in sub else "", None))
-                            ext = sub["ext"] if "ext" in sub else ""
-                            link = LinkIds.LINKID_SUBEXTENSION + ":" + ext
-                            fields.append((ext, link))
-                            table.add_row(fields)
+                            name = sub["name"] if "name" in sub else ""
+                            extensions.append(sub["ext"]
+                                              if "ext" in sub else "")
+                        fields.append((name, None))
+                        fields.append((extensions,
+                                       LinkIds.LINKID_SUBEXTENSION))
+                        table.add_row(fields)
                     # Add table to status window
-                    self.status_text.append_safe(table.to_html())
+                    self.status_text.append_html(table.to_html())
             parse_subs(self, "automatic_captions", "Auto-generated captions")
             parse_subs(self, "subtitles", "Subtitles")
         self.enable_active_buttons(True)
-
-    def strip_color_codes(self, message):
-        """Removes console color escape codes from string
-
-        Args:
-            message (str): Message with possible color codes
-
-        Returns:
-            str: message with color escape codes removed
-        """
-        regex = re.compile(AppConst.REGEX_COLORSTRIP)
-        return regex.sub("", message)
 
     def add_status_message(self, message):
         """Adds text to the status window and scrolls to the bottom
@@ -1333,8 +1330,8 @@ class MainWindow(QMainWindow):
         Args:
             message (str): Message text to add
         """
-        # Add text with console color codes stripped
-        self.status_text.append_safe(self.strip_color_codes(message))
+        # Add text to status window
+        self.status_text.append_text(message)
         # Drive message loop
         QApplication.processEvents()
 

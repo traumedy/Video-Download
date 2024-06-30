@@ -38,6 +38,7 @@ class SettingsConst:
     SETTINGS_VAL_SPECIFYFORMAT = "SpecifyFormat"
     SETTINGS_VAL_SPECIFYRES = "SpecifyResolution"
     SETTINGS_VAL_DOWNLOADSUBTITLES = "DownloadSubtitles"
+    SETTINGS_VAL_AUTOSCROLLSTATUS = "AutoScrollStatus"
     SETTINGS_VAL_OVERWRITE = "Overwrite"
     SETTINGS_VAL_KEEPFILES = "KeepFiles"
     SETTINGS_VAL_CONSOLEOUTPUT = "ConsoleOutput"
@@ -257,6 +258,8 @@ class ToolTips:
         "The highest resolution below or equal to this will be downloaded."
     TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video.\nMore options " \
         "will be revealed when checked."
+    TTT_AUTOSCROLL_CHECK = "When checked, status window automatically " \
+        "scrolls to the bottom when new text is added."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
         "downloading."
     TTT_KEEPFILES_CHECK = "Keep media files after post processing."

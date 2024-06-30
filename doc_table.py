@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""doc_table.py - Class containing QTextDocument and QTextTable
+"""doc_table.py - DocTable class encapsulating QTextDocument and QTextTable
 """
 
 __author__ = "Josh Buchbinder"
@@ -29,7 +29,9 @@ class DocTable(QTextDocument):
         """Adds a row to a QTextTable
 
         Args:
-            fields ([(str, str)]): List of fiends to add (text, link)
+            fields ([(str|[str], str)]): List of string tuples of fields and
+                links to add (text, link) or list of tuples with multiple
+                strings using the same link prefix ([texts], link_prefix)
             header (bool): True if this is the header (Default: False)
         """
         cursor = QTextCursor()
@@ -45,14 +47,23 @@ class DocTable(QTextDocument):
                 fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
                 cell.setFormat(fmt)
             if field[0]:
+                fmt_orig = cursor.charFormat()
                 if field[1]:
                     # Link
-                    txt_fmt = cursor.charFormat()
-                    txt_fmt.setAnchor(True)
-                    txt_fmt.setAnchorHref(field[1])
-                    # txt_fmt.setAnchorNames([str(field[0])])
-                    # txt_fmt.setToolTip("TEST")
-                    cursor.insertText(str(field[0]), txt_fmt)
+                    fmt = fmt_orig
+                    fmt.setAnchor(True)
+                    if isinstance(field[0], list):
+                        # A list of link strings
+                        for s in field[0]:
+                            link = field[1] + ":" + s
+                            fmt.setAnchorHref(link)
+                            cursor.insertText(s, fmt)
+                            cursor.insertText(" ", fmt_orig)
+                    else:
+                        fmt.setAnchorHref(field[1])
+                        cursor.insertText(str(field[0]), fmt)
+                    # Restore original format
+                    cursor.setCharFormat(fmt_orig)
                 else:
                     # Plain text
                     cursor.insertText(str(field[0]))
