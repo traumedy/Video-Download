@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.4"
+__version__ = "0.4.5"
 
 import sys
 import shutil
@@ -64,9 +64,9 @@ class MainWindow(QMainWindow):
     format_quality_layout_widget: QWidget
     format_quality_combo: QComboBox
     format_audext_layout_widget: QWidget
-    format_audext_combo: QComboBox
+    format_audext_combo: ComboBoxExt
     format_vidext_layout_widget: QWidget
-    format_vidext_combo: QComboBox
+    format_vidext_combo: ComboBoxExt
     format_audcodec_layout_widget: QWidget
     format_audcodec_combo: ComboBoxExt
     format_vidcodec_layout_widget: QWidget
@@ -183,9 +183,9 @@ class MainWindow(QMainWindow):
         self.format_quality_layout_widget = QWidget()
         self.format_quality_combo = QComboBox()
         self.format_audext_layout_widget = QWidget()
-        self.format_audext_combo = QComboBox()
+        self.format_audext_combo = ComboBoxExt()
         self.format_vidext_layout_widget = QWidget()
-        self.format_vidext_combo = QComboBox()
+        self.format_vidext_combo = ComboBoxExt()
         self.format_audcodec_layout_widget = QWidget()
         self.format_audcodec_combo = ComboBoxExt()
         self.format_vidcodec_layout_widget = QWidget()
@@ -598,15 +598,15 @@ class MainWindow(QMainWindow):
                 self.format_string_text.setText(value)
             elif ident == LinkIds.LINKID_FILEEXT:
                 if value in ComboBoxConst.FORMAT_EXT_VID_LIST:
-                    self.format_type_combo.set_current_data(
-                        ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT)
-                    self.specifyformat_check.setChecked(True)
-                    self.format_vidext_combo.setCurrentText(value)
+                    if self.format_vidext_combo.setCurrentText(value):
+                        self.format_type_combo.set_current_data(
+                            ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT)
+                        self.specifyformat_check.setChecked(True)
                 elif value in ComboBoxConst.FORMAT_EXT_AUD_LIST:
-                    self.format_type_combo.set_current_data(
-                        ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT)
-                    self.specifyformat_check.setChecked(True)
-                    self.format_audext_combo.setCurrentText(value)
+                    if self.format_audext_combo.setCurrentText(value):
+                        self.format_type_combo.set_current_data(
+                            ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT)
+                        self.specifyformat_check.setChecked(True)
             elif ident == LinkIds.LINKID_AUDIOCODEC:
                 dotpos = value.find(".")
                 if dotpos != -1:
