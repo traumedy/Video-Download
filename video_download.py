@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 
 import sys
 import shutil
@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
     subs_lang_combo: ComboBoxExt
     subs_all_pushbutton: QPushButton
     subs_clear_pushbutton: QPushButton
-    subs_format_combo: QComboBox
+    subs_format_combo: ComboBoxExt
     subs_cnvt_combo: QComboBox
     subs_merge_check: QCheckBox
     subs_delay_spin: QSpinBox
@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
         self.subs_lang_combo = ComboBoxExt(checkboxes=True)
         self.subs_all_pushbutton = QPushButton("Check all languages")
         self.subs_clear_pushbutton = QPushButton("Uncheck all languages")
-        self.subs_format_combo = QComboBox()
+        self.subs_format_combo = ComboBoxExt()
         self.subs_cnvt_combo = QComboBox()
         self.subs_merge_check = QCheckBox("Merge into video")
         self.subs_delay_spin = QSpinBox()
@@ -625,7 +625,8 @@ class MainWindow(QMainWindow):
                 if self.subs_lang_combo.check_item_by_data(value, True):
                     self.downloadsubs_check.setChecked(True)
             elif ident == LinkIds.LINKID_SUBEXTENSION:
-                self.subs_format_combo.setCurrentText(value)
+                if self.subs_format_combo.setCurrentText(value):
+                    self.downloadsubs_check.setChecked(True)
             elif ident == LinkIds.LINKID_RESOLUTION:
                 xpos = value.find("x")
                 if xpos != -1:

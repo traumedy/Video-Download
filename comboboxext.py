@@ -80,6 +80,22 @@ class ComboBoxExt(QComboBox):
             super().hidePopup()
         self._changed = False
 
+    @override
+    def setCurrentText(self, text):
+        """Override setCurrentText to return True if item is found
+
+        Args:
+            text (str): Text to find
+
+        Returns:
+            bool: True if item is found
+        """
+        index = self.findText(text)
+        if index != -1:
+            self.setCurrentIndex(index)
+            return True
+        return False
+
     def item_pressed(self, index):
         """Callback function for whan an item is pressed
 
