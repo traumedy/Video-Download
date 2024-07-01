@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.5"
+__version__ = "0.4.6"
 
 import sys
 import shutil
@@ -665,23 +665,25 @@ class MainWindow(QMainWindow):
             (self.username_text, SettingsConst.SETTINGS_VAL_USERNAME, ""),
             (self.password_text, SettingsConst.SETTINGS_VAL_PASSWORD, ""),
             (self.specifyformat_check,
-                SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, ""),
+                SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, False),
             (self.specifyres_check,
-                SettingsConst.SETTINGS_VAL_SPECIFYRES, ""),
+                SettingsConst.SETTINGS_VAL_SPECIFYRES, False),
             (self.resolution_combo,
                 SettingsConst.SETTINGS_VAL_RESHEIGHT, ""),
             (self.downloadsubs_check,
-                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, ""),
+                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, False),
             (self.autoscroll_check,
-                SettingsConst.SETTINGS_VAL_AUTOSCROLLSTATUS, ""),
-            (self.overwrite_check, SettingsConst.SETTINGS_VAL_OVERWRITE, ""),
-            (self.keepfiles_check, SettingsConst.SETTINGS_VAL_KEEPFILES, ""),
+                SettingsConst.SETTINGS_VAL_AUTOSCROLLSTATUS, True),
+            (self.overwrite_check,
+                SettingsConst.SETTINGS_VAL_OVERWRITE, False),
+            (self.keepfiles_check,
+                SettingsConst.SETTINGS_VAL_KEEPFILES, False),
             (self.preferfreeformats_check,
-                SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, ""),
+                SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, False),
             (self.consoleoutput_check,
-                SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, ""),
+                SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, False),
             (self.generatedsubs_check,
-                SettingsConst.SETTINGS_VAL_AUTOGENSUBS, ""),
+                SettingsConst.SETTINGS_VAL_AUTOGENSUBS, False),
             (self.subs_lang_combo,
                 SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE, ""),
             (self.subs_cnvt_combo,
@@ -733,7 +735,7 @@ class MainWindow(QMainWindow):
                                                           default))
             elif isinstance(widget, QCheckBox):
                 widget.setChecked(value_to_bool(
-                                  self.settings.value(settings_key)))
+                                  self.settings.value(settings_key, default)))
             elif isinstance(widget, QSpinBox):
                 widget.setValue(self.settings.value(settings_key,
                                                     default))
