@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.7"
+__version__ = "0.4.8"
 
 import sys
 import shutil
@@ -347,28 +347,33 @@ class MainWindow(QMainWindow):
                                         alignment=Qt.AlignmentFlag.AlignRight)
         format_quality_layout.addWidget(self.format_quality_combo,
                                         alignment=Qt.AlignmentFlag.AlignLeft)
+        format_quality_layout.addStretch()
         format_audext_layout = QHBoxLayout(self.format_audext_layout_widget)
         format_audext_layout.addWidget(QLabel("File extension:"),
                                        alignment=Qt.AlignmentFlag.AlignRight)
         format_audext_layout.addWidget(self.format_audext_combo,
                                        alignment=Qt.AlignmentFlag.AlignLeft)
+        format_audext_layout.addStretch()
         format_vidext_layout = QHBoxLayout(self.format_vidext_layout_widget)
         format_vidext_layout.addWidget(QLabel("Video extension:"),
                                        alignment=Qt.AlignmentFlag.AlignRight)
         format_vidext_layout.addWidget(self.format_vidext_combo,
                                        alignment=Qt.AlignmentFlag.AlignLeft)
+        format_vidext_layout.addStretch()
         format_audcodec_layout = QHBoxLayout(
             self.format_audcodec_layout_widget)
         format_audcodec_layout.addWidget(QLabel("Audio codec:"),
                                          alignment=Qt.AlignmentFlag.AlignRight)
         format_audcodec_layout.addWidget(self.format_audcodec_combo,
                                          alignment=Qt.AlignmentFlag.AlignLeft)
+        format_audcodec_layout.addStretch()
         format_vidcodec_layout = QHBoxLayout(
             self.format_vidcodec_layout_widget)
         format_vidcodec_layout.addWidget(QLabel("Video codec:"),
                                          alignment=Qt.AlignmentFlag.AlignRight)
         format_vidcodec_layout.addWidget(self.format_vidcodec_combo,
                                          alignment=Qt.AlignmentFlag.AlignLeft)
+        format_vidcodec_layout.addStretch()
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
@@ -386,6 +391,7 @@ class MainWindow(QMainWindow):
         format_merge_layout.addWidget(QLabel("Output format:"),
                                       alignment=Qt.AlignmentFlag.AlignRight)
         format_merge_layout.addWidget(self.format_marge_container_combo)
+        # format_merge_layout.addStretch()
         self.format_stacked_widget.addWidget(self.format_quality_layout_widget)
         self.format_stacked_widget.addWidget(self.format_audext_layout_widget)
         self.format_stacked_widget.addWidget(self.format_vidext_layout_widget)
