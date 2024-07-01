@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.6"
+__version__ = "0.4.7"
 
 import sys
 import shutil
@@ -83,8 +83,8 @@ class MainWindow(QMainWindow):
     subtitles_layout: QGridLayout
     generatedsubs_check: QCheckBox
     subs_lang_combo: ComboBoxExt
-    subs_all_pushbutton: QPushButton
-    subs_clear_pushbutton: QPushButton
+    subs_all_button: QPushButton
+    subs_clear_button: QPushButton
     subs_format_combo: ComboBoxExt
     subs_cnvt_combo: QComboBox
     subs_merge_check: QCheckBox
@@ -202,8 +202,8 @@ class MainWindow(QMainWindow):
         self.subtitles_layout = QGridLayout()
         self.generatedsubs_check = QCheckBox("Auto-generated")
         self.subs_lang_combo = ComboBoxExt(checkboxes=True)
-        self.subs_all_pushbutton = QPushButton("Check all languages")
-        self.subs_clear_pushbutton = QPushButton("Uncheck all languages")
+        self.subs_all_button = QPushButton("Check all languages")
+        self.subs_clear_button = QPushButton("Uncheck all languages")
         self.subs_format_combo = ComboBoxExt()
         self.subs_cnvt_combo = QComboBox()
         self.subs_merge_check = QCheckBox("Merge into video")
@@ -224,7 +224,8 @@ class MainWindow(QMainWindow):
             self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
         # QLineEdit fields to expand to fill
-        # (These don't seem to work)
+        # (These don't seem to work, probably Apply UI guidelines prevent
+        # usable interfaces)
         widgets = [self.list_path_text, self.download_path_text,
                    self.ffmpeg_path_text]
         for widget in widgets:
@@ -236,20 +237,22 @@ class MainWindow(QMainWindow):
             widget.setSizePolicy(QSizePolicy.Policy.Expanding,
                                  QSizePolicy.Policy.Fixed)
         # Prevent various other widgets from expanding horizontally
-        # (some of these don't work)
         widgets = [self.list_path_browse_button,
                    self.download_path_browse_button,
-                   self.ffmpeg_path_browse_button, self.subs_clear_pushbutton,
-                   self.subs_all_pushbutton,
-                   self.subs_lang_combo, self.subs_format_combo,
-                   self.subs_cnvt_combo,
-                   self.list_subs_button, self.format_type_combo,
-                   self.format_quality_combo, self.format_audext_combo,
-                   self.format_vidext_combo, self.format_audcodec_combo,
-                   self.format_vidcodec_combo, self.format_merge_audio_combo,
-                   self.format_merge_video_combo,
-                   self.format_marge_container_combo,
-                   self.resolution_combo, self.subs_delay_spin]
+                   self.ffmpeg_path_browse_button, self.subs_clear_button,
+                   self.subs_all_button, self.list_subs_button,
+                   self.resolution_combo
+                   # self.subs_lang_combo, self.subs_format_combo,
+                   # self.subs_cnvt_combo,
+                   # self.format_type_combo,
+                   # self.format_quality_combo, self.format_audext_combo,
+                   # self.format_vidext_combo, self.format_audcodec_combo,
+                   # self.format_vidcodec_combo,
+                   # self.format_merge_audio_combo,
+                   # self.format_merge_video_combo,
+                   # self.format_marge_container_combo,
+                   # self.subs_delay_spin
+                   ]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
@@ -400,9 +403,9 @@ class MainWindow(QMainWindow):
         self.subtitles_layout.addWidget(QLabel("Languages:"), 1, 2,
                                         alignment=Qt.AlignmentFlag.AlignRight)
         self.subtitles_layout.addWidget(self.subs_lang_combo, 1, 3)
-        self.subtitles_layout.addWidget(self.subs_all_pushbutton, 2, 2,
+        self.subtitles_layout.addWidget(self.subs_all_button, 2, 2,
                                         alignment=Qt.AlignmentFlag.AlignRight)
-        self.subtitles_layout.addWidget(self.subs_clear_pushbutton, 2, 3,
+        self.subtitles_layout.addWidget(self.subs_clear_button, 2, 3,
                                         alignment=Qt.AlignmentFlag.AlignLeft)
         self.subtitles_layout.addWidget(QLabel("Download format:"), 1, 4,
                                         alignment=Qt.AlignmentFlag.AlignRight)
@@ -468,9 +471,9 @@ class MainWindow(QMainWindow):
         self.autoscroll_check.checkStateChanged.connect(
             lambda checked: self.status_text.set_autoscroll(
                 checked == Qt.CheckState.Checked))
-        self.subs_all_pushbutton.clicked.connect(
+        self.subs_all_button.clicked.connect(
             lambda: self.subs_lang_combo.check_all(True))
-        self.subs_clear_pushbutton.clicked.connect(
+        self.subs_clear_button.clicked.connect(
             lambda: self.subs_lang_combo.check_all(False))
         self.list_subs_button.clicked.connect(
             lambda: self.download_subtitle_formats(self.url_text.text()))
@@ -511,7 +514,7 @@ class MainWindow(QMainWindow):
         self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
         self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
         self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
-        self.subs_clear_pushbutton.setToolTip(ToolTips.TTT_SUBS_CLEAR_BUTTON)
+        self.subs_clear_button.setToolTip(ToolTips.TTT_SUBS_CLEAR_BUTTON)
         self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
         self.subs_cnvt_combo.setToolTip(ToolTips.TTT_SUBS_CONVERT_COMBO)
         self.subs_merge_check.setToolTip(ToolTips.TTT_SUBS_MERGE_CHECK)
@@ -1017,20 +1020,21 @@ class MainWindow(QMainWindow):
                 self.add_status_message(message)
             subs_format = self.subs_format_combo.currentText()
             ydl_opts["subtitlesformat"] = subs_format
-            convert_format = self.subs_cnvt_combo.currentData()
-            ydl_opts["postprocessors"] = []
-            if convert_format:
-                cnvt_dict = {"format": convert_format,
-                             'key': 'FFmpegSubtitlesConvertor',
-                             'when': 'before_dl'}
-                ydl_opts["postprocessors"].append(cnvt_dict)
-            if self.subs_merge_check.isChecked():
-                merge_dict = {'already_have_subtitle': True,
-                              'key': 'FFmpegEmbedSubtitle'}
-            ydl_opts["postprocessors"].append(merge_dict)
             sleep_interval = self.subs_delay_spin.value()
             if sleep_interval:
                 ydl_opts["sleep_interval_subtitles"] = sleep_interval
+            # Create post processors dictionary
+            postprocessors_dict = []
+            convert_format = self.subs_cnvt_combo.currentData()
+            if convert_format:
+                postprocessors_dict.append({"format": convert_format,
+                                            'key': 'FFmpegSubtitlesConvertor',
+                                            'when': 'before_dl'})
+            if self.subs_merge_check.isChecked():
+                postprocessors_dict.append({'already_have_subtitle': True,
+                                            'key': 'FFmpegEmbedSubtitle'})
+            if postprocessors_dict:
+                ydl_opts["postprocessors"] = postprocessors_dict
 
         format_str = ""
         if self.specifyformat_check.isChecked():
