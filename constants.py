@@ -8,8 +8,6 @@ Author: Josh Buchbinder
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
-import shutil
-from PySide6.QtCore import QFileInfo
 
 class AppConst:
     """Various strings
@@ -74,15 +72,6 @@ class SettingsConst:
         Returns:
             [(QWidget, str)]: [(Widget, settings key, default)]
         """
-        # Default to ffmpeg in path
-        ffmpeg_path = shutil.which("ffmpeg")
-        if ffmpeg_path:
-            # If ffmpeg found
-            ffmpeg_info = QFileInfo(ffmpeg_path)
-            ffmpeg_path = ffmpeg_info.dir().path()
-        else:
-            # ffmpeg executable not found in path
-            ffmpeg_path = ""
 
         return [
             (mainwindow.url_type_combo,
@@ -94,7 +83,7 @@ class SettingsConst:
             (mainwindow.download_path_text,
                 SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""),
             (mainwindow.ffmpeg_path_text,
-                SettingsConst.SETTINGS_VAL_FFMPEGPATH, ffmpeg_path),
+                SettingsConst.SETTINGS_VAL_FFMPEGPATH, ""),
             (mainwindow.username_text,
                 SettingsConst.SETTINGS_VAL_USERNAME, ""),
             (mainwindow.password_text,

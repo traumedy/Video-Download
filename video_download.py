@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.8"
+__version__ = "0.4.9"
 
 import sys
 from overrides import override
@@ -28,7 +28,7 @@ from status_window import StatusWindow
 from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips, LinkIds
 from bookmark_html_parser import BookmarkHTMLParser
 from doc_table import DocTable
-from utils import value_to_bool
+from utils import value_to_bool, get_ffmpeg_bin_path
 
 
 class MainWindow(QMainWindow):
@@ -697,11 +697,14 @@ class MainWindow(QMainWindow):
         state = self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWSTATE,
                                     Qt.WindowState.WindowNoState)
         self.setWindowState(state)
+        # Try to find ffmpeg path if blank
+        if not self.ffmpeg_path_text.text():
+            self.ffmpeg_path_text.setText(get_ffmpeg_bin_path())
 
     def save_settings(self):
         """Save persistent settingss
         """
-        widgets = self.get_settings_widgets()
+        widgets = SettingsConst.get_mainwindow_widgets_vals(self)
         for widget, settings_key, _ in widgets:
             if isinstance(widget, QLineEdit):
                 self.settings.setValue(settings_key, widget.text())
