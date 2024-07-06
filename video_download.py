@@ -28,7 +28,7 @@ from status_window import StatusWindow
 from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips, LinkIds
 from bookmark_html_parser import BookmarkHTMLParser
 from doc_table import DocTable
-from utils import value_to_bool, get_ffmpeg_bin_path
+from utils import value_to_bool, normalize_path, get_ffmpeg_bin_path
 
 
 class MainWindow(QMainWindow):
@@ -757,7 +757,8 @@ class MainWindow(QMainWindow):
         if file_dialog.exec():
             # Fill in text box
             selected_files = file_dialog.selectedFiles()
-            self.list_path_text.setText(selected_files[0])
+            path = normalize_path(selected_files[0])
+            self.list_path_text.setText(path)
 
     def download_browse_button_clicked(self):
         """Called when download path browse button is clicked
@@ -772,7 +773,7 @@ class MainWindow(QMainWindow):
             QFileDialog.ShowDirsOnly
             | QFileDialog.DontResolveSymlinks)
         if path:
-            self.download_path_text.setText(path)
+            self.download_path_text.setText(normalize_path(path))
 
     def ffmpeg_browse_button_clicked(self):
         """Called when ffmpeg browse button is clicked
