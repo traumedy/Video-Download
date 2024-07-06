@@ -12,12 +12,11 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 __version__ = "0.4.8"
 
 import sys
-import shutil
 from overrides import override
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
-from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QGridLayout, QTextEdit
+from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QGridLayout
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialogButtonBox, QSpinBox
 from PySide6.QtWidgets import QCheckBox, QComboBox, QStyle
@@ -308,39 +307,46 @@ class MainWindow(QMainWindow):
         Returns:
             QLayout: Layout for main window
         """
-        # Create horizontal layouts to stack browse buttons next to paths
+        # Single URL layout
         url_layout = QHBoxLayout(self.url_text_layout_widget)
         url_layout.addWidget(self.url_text)
         url_layout.addWidget(self.list_formats_button)
+        # URL list layout
         list_path_layout = QHBoxLayout(self.list_path_layout_widget)
         list_path_layout.addWidget(self.list_path_text)
         list_path_layout.addWidget(self.list_path_browse_button, 0,
                                    Qt.AlignmentFlag.AlignRight)
+        # Stacked widget to hold single URL and URL list layouts
         self.url_stacked_widget.addWidget(self.url_text_layout_widget)
         self.url_stacked_widget.addWidget(self.list_path_layout_widget)
+        # Download path layout
         download_path_layout = QHBoxLayout()
         download_path_layout.addWidget(self.download_path_text)
         download_path_layout.addWidget(self.download_path_browse_button, 0,
                                        Qt.AlignmentFlag.AlignRight)
+        # FFMPEG path layout
         ffmpeg_layout = QHBoxLayout()
         ffmpeg_layout.addWidget(self.ffmpeg_path_text)
         ffmpeg_layout.addWidget(self.ffmpeg_path_browse_button, 0,
                                 Qt.AlignmentFlag.AlignRight)
+        # Username/password layout
         auth_layout = QHBoxLayout()
         auth_layout.addWidget(QLabel("Username:"))
         auth_layout.addWidget(self.username_text)
         auth_layout.addWidget(QLabel("Password:"))
         auth_layout.addWidget(self.password_text)
+        # Switches (checkboxes) layout
         switches_layout = QGridLayout()
         switches_layout.addWidget(self.specifyformat_check, 1, 1)
         switches_layout.addWidget(self.specifyres_check, 2, 1)
-        # Disable this widget to hide subtitles panel
         switches_layout.addWidget(self.downloadsubs_check, 1, 2)
         switches_layout.addWidget(self.autoscroll_check, 2, 2)
         switches_layout.addWidget(self.overwrite_check, 1, 3)
         switches_layout.addWidget(self.keepfiles_check, 2, 3)
         switches_layout.addWidget(self.preferfreeformats_check, 1, 4)
         switches_layout.addWidget(self.consoleoutput_check, 2, 4)
+        # - Format selection layouts
+        # Audio + video by quality layout
         format_quality_layout = QHBoxLayout(
             self.format_quality_layout_widget)
         format_quality_layout.addWidget(QLabel("Quality:"),
@@ -348,18 +354,21 @@ class MainWindow(QMainWindow):
         format_quality_layout.addWidget(self.format_quality_combo,
                                         alignment=Qt.AlignmentFlag.AlignLeft)
         format_quality_layout.addStretch()
+        # Audio only by extension layout
         format_audext_layout = QHBoxLayout(self.format_audext_layout_widget)
         format_audext_layout.addWidget(QLabel("File extension:"),
                                        alignment=Qt.AlignmentFlag.AlignRight)
         format_audext_layout.addWidget(self.format_audext_combo,
                                        alignment=Qt.AlignmentFlag.AlignLeft)
         format_audext_layout.addStretch()
+        # Video only by extension layout
         format_vidext_layout = QHBoxLayout(self.format_vidext_layout_widget)
         format_vidext_layout.addWidget(QLabel("Video extension:"),
                                        alignment=Qt.AlignmentFlag.AlignRight)
         format_vidext_layout.addWidget(self.format_vidext_combo,
                                        alignment=Qt.AlignmentFlag.AlignLeft)
         format_vidext_layout.addStretch()
+        # Audio only by codec layout
         format_audcodec_layout = QHBoxLayout(
             self.format_audcodec_layout_widget)
         format_audcodec_layout.addWidget(QLabel("Audio codec:"),
@@ -367,6 +376,7 @@ class MainWindow(QMainWindow):
         format_audcodec_layout.addWidget(self.format_audcodec_combo,
                                          alignment=Qt.AlignmentFlag.AlignLeft)
         format_audcodec_layout.addStretch()
+        # Video only by codec layout
         format_vidcodec_layout = QHBoxLayout(
             self.format_vidcodec_layout_widget)
         format_vidcodec_layout.addWidget(QLabel("Video codec:"),
@@ -374,12 +384,14 @@ class MainWindow(QMainWindow):
         format_vidcodec_layout.addWidget(self.format_vidcodec_combo,
                                          alignment=Qt.AlignmentFlag.AlignLeft)
         format_vidcodec_layout.addStretch()
+        # Raw format string layout
         format_string_layout = QHBoxLayout(
             self.format_string_layout_widget)
         format_string_layout.addWidget(QLabel("Format string:"))
         format_string_layout.addWidget(self.format_string_text)
         format_string_layout.addWidget(self.format_string_help_button, 0,
                                        Qt.AlignmentFlag.AlignRight)
+        # Merge formats layout
         format_merge_layout = QHBoxLayout(
             self.format_merge_layout_widget)
         format_merge_layout.addWidget(QLabel("Audio:"),
@@ -392,6 +404,7 @@ class MainWindow(QMainWindow):
                                       alignment=Qt.AlignmentFlag.AlignRight)
         format_merge_layout.addWidget(self.format_marge_container_combo)
         # format_merge_layout.addStretch()
+        # Stacked layout widget for format selection layouts
         self.format_stacked_widget.addWidget(self.format_quality_layout_widget)
         self.format_stacked_widget.addWidget(self.format_audext_layout_widget)
         self.format_stacked_widget.addWidget(self.format_vidext_layout_widget)
@@ -401,9 +414,13 @@ class MainWindow(QMainWindow):
             self.format_vidcodec_layout_widget)
         self.format_stacked_widget.addWidget(self.format_merge_layout_widget)
         self.format_stacked_widget.addWidget(self.format_string_layout_widget)
+        # Main format selection layout
         self.format_layout.addWidget(self.format_type_combo)
         self.format_layout.addWidget(self.format_stacked_widget)
+        # Resolution layout
         self.resolution_layout.addWidget(self.resolution_combo)
+        self.resolution_layout.addStretch()
+        # Subtitles layout
         self.subtitles_layout.addWidget(self.generatedsubs_check, 1, 1)
         self.subtitles_layout.addWidget(self.subs_merge_check, 2, 1)
         self.subtitles_layout.addWidget(QLabel("Languages:"), 1, 2,
@@ -646,88 +663,10 @@ class MainWindow(QMainWindow):
                 except ValueError:
                     pass
 
-    def get_settings_widgets(self):
-        """Returns list of widgets and their associated settings key string
-            and their default values
-
-        Returns:
-            [(QWidget, str)]: [(Widget, settings key, default)]
-        """
-        # Default to ffmpeg in path
-        ffmpeg_path = shutil.which("ffmpeg")
-        if ffmpeg_path:
-            # If ffmpeg found
-            ffmpeg_info = QFileInfo(ffmpeg_path)
-            ffmpeg_path = ffmpeg_info.dir().path()
-        else:
-            # ffmpeg executable not found in path
-            ffmpeg_path = ""
-
-        return [
-            (self.url_type_combo, SettingsConst.SETTINGS_VAL_URLTYPE, ""),
-            (self.url_text, SettingsConst.SETTINGS_VAL_URLTEXT, ""),
-            (self.list_path_text, SettingsConst.SETTINGS_VAL_URLLIST, ""),
-            (self.download_path_text,
-                SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""),
-            (self.ffmpeg_path_text,
-                SettingsConst.SETTINGS_VAL_FFMPEGPATH, ffmpeg_path),
-            (self.username_text, SettingsConst.SETTINGS_VAL_USERNAME, ""),
-            (self.password_text, SettingsConst.SETTINGS_VAL_PASSWORD, ""),
-            (self.specifyformat_check,
-                SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, False),
-            (self.specifyres_check,
-                SettingsConst.SETTINGS_VAL_SPECIFYRES, False),
-            (self.resolution_combo,
-                SettingsConst.SETTINGS_VAL_RESHEIGHT, ""),
-            (self.downloadsubs_check,
-                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, False),
-            (self.autoscroll_check,
-                SettingsConst.SETTINGS_VAL_AUTOSCROLLSTATUS, True),
-            (self.overwrite_check,
-                SettingsConst.SETTINGS_VAL_OVERWRITE, False),
-            (self.keepfiles_check,
-                SettingsConst.SETTINGS_VAL_KEEPFILES, False),
-            (self.preferfreeformats_check,
-                SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, False),
-            (self.consoleoutput_check,
-                SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, False),
-            (self.generatedsubs_check,
-                SettingsConst.SETTINGS_VAL_AUTOGENSUBS, False),
-            (self.subs_lang_combo,
-                SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE, ""),
-            (self.subs_cnvt_combo,
-                SettingsConst.SETTINGS_VAL_SUBTITLECONVERT, ""),
-            (self.subs_merge_check,
-                SettingsConst.SETTINGS_VAL_SUBTITLEMERGE, False),
-            (self.subs_format_combo,
-                SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT, ""),
-            (self.subs_delay_spin,
-                SettingsConst.SETTINGS_VAL_SUBTITLEDELAY, 0),
-            (self.format_type_combo,
-                SettingsConst.SETTINGS_VAL_FORMATTYPE, ""),
-            (self.format_quality_combo,
-                SettingsConst.SETTINGS_VAL_FORMATQUALITY, ""),
-            (self.format_audext_combo,
-                SettingsConst.SETTINGS_VAL_FORMATAUDEXT, ""),
-            (self.format_vidext_combo,
-                SettingsConst.SETTINGS_VAL_FORMATVIDEXT, ""),
-            (self.format_audcodec_combo,
-                SettingsConst.SETTINGS_VAL_FORMATAUDCODEC, ""),
-            (self.format_vidcodec_combo,
-                SettingsConst.SETTINGS_VAL_FORMATVIDCODEC, ""),
-            (self.format_merge_audio_combo,
-                SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""),
-            (self.format_merge_video_combo,
-                SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""),
-            (self.format_marge_container_combo,
-                SettingsConst.SETTINGS_VAL_FORMATMERGECONTAINER, ""),
-            (self.format_string_text,
-                SettingsConst.SETTINGS_VAL_FORMATSTRING, "")]
-
     def load_settings(self):
         """Loads persistent settings
         """
-        widgets = self.get_settings_widgets()
+        widgets = SettingsConst.get_mainwindow_widgets_vals(self)
         for widget, settings_key, default in widgets:
             if isinstance(widget, QLineEdit):
                 widget.setText(self.settings.value(settings_key, default))

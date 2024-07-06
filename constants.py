@@ -8,6 +8,8 @@ Author: Josh Buchbinder
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
+import shutil
+from PySide6.QtCore import QFileInfo
 
 class AppConst:
     """Various strings
@@ -63,6 +65,90 @@ class SettingsConst:
     SETTINGS_VAL_WINDOWSTATE = "WindowState"
     SETTINGS_VAL_WINDOWWIDTH = "WindowWidth"
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
+
+    @staticmethod
+    def get_mainwindow_widgets_vals(mainwindow):
+        """Returns list of widgets and their associated settings key string
+            and their default values
+
+        Returns:
+            [(QWidget, str)]: [(Widget, settings key, default)]
+        """
+        # Default to ffmpeg in path
+        ffmpeg_path = shutil.which("ffmpeg")
+        if ffmpeg_path:
+            # If ffmpeg found
+            ffmpeg_info = QFileInfo(ffmpeg_path)
+            ffmpeg_path = ffmpeg_info.dir().path()
+        else:
+            # ffmpeg executable not found in path
+            ffmpeg_path = ""
+
+        return [
+            (mainwindow.url_type_combo,
+                SettingsConst.SETTINGS_VAL_URLTYPE, ""),
+            (mainwindow.url_text,
+                SettingsConst.SETTINGS_VAL_URLTEXT, ""),
+            (mainwindow.list_path_text,
+                SettingsConst.SETTINGS_VAL_URLLIST, ""),
+            (mainwindow.download_path_text,
+                SettingsConst.SETTINGS_VAL_DOWNLOADPATH, ""),
+            (mainwindow.ffmpeg_path_text,
+                SettingsConst.SETTINGS_VAL_FFMPEGPATH, ffmpeg_path),
+            (mainwindow.username_text,
+                SettingsConst.SETTINGS_VAL_USERNAME, ""),
+            (mainwindow.password_text,
+                SettingsConst.SETTINGS_VAL_PASSWORD, ""),
+            (mainwindow.specifyformat_check,
+                SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, False),
+            (mainwindow.specifyres_check,
+                SettingsConst.SETTINGS_VAL_SPECIFYRES, False),
+            (mainwindow.resolution_combo,
+                SettingsConst.SETTINGS_VAL_RESHEIGHT, ""),
+            (mainwindow.downloadsubs_check,
+                SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, False),
+            (mainwindow.autoscroll_check,
+                SettingsConst.SETTINGS_VAL_AUTOSCROLLSTATUS, True),
+            (mainwindow.overwrite_check,
+                SettingsConst.SETTINGS_VAL_OVERWRITE, False),
+            (mainwindow.keepfiles_check,
+                SettingsConst.SETTINGS_VAL_KEEPFILES, False),
+            (mainwindow.preferfreeformats_check,
+                SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, False),
+            (mainwindow.consoleoutput_check,
+                SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, False),
+            (mainwindow.generatedsubs_check,
+                SettingsConst.SETTINGS_VAL_AUTOGENSUBS, False),
+            (mainwindow.subs_lang_combo,
+                SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE, ""),
+            (mainwindow.subs_cnvt_combo,
+                SettingsConst.SETTINGS_VAL_SUBTITLECONVERT, ""),
+            (mainwindow.subs_merge_check,
+                SettingsConst.SETTINGS_VAL_SUBTITLEMERGE, False),
+            (mainwindow.subs_format_combo,
+                SettingsConst.SETTINGS_VAL_SUBTITLEFORMAT, ""),
+            (mainwindow.subs_delay_spin,
+                SettingsConst.SETTINGS_VAL_SUBTITLEDELAY, 0),
+            (mainwindow.format_type_combo,
+                SettingsConst.SETTINGS_VAL_FORMATTYPE, ""),
+            (mainwindow.format_quality_combo,
+                SettingsConst.SETTINGS_VAL_FORMATQUALITY, ""),
+            (mainwindow.format_audext_combo,
+                SettingsConst.SETTINGS_VAL_FORMATAUDEXT, ""),
+            (mainwindow.format_vidext_combo,
+                SettingsConst.SETTINGS_VAL_FORMATVIDEXT, ""),
+            (mainwindow.format_audcodec_combo,
+                SettingsConst.SETTINGS_VAL_FORMATAUDCODEC, ""),
+            (mainwindow.format_vidcodec_combo,
+                SettingsConst.SETTINGS_VAL_FORMATVIDCODEC, ""),
+            (mainwindow.format_merge_audio_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGEAUD, ""),
+            (mainwindow.format_merge_video_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGEVID, ""),
+            (mainwindow.format_marge_container_combo,
+                SettingsConst.SETTINGS_VAL_FORMATMERGECONTAINER, ""),
+            (mainwindow.format_string_text,
+                SettingsConst.SETTINGS_VAL_FORMATSTRING, "")]
 
 
 class ComboBoxConst:
