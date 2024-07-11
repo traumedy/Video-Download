@@ -135,7 +135,7 @@ class ComboBoxExt(QComboBox):
             bool: True if item is found
         """
         datalist = [(index, self.itemData(index))
-                    for index in range(0, self.count())]
+                    for index in range(self.count())]
         closest = (-1, 0)
         for index, data in datalist:
             if val <= data and (closest[0] == -1 or data < closest[1]):
@@ -152,7 +152,7 @@ class ComboBoxExt(QComboBox):
         Returns:
             [str]: List of all items' text
         """
-        return [self.itemText(i) for i in range(0, self.count())]
+        return [self.itemText(i) for i in range(self.count())]
 
     def items_data(self):
         """Returns the data of the items of the combobox as a list
@@ -160,7 +160,7 @@ class ComboBoxExt(QComboBox):
         Returns:
             [Any]: List of all items' data
         """
-        return [self.itemData(i) for i in range(0, self.count())]
+        return [self.itemData(i) for i in range(self.count())]
 
     def checked_items_text(self):
         """Returns a list of the text of checked items
@@ -168,7 +168,7 @@ class ComboBoxExt(QComboBox):
         Returns:
             [str]: List of checked items' text
         """
-        return [self.itemText(i) for i in range(0, self.count())
+        return [self.itemText(i) for i in range(self.count())
                 if self.model().item(i, 0).checkState() == Qt.Checked]
 
     def checked_items_data(self):
@@ -177,7 +177,7 @@ class ComboBoxExt(QComboBox):
         Returns:
             [Any]: List of checked items' data
         """
-        return [self.itemData(i) for i in range(0, self.count())
+        return [self.itemData(i) for i in range(self.count())
                 if self.model().item(i, 0).checkState() == Qt.Checked]
 
     def check_item_by_index(self, index, checked):

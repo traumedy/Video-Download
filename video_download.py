@@ -1143,7 +1143,7 @@ class MainWindow(QMainWindow):
         """Callback function for postprocessing progress info
 
         Args:
-            hook_dict ({str, ???}): Info about callback and file info
+            hook_dict ({str:Any}): Info about callback and file info
         """
         status = hook_dict.get("status", None)
         info_dict = hook_dict.get("info_dict", {})
@@ -1245,21 +1245,21 @@ class MainWindow(QMainWindow):
                 self.enable_active_buttons(True)
                 return
 
-            def parse_subs(self, key, name):
+            def parse_subs(self, dict_key, sub_name):
                 """Parses subtitle metadata
 
                 Args:
-                    key (str): Key name to parse
-                    name (str): Description of this subtitle
+                    dict_key (str): Dictionary key in meta name to parse
+                    sub_name (str): Description of this subtitle
                 """
-                if key not in meta or not isinstance(meta[key],
-                                                     dict) or not meta[key]:
+                if dict_key not in meta or not isinstance(
+                        meta[dict_key], dict) or not meta[dict_key]:
                     self.add_status_message("This video seems to contain no "
-                                            f"{name}.")
+                                            f"{sub_name}.")
                 else:
-                    subtitles_list = meta[key]
+                    subtitles_list = meta[dict_key]
                     headers = ["Code", "Name", "Format"]
-                    table = DocTable(name, headers)
+                    table = DocTable(sub_name, headers)
                     for key, value in subtitles_list.items():
                         fields = []
                         link = LinkIds.LINKID_SUBLANGUAGE + ":" + key
@@ -1276,6 +1276,7 @@ class MainWindow(QMainWindow):
                         table.add_row(fields)
                     # Add table to status window
                     self.status_text.append_html(table.to_html())
+
             parse_subs(self, "automatic_captions", "Auto-generated captions")
             parse_subs(self, "subtitles", "Subtitles")
         self.enable_active_buttons(True)
@@ -1310,7 +1311,7 @@ def main(argv):
         argv ([str]): Command line arguments
 
     Returns:
-        int: ERRNO value
+        int: exit() value
     """
 
     # Create application
@@ -1321,10 +1322,9 @@ def main(argv):
     window.show()
 
     # Start event loop
-    app.exec()
+    return app.exec()
 
 
 # Entry point
 if __name__ == "__main__":
-    main(sys.argv)
-    exit(0)
+    sys.exit(main(sys.argv))
