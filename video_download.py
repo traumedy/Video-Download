@@ -914,13 +914,12 @@ class MainWindow(QMainWindow):
         # Get URL list from parser
         return parser.get_url_list()
 
-    def create_ydl_quiet_options(self):
+    def create_ydl_quiet_options(self, ydl_opts):
         """Returns a YouTubeDL Options map preset to quiet settings
 
-        Returns:
-            {}: Options map
+        Args:
+            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
         """
-        ydl_opts = {}
         if self.consoleoutput_check.isChecked():
             ydl_opts["quiet"] = False
             ydl_opts["verbose"] = True
@@ -930,32 +929,39 @@ class MainWindow(QMainWindow):
             ydl_opts["verbose"] = False
             ydl_opts["no_warnings"] = True
         ydl_opts["noprogress"] = True
-        return ydl_opts
 
-    def create_ydl_download_options(self):
-        """Creates the dictionary of options to pass to yt_dlp.YoutubeDL
-        built from UI values and set some default values
+    def create_ydl_auth_options(self, ydl_opts):
+        """Sets the dictionary values for authentication options
 
-        Returns:
-            dict: Dictionary of options for yt_dlp.YoutubeDL constructor
+        Args:
+            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
         """
-        # Set options for yt_dlp.YoutubeDL
-        ydl_opts = self.create_ydl_quiet_options()
-        ffmpeg_path = self.ffmpeg_path_text.text()
-        if ffmpeg_path:
-            ydl_opts["ffmpeg_location"] = ffmpeg_path
         username = self.username_text.text()
         if username:
             ydl_opts["username"] = username
         password = self.password_text.text()
         if password:
             ydl_opts["password"] = password
+
+    def create_ydl_switches_options(self, ydl_opts):
+        """Sets the dictionary values for various switch options
+
+        Args:
+            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+        """
         if self.overwrite_check.isChecked():
             ydl_opts["overwrites"] = True
         if self.keepfiles_check.isChecked():
             ydl_opts["keepvideo"] = True
         if self.preferfreeformats_check.isChecked():
             ydl_opts["prefer_free_formats"] = True
+
+    def create_ydl_subtitle_options(self, ydl_opts):
+        """Sets the dictionary values for subtitle options
+
+        Args:
+            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+        """
         if self.downloadsubs_check.isChecked():
             if self.generatedsubs_check.isChecked():
                 ydl_opts["writeautomaticsub"] = True
@@ -985,6 +991,12 @@ class MainWindow(QMainWindow):
             if postprocessors_dict:
                 ydl_opts["postprocessors"] = postprocessors_dict
 
+    def create_ydl_format_options(self, ydl_opts):
+        """Sets the dictionary values for format options
+
+        Args:
+            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+        """
         format_str = ""
         if self.specifyformat_check.isChecked():
             # Create format string
@@ -1035,7 +1047,25 @@ class MainWindow(QMainWindow):
                 ydl_opts["format_sort"] = [sort_str]
                 message = f"Using format sort string: {sort_str}"
                 self.add_status_message(message)
+
+    def create_ydl_download_options(self):
+        """Creates the dictionary of options to pass to yt_dlp.YoutubeDL
+        for downloading media files, built from UI values and some
+        default values
+
+        Returns:
+            dict: Dictionary of options for yt_dlp.YoutubeDL constructor
+        """
+        # Set options for yt_dlp.YoutubeDL
+        ydl_opts = {}
         ydl_opts["postprocessor_hooks"] = [self.ydl_postprocessor_hook]
+        ffmpeg_path = self.ffmpeg_path_text.text()
+        if ffmpeg_path:
+            ydl_opts["ffmpeg_location"] = ffmpeg_path
+        self.create_ydl_quiet_options(ydl_opts)
+        self.create_ydl_auth_options(ydl_opts)
+        self.create_ydl_switches_options(ydl_opts)
+        self.create_ydl_format_options(ydl_opts)
         return ydl_opts
 
     def download_url_list(self, url_list):
@@ -1168,8 +1198,8 @@ class MainWindow(QMainWindow):
 
         # Disable widgets that would interfere with processing
         self.enable_active_buttons(False)
-
-        ydl_opts = self.create_ydl_quiet_options()
+        ydl_opts = {}
+        self.create_ydl_quiet_options(ydl_opts)
         ydl_opts["simulate"] = True
 
         # Perform data retrieval
@@ -1232,7 +1262,8 @@ class MainWindow(QMainWindow):
         message = f"Trying to retrieve subtitle list for URL {url}"
         self.add_status_message(message)
 
-        ydl_opts = self.create_ydl_quiet_options()
+        ydl_opts = {}
+        self.create_ydl_quiet_options(ydl_opts)
         ydl_opts["simulate"] = True
 
         with YoutubeDL(ydl_opts) as ydl:
