@@ -561,7 +561,7 @@ class MainWindow(QMainWindow):
         self.format_string_help_button.setToolTip(
             ToolTips.TTT_FORMAT_STRING_HELP_BUTTON)
         self.resolution_combo.setToolTip(ToolTips.TTT_RESOLUTION_COMBO)
-        self.status_text.setToolTip(ToolTips.TTT_STATUS_TEXT)
+        self.status_text.setToolTip(ToolTips.TTT_STATUSWINDOW_TEXT)
         self.close_button.setToolTip(ToolTips.TTT_CLOSE_BUTTON)
         self.download_button.setToolTip(ToolTips.TTT_DOWNLOAD_BUTTON)
 
@@ -1242,7 +1242,7 @@ class MainWindow(QMainWindow):
                             text = fmt[key]
                         text += suffix
                         if linkid:
-                            link = linkid + ":" + text
+                            link = linkid + LinkIds.LINKID_SEP + text
                     fields.append((text, link))
                 # Add fields to table
                 table.add_row(fields)
@@ -1293,7 +1293,8 @@ class MainWindow(QMainWindow):
                     table = DocTable(sub_name, headers)
                     for key, value in subtitles_list.items():
                         fields = []
-                        link = LinkIds.LINKID_SUBLANGUAGE + ":" + key
+                        link = LinkIds.LINKID_SUBLANGUAGE + \
+                            LinkIds.LINKID_SEP + key
                         fields.append((key, link))
                         extensions = []
                         name = ""

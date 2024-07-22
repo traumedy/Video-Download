@@ -6,12 +6,12 @@
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
-from overrides import override
 import re
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QTextCursor
-from PySide6.QtWidgets import QTextEdit
-from constants import AppConst
+from overrides import override
+from PySide6.QtCore import Qt, QEvent
+from PySide6.QtGui import QFont, QTextCursor, QHelpEvent
+from PySide6.QtWidgets import QTextEdit, QToolTip
+from constants import AppConst, LinkIds, StringMaps
 
 
 class StatusWindow(QTextEdit):
@@ -39,7 +39,7 @@ class StatusWindow(QTextEdit):
         """Override of mouseMoveEvent
 
         Args:
-            e (QMouseEvent): _description_
+            e (QMouseEvent): Mouse event
         """
         anchor = self.anchorAt(e.pos())
         if anchor:
@@ -72,6 +72,42 @@ class StatusWindow(QTextEdit):
                 self.anchor = None
         super().mouseReleaseEvent(e)
 
+    @override
+    def event(self, e):
+        """Override of event handler in parent class
+
+        Args:
+            e (QEvent): Event to handle
+
+        Returns:
+            bool: True if handled
+        """
+        if e.type() == QEvent.ToolTip:
+            help_event = QHelpEvent(e)
+            anchor = self.anchorAt(e.pos())
+            if anchor:
+                QToolTip.showText(help_event.globalPos(),
+                                  self.tooltip_from_anchor(anchor))
+                return True
+
+        return super().event(e)
+
+    def tooltip_from_anchor(self, anchor):
+        """Returns tooltip text for an anchor text
+
+        Args:
+            anchor (str): Anchor text
+
+        Returns:
+            str: Tooltip text
+        """
+        sep_pos = anchor.find(LinkIds.LINKID_SEP)
+        if sep_pos != -1:
+            link_id = anchor[0:sep_pos]
+            if link_id in StringMaps.STRINGMAP_LINKID_TOOLTIP:
+                return StringMaps.STRINGMAP_LINKID_TOOLTIP[link_id]
+        return ""
+
     def scroll_to_end(self):
         """Scrolls window to bottom of text
         """
@@ -102,6 +138,16 @@ class StatusWindow(QTextEdit):
         cursor.insertText(self.strip_color_codes(text) + "\n")
         if self.autoscroll:
             self.scroll_to_end()
+
+    def append_console_text(self, text):
+        """Add console text with color escape sequences converted
+        to change the text color
+
+        Args:
+            text (str): Text to add
+        """
+        # TODO
+        self.append_text(text)
 
     def append_html(self, text):
         """Simple text append, allows html

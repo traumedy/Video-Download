@@ -8,6 +8,7 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 
 from PySide6.QtGui import QFont, QBrush, QColor
 from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat
+from constants import LinkIds
 
 
 class DocTable(QTextDocument):
@@ -55,8 +56,9 @@ class DocTable(QTextDocument):
                     if isinstance(field[0], list):
                         # A list of link strings
                         for s in field[0]:
-                            link = field[1] + ":" + s
+                            link = field[1] + LinkIds.LINKID_SEP + s
                             fmt.setAnchorHref(link)
+                            fmt.setToolTip("ToolTipTest")
                             cursor.insertText(s, fmt)
                             cursor.insertText(" ", fmt_orig)
                     else:

@@ -19,6 +19,8 @@ class AppConst:
         "master/README.md#format-selection"
     # Regex to strip color codes from string
     REGEX_COLORSTRIP = r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]'
+    # Regex for escape sequences
+    REGEX_ESCAPESEQ = r"(\x1B\[([\d;]+)m)"
     # URL list file extensions
     URLLIST_EXTENSIONS = ["html", "txt"]
 
@@ -305,6 +307,7 @@ class ComboBoxConst:
 class ToolTips:
     """Strings for widgt tooltips
     """
+    # ToolTip text for widgets
     TTT_URL_TYPE_COMBO = "Select either a single URL to download or a URL list"
     TTT_URL_TEXT = "The URL of a page with a video to download"
     TTT_LIST_FORMATS_BUTTON = "Retrieve the list of video and audio formats " \
@@ -388,19 +391,34 @@ class ToolTips:
         "the ID of a specific format listed in the table."
     TTT_FORMAT_STRING_HELP_BUTTON = "Launches a browser directed to " \
         "detailed information about creating yt-dlp format strings."
-    TTT_STATUS_TEXT = "This window shows status text.\nYou can pinch and " \
-        "zoom the text in this window or\nhold ctrl and use the mouse wheel " \
-        "to change the zoom factor,\nand copy text by dragging and then " \
-        "pressing CTRL-C.\nClicking on a blue link will select that format " \
-        "in the format selection options."
+    TTT_STATUSWINDOW_TEXT = "This window shows status text.\nYou can " \
+        "pinch and zoom the text in this window or\nhold ctrl and use the " \
+        "mouse wheel to change the zoom factor,\nand copy text by dragging " \
+        "and then pressing CTRL-C.\nClicking on a blue link will change " \
+        "download options."
     TTT_CLOSE_BUTTON = "Close this window."
     TTT_DOWNLOAD_BUTTON = "Begin downloading and processing " \
         "files."
+    # ToolTip text for links in the status window
+    TTT_LINK_STATUSWINDOW_FMTID = "Click here to change format selection " \
+        "options to\ndownload this specific format ID."
+    TTT_LINK_STATUSWINDOW_FILEEXT = "Click here to change format selection " \
+        "options to\nAudio+Video by extension and to download this file " \
+        "extension."
+    TTT_LINK_STATUSWINDOW_AUDIOCODEC = ""
+    TTT_LINK_STATUSWINDOW_VIDEOCODEC = ""
+    TTT_LINK_STATUSWINDOW_SUBLANGUAGE = "Click here to check this language " \
+        "\nin the languages list of subtitles options."
+    TTT_LINK_STATUSWINDOW_SUBEXTENSION = "Click here to change the the " \
+        "download format\nin the subtitles options."
+    TTT_LINK_STATUSWINDOW_RESOLUTION = "Click here to change Max resolution " \
+        "option to\ndownload no higher than this resolution."
 
 
 class LinkIds:
     """String constants for link IDs
     """
+    LINKID_SEP = ":"
     LINKID_FORMATID = "formatid"
     LINKID_FILEEXT = "vidextension"
     LINKID_AUDIOCODEC = "audiocodec"
@@ -408,3 +426,18 @@ class LinkIds:
     LINKID_SUBLANGUAGE = "sublanguage"
     LINKID_SUBEXTENSION = "subextension"
     LINKID_RESOLUTION = "resolution"
+
+
+class StringMaps:
+    """String maps
+    """
+    # Map of link IDs to their tooltips in the status window
+    STRINGMAP_LINKID_TOOLTIP = {
+        LinkIds.LINKID_FORMATID: ToolTips.TTT_LINK_STATUSWINDOW_FMTID,
+        LinkIds.LINKID_FILEEXT: ToolTips.TTT_LINK_STATUSWINDOW_FILEEXT,
+        LinkIds.LINKID_AUDIOCODEC: ToolTips.TTT_LINK_STATUSWINDOW_AUDIOCODEC,
+        LinkIds.LINKID_VIDEOCODEC: ToolTips.TTT_LINK_STATUSWINDOW_VIDEOCODEC,
+        LinkIds.LINKID_SUBLANGUAGE: ToolTips.TTT_LINK_STATUSWINDOW_SUBLANGUAGE,
+        LinkIds.LINKID_SUBEXTENSION:
+        ToolTips.TTT_LINK_STATUSWINDOW_SUBEXTENSION,
+        LinkIds.LINKID_RESOLUTION: ToolTips.TTT_LINK_STATUSWINDOW_RESOLUTION}
