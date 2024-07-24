@@ -171,6 +171,7 @@ class ComboBoxConst:
         ("Corsican (co)", "co"), ("Croatian (hr)", "hr"), ("Czech (cs)", "cs"),
         ("Danish (da)", "da"), ("Divehi (dv)", "dv"), ("Dutch (nl)", "nl"),
         ("English (Original) (en-orig)", "en-orig"), ("English (en)", "en"),
+        ("English (United States)", "en-US"),
         ("Esperanto (eo)", "eo"), ("Estonian (et)", "et"), ("Ewe (ee)", "ee"),
         ("Filipino (fil)", "fil"), ("Finnish (fi)", "fi"),
         ("French (fr)", "fr"), ("Galician (gl)", "gl"), ("Ganda (lg)", "lg"),

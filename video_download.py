@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.9"
+__version__ = "0.4.10"
 
 import sys
 from overrides import override
@@ -1065,6 +1065,7 @@ class MainWindow(QMainWindow):
         self.create_ydl_quiet_options(ydl_opts)
         self.create_ydl_auth_options(ydl_opts)
         self.create_ydl_switches_options(ydl_opts)
+        self.create_ydl_subtitle_options(ydl_opts)
         self.create_ydl_format_options(ydl_opts)
         return ydl_opts
 
