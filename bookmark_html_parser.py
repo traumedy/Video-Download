@@ -7,39 +7,48 @@ browser bookmarks to extract URLs.
 from html.parser import HTMLParser
 from overrides import override
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
-from PySide6.QtWidgets import QLabel, QListWidget
+from PySide6.QtWidgets import QLabel, QListWidget, QWidget
 
 
 class FolderSelectDialog(QDialog):
     """Simple dialog box allowing selection of an item from a list
     """
+    button_box: QDialogButtonBox
+    dlg_layout: QVBoxLayout
+    folder_listbox: QListWidget
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """Initializer for dialog
+
+        Args:
+            parent (QWidget, optional): Parent widget. Defaults to None.
+        """
         super().__init__(parent)
 
         self.setWindowTitle("Select bookmark folder")
-        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        buttons = QDialogButtonBox.StandardButton.Ok |\
+            QDialogButtonBox.StandardButton.Cancel
         self.button_box = QDialogButtonBox(buttons)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
 
-        self.layout = QVBoxLayout()
+        self.dlg_layout = QVBoxLayout()
         message = QLabel("Select the folder of URLs or none for all folders")
         self.folder_listbox = QListWidget()
-        self.layout.addWidget(message)
-        self.layout.addWidget(self.folder_listbox)
-        self.layout.addWidget(self.button_box)
-        self.setLayout(self.layout)
+        self.dlg_layout.addWidget(message)
+        self.dlg_layout.addWidget(self.folder_listbox)
+        self.dlg_layout.addWidget(self.button_box)
+        self.setLayout(self.dlg_layout)
 
-    def set_list(self, folder_list):
+    def set_list(self, folder_list: list[str]) -> None:
         """Sets string list for selection
 
         Args:
-            folder_list ([str]): List of strings for selection
+            folder_list (list[str]): List of strings for selection
         """
         self.folder_listbox.insertItems(0, folder_list)
 
-    def get_selected(self):
+    def get_selected(self) -> str:
         """Returns string of selected item
 
         Returns:
@@ -73,7 +82,7 @@ class BookmarkHTMLParser(HTMLParser):
         self.url_dict[""] = []
 
     @override
-    def handle_decl(self, decl):
+    def handle_decl(self, decl: str) -> None:
         """Overriden method, handles doctype decleration tags
 
         Args:
@@ -83,12 +92,14 @@ class BookmarkHTMLParser(HTMLParser):
         self.url_dict[""] = []
 
     @override
-    def handle_starttag(self, tag, attrs):
+    def handle_starttag(self, tag: str,
+                        attrs: list[tuple[str, str | None]]) -> None:
         """Overriden method, handles tag opening
 
         Args:
             tag (str): Tag name
-            attrs (dict): Dictionary of attributes for start tag
+            attrs (list[tuple[str, str | None]]): List of attributes
+                for start tag
         """
         if "h3" == tag:
             self.in_folder_title = True
@@ -99,7 +110,7 @@ class BookmarkHTMLParser(HTMLParser):
                     self.url_dict[self.current_folder].append(attr[1])
 
     @override
-    def handle_endtag(self, tag):
+    def handle_endtag(self, tag: str) -> None:
         """Overriden method, handles tag closing
 
         Args:
@@ -108,7 +119,7 @@ class BookmarkHTMLParser(HTMLParser):
         if "h3" == tag:
             self.in_folder_title = False
 
-    def handle_data(self, data):
+    def handle_data(self, data: str) -> None:
         """Overriden method, handles data between tags
 
         Args:
@@ -119,11 +130,11 @@ class BookmarkHTMLParser(HTMLParser):
             self.current_folder = data
             self.url_dict[self.current_folder] = []
 
-    def get_url_list(self):
+    def get_url_list(self) -> list[str]:
         """Returns list of URL strings
 
         Returns:
-            [str]: Extracted URLs or empty list
+            list[str]: Extracted URLs or empty list
         """
         # Make list of folder names that actually contain URLs
         folders = [key for key, val in self.url_dict.items() if val]

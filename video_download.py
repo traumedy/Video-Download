@@ -9,14 +9,16 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.4.10"
+__version__ = "0.5.0"
 
 import sys
+from typing import Any
 from overrides import override
 from PySide6.QtCore import Qt, QFileInfo, QDir, QUrl, QSettings
-from PySide6.QtGui import QDesktopServices
+from PySide6.QtGui import QDesktopServices, QCloseEvent, QDragEnterEvent
+from PySide6.QtGui import QDropEvent
 from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
-from PySide6.QtWidgets import QFormLayout, QHBoxLayout, QGridLayout
+from PySide6.QtWidgets import QLayout, QFormLayout, QHBoxLayout, QGridLayout
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialogButtonBox, QSpinBox
 from PySide6.QtWidgets import QCheckBox, QComboBox, QStyle
@@ -99,7 +101,9 @@ class MainWindow(QMainWindow):
     cancel_flag: bool
     settings: QSettings
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initializer for MainWindow
+        """
         super().__init__()
         # Set title text for window
         self.setWindowTitle(f"Video URL downloader v{__version__}")
@@ -151,7 +155,7 @@ class MainWindow(QMainWindow):
         visible = self.specifyres_check.isChecked()
         self.main_layout.setRowVisible(self.resolution_layout, visible)
 
-    def create_mainwindow_widgets(self):
+    def create_mainwindow_widgets(self) -> None:
         """Create widgets for window
         """
         self.url_stacked_widget = QStackedWidget()
@@ -258,7 +262,7 @@ class MainWindow(QMainWindow):
 
         # Populate subtitles combo boxes
         for lang, lang_code in ComboBoxConst.SUBTITLES_LANGUAGES_LIST:
-            self.subs_lang_combo.addItem(lang, lang_code)
+            self.subs_lang_combo.add_check_item(lang, lang_code)
         for label in ComboBoxConst.SUBTITLES_DOWNFMT_LIST:
             self.subs_format_combo.addItem(label)
         for label, data in ComboBoxConst.SUBTITLES_CNVTFMT_LIST:
@@ -301,7 +305,7 @@ class MainWindow(QMainWindow):
         self.bottom_buttonbox.addButton(self.download_button,
                                         QDialogButtonBox.ButtonRole.AcceptRole)
 
-    def create_mainwindow_layout(self):
+    def create_mainwindow_layout(self) -> QLayout:
         """Creates layout for main window
 
         Returns:
@@ -469,7 +473,7 @@ class MainWindow(QMainWindow):
 
         return self.main_layout
 
-    def connect_mainwindow_signals(self):
+    def connect_mainwindow_signals(self) -> None:
         """Connects main window signals to slots
         """
         self.url_type_combo.currentIndexChanged.connect(
@@ -508,7 +512,7 @@ class MainWindow(QMainWindow):
         self.close_button.clicked.connect(self.close)
         self.download_button.clicked.connect(self.download_button_clicked)
 
-    def create_mainwindow_tooltips(self):
+    def create_mainwindow_tooltips(self) -> None:
         """Sets tooltips for main window widgets
         """
         # Set widget tooltips
@@ -566,7 +570,7 @@ class MainWindow(QMainWindow):
         self.download_button.setToolTip(ToolTips.TTT_DOWNLOAD_BUTTON)
 
     @override
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """Overridden method, called when window is closing
 
         Args:
@@ -577,11 +581,11 @@ class MainWindow(QMainWindow):
         event.accept()
 
     @override
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         """Overriden method, called when a file is dragged over window
 
         Args:
-            event (QDragEnterEvent): Event info
+            event (PySide6.QtGui.QDragEnterEvent): Event info
         """
         drag_url = QUrl(event.mimeData().text())
         if drag_url.isLocalFile():
@@ -593,11 +597,11 @@ class MainWindow(QMainWindow):
         event.ignore()
 
     @override
-    def dropEvent(self, event):
+    def dropEvent(self, event: QDropEvent) -> None:
         """Overriden method, called when a file is dropped on window
 
         Args:
-            event (QDragEvent): Event info
+            event (PySide6.QtGui.QDropEvent): Event info
         """
         drag_url = QUrl(event.mimeData().text())
         if drag_url.isLocalFile():
@@ -607,8 +611,8 @@ class MainWindow(QMainWindow):
             return
         event.ignore()
 
-    def status_click_callback(self, link):
-        """Callback when a link is clicked in on the status text widget
+    def status_click_callback(self, link: str) -> None:
+        """Callback when a link is clicked in the status text widget
 
         Args:
             link (str): The anchor link
@@ -624,12 +628,12 @@ class MainWindow(QMainWindow):
                 self.format_string_text.setText(value)
             elif ident == LinkIds.LINKID_FILEEXT:
                 if value in ComboBoxConst.FORMAT_EXT_VID_LIST:
-                    if self.format_vidext_combo.setCurrentText(value):
+                    if self.format_vidext_combo.set_current_text(value):
                         self.format_type_combo.set_current_data(
                             ComboBoxConst.FORMAT_TYPE_AUDVID_BY_EXT)
                         self.specifyformat_check.setChecked(True)
                 elif value in ComboBoxConst.FORMAT_EXT_AUD_LIST:
-                    if self.format_audext_combo.setCurrentText(value):
+                    if self.format_audext_combo.set_current_text(value):
                         self.format_type_combo.set_current_data(
                             ComboBoxConst.FORMAT_TYPE_AUD_BY_EXT)
                         self.specifyformat_check.setChecked(True)
@@ -663,45 +667,47 @@ class MainWindow(QMainWindow):
                 except ValueError:
                     pass
 
-    def load_settings(self):
+    def load_settings(self) -> None:
         """Loads persistent settings
         """
         widgets = SettingsConst.get_mainwindow_widgets_vals(self)
         for widget, settings_key, default in widgets:
             if isinstance(widget, QLineEdit):
-                widget.setText(self.settings.value(settings_key, default))
+                widget.setText(str(self.settings.value(settings_key, default)))
             elif isinstance(widget, ComboBoxExt):
                 if widget.has_checkboxes():
-                    checked_items = self.settings.value(
-                        settings_key, default).split("|")
+                    checked_items = str(self.settings.value(
+                        settings_key, default)).split("|")
                     widget.check_items_by_text(checked_items, True)
                 else:
-                    widget.setCurrentText(self.settings.value(settings_key,
-                                                              default))
+                    widget.setCurrentText(str(self.settings.value(settings_key,
+                                                                  default)))
             elif isinstance(widget, QComboBox):
-                widget.setCurrentText(self.settings.value(settings_key,
-                                                          default))
+                widget.setCurrentText(str(self.settings.value(settings_key,
+                                                              default)))
             elif isinstance(widget, QCheckBox):
                 widget.setChecked(value_to_bool(
                                   self.settings.value(settings_key, default)))
             elif isinstance(widget, QSpinBox):
-                widget.setValue(self.settings.value(settings_key,
-                                                    default))
+                widget.setValue(int(self.settings.value(settings_key,
+                                default, int)))  # type: ignore
         # Restore widow size
         size = self.size()
         width = int(self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWWIDTH,
-                                        size.width()))
+                    size.width()))  # type: ignore
         height = int(self.settings.value(
-            SettingsConst.SETTINGS_VAL_WINDOWHEIGHT, size.height()))
+                     SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
+                     size.height(), int))  # type: ignore
         self.resize(width, height)
-        state = self.settings.value(SettingsConst.SETTINGS_VAL_WINDOWSTATE,
-                                    Qt.WindowState.WindowNoState)
-        self.setWindowState(state)
+        state = self.settings.value(
+                            SettingsConst.SETTINGS_VAL_WINDOWSTATE,
+                            Qt.WindowState.WindowNoState, int)
+        self.setWindowState(Qt.WindowState(state))
         # Try to find ffmpeg path if blank
         if not self.ffmpeg_path_text.text():
             self.ffmpeg_path_text.setText(get_ffmpeg_bin_path())
 
-    def save_settings(self):
+    def save_settings(self) -> None:
         """Save persistent settingss
         """
         widgets = SettingsConst.get_mainwindow_widgets_vals(self)
@@ -729,9 +735,9 @@ class MainWindow(QMainWindow):
             self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWHEIGHT,
                                    self.height())
         self.settings.setValue(SettingsConst.SETTINGS_VAL_WINDOWSTATE,
-                               state)
+                               state.value)
 
-    def list_formats_button_clicked(self):
+    def list_formats_button_clicked(self) -> None:
         """Called when list formats button is clicked
         """
         url = self.url_text.text()
@@ -742,7 +748,7 @@ class MainWindow(QMainWindow):
             return
         self.download_url_formats(url)
 
-    def list_browse_button_clicked(self):
+    def list_browse_button_clicked(self) -> None:
         """Called when video list browse button is clicked
         """
         file_dialog = QFileDialog(self)
@@ -760,7 +766,7 @@ class MainWindow(QMainWindow):
             path = normalize_path(selected_files[0])
             self.list_path_text.setText(path)
 
-    def download_browse_button_clicked(self):
+    def download_browse_button_clicked(self) -> None:
         """Called when download path browse button is clicked
         """
         # For initial directory
@@ -770,12 +776,12 @@ class MainWindow(QMainWindow):
             self,
             "Save videos to directory...",
             dir_info.filePath(),
-            QFileDialog.ShowDirsOnly
-            | QFileDialog.DontResolveSymlinks)
+            QFileDialog.Option.ShowDirsOnly
+            | QFileDialog.Option.DontResolveSymlinks)
         if path:
             self.download_path_text.setText(normalize_path(path))
 
-    def ffmpeg_browse_button_clicked(self):
+    def ffmpeg_browse_button_clicked(self) -> None:
         """Called when ffmpeg browse button is clicked
         """
         # For initial directory
@@ -785,12 +791,12 @@ class MainWindow(QMainWindow):
             self,
             "FFMPEG location directory...",
             dir_info.filePath(),
-            QFileDialog.ShowDirsOnly
-            | QFileDialog.DontResolveSymlinks)
+            QFileDialog.Option.ShowDirsOnly
+            | QFileDialog.Option.DontResolveSymlinks)
         if path:
             self.ffmpeg_path_text.setText(path)
 
-    def format_type_combo_changed(self, new_index):
+    def format_type_combo_changed(self, new_index: int) -> None:
         """Called when format type combo changes
 
         Args:
@@ -822,13 +828,13 @@ class MainWindow(QMainWindow):
             self.format_stacked_widget.setCurrentWidget(
                 self.format_string_layout_widget)
 
-    def cancel_button_clicked(self):
+    def cancel_button_clicked(self) -> None:
         """Called when cancel button is clicked
         """
         self.cancel_flag = True
         self.add_status_message("Canceling...")
 
-    def download_button_clicked(self):
+    def download_button_clicked(self) -> None:
         """Called when download button is clicked
         """
         dir_info = QFileInfo(self.download_path_text.text())
@@ -880,14 +886,14 @@ class MainWindow(QMainWindow):
             # Return to current directory
             QDir.setCurrent(current_path)
 
-    def parse_txt_file(self, file_path):
+    def parse_txt_file(self, file_path: str) -> list[str]:
         """Parses a simple text file and builds a list of entries
 
         Args:
             file_path (str): Path to file to parse
 
         Returns:
-            [str]: List of lines extracted from file
+            list[str]: List of lines extracted from file
         """
         url_list = [line.strip('\n') for line in open(file_path, 'r',
                                                       encoding="utf-8")
@@ -896,7 +902,7 @@ class MainWindow(QMainWindow):
         url_list = [x for x in url_list if x]
         return url_list
 
-    def parse_html_file(self, file_path):
+    def parse_html_file(self, file_path: str) -> list[str]:
         """Parses a HTML bookmark file and builds a list of entries.
         These files are exported from Chrome and Firefox
 
@@ -904,7 +910,7 @@ class MainWindow(QMainWindow):
             file_path (str): Path to file to parse
 
         Returns:
-            [str]: List of lines extracted from file
+            list[str]: List of lines extracted from file
         """
         # Use our custom HTML parser
         parser = BookmarkHTMLParser(self)
@@ -914,11 +920,12 @@ class MainWindow(QMainWindow):
         # Get URL list from parser
         return parser.get_url_list()
 
-    def create_ydl_quiet_options(self, ydl_opts):
+    def create_ydl_quiet_options(self, ydl_opts: dict[str, Any]) -> None:
         """Returns a YouTubeDL Options map preset to quiet settings
 
         Args:
-            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+            ydl_opts (dict[str, Any]): Dict of options for yt_dlp.YoutubeDL
+                constructor
         """
         if self.consoleoutput_check.isChecked():
             ydl_opts["quiet"] = False
@@ -930,11 +937,12 @@ class MainWindow(QMainWindow):
             ydl_opts["no_warnings"] = True
         ydl_opts["noprogress"] = True
 
-    def create_ydl_auth_options(self, ydl_opts):
+    def create_ydl_auth_options(self, ydl_opts: dict[str, Any]):
         """Sets the dictionary values for authentication options
 
         Args:
-            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+            ydl_opts (dict[str, Any]): Dict of options for yt_dlp.YoutubeDL
+                constructor
         """
         username = self.username_text.text()
         if username:
@@ -943,11 +951,12 @@ class MainWindow(QMainWindow):
         if password:
             ydl_opts["password"] = password
 
-    def create_ydl_switches_options(self, ydl_opts):
+    def create_ydl_switches_options(self, ydl_opts: dict[str, Any]) -> None:
         """Sets the dictionary values for various switch options
 
         Args:
-            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+            ydl_opts (dict[str, Any]): Dict of options for yt_dlp.YoutubeDL
+                constructor
         """
         if self.overwrite_check.isChecked():
             ydl_opts["overwrites"] = True
@@ -956,11 +965,12 @@ class MainWindow(QMainWindow):
         if self.preferfreeformats_check.isChecked():
             ydl_opts["prefer_free_formats"] = True
 
-    def create_ydl_subtitle_options(self, ydl_opts):
+    def create_ydl_subtitle_options(self, ydl_opts: dict[str, Any]) -> None:
         """Sets the dictionary values for subtitle options
 
         Args:
-            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+            ydl_opts (dict[str, Any]): Dict of options for yt_dlp.YoutubeDL
+                constructor
         """
         if self.downloadsubs_check.isChecked():
             if self.generatedsubs_check.isChecked():
@@ -991,11 +1001,12 @@ class MainWindow(QMainWindow):
             if postprocessors_dict:
                 ydl_opts["postprocessors"] = postprocessors_dict
 
-    def create_ydl_format_options(self, ydl_opts):
+    def create_ydl_format_options(self, ydl_opts: dict[str, Any]) -> None:
         """Sets the dictionary values for format options
 
         Args:
-            ydl_opts (dict): Dict of options for yt_dlp.YoutubeDL constructor
+            ydl_opts (dict[str, Any]): Dict of options for yt_dlp.YoutubeDL
+                constructor
         """
         format_str = ""
         if self.specifyformat_check.isChecked():
@@ -1048,13 +1059,14 @@ class MainWindow(QMainWindow):
                 message = f"Using format sort string: {sort_str}"
                 self.add_status_message(message)
 
-    def create_ydl_download_options(self):
+    def create_ydl_download_options(self) -> dict[str, Any]:
         """Creates the dictionary of options to pass to yt_dlp.YoutubeDL
         for downloading media files, built from UI values and some
         default values
 
         Returns:
-            dict: Dictionary of options for yt_dlp.YoutubeDL constructor
+            dict[str, Any]: Dictionary of options for yt_dlp.YoutubeDL
+                constructor
         """
         # Set options for yt_dlp.YoutubeDL
         ydl_opts = {}
@@ -1069,11 +1081,11 @@ class MainWindow(QMainWindow):
         self.create_ydl_format_options(ydl_opts)
         return ydl_opts
 
-    def download_url_list(self, url_list):
+    def download_url_list(self, url_list: list[str]) -> None:
         """Performs the downloading of URLs
 
         Args:
-            url_list ([str]): List of URLs to download
+            url_list (list[str]): List of URLs to download
         """
         # Disable widgets that would interfere with processing
         self.enable_active_buttons(False)
@@ -1130,11 +1142,12 @@ class MainWindow(QMainWindow):
         dlg.setText(message)
         dlg.exec()
 
-    def ydl_download_progress_hook(self, progress_dict):
+    def ydl_download_progress_hook(self, progress_dict:
+                                   dict[str, Any]) -> None:
         """Callback function for download progress
 
         Args:
-            progress_dict ({str:str}): progress dictionary
+            progress_dict (dict[str:Any]): progress dictionary
         """
         # Drive message loop
         QApplication.processEvents()
@@ -1170,11 +1183,11 @@ class MainWindow(QMainWindow):
                 message = f"Error with file {filename}"
                 self.add_status_message(message)
 
-    def ydl_postprocessor_hook(self, hook_dict):
+    def ydl_postprocessor_hook(self, hook_dict: dict[str, Any]) -> None:
         """Callback function for postprocessing progress info
 
         Args:
-            hook_dict ({str:Any}): Info about callback and file info
+            hook_dict (dict[str, Any]): Info about callback and file info
         """
         status = hook_dict.get("status", None)
         info_dict = hook_dict.get("info_dict", {})
@@ -1187,7 +1200,7 @@ class MainWindow(QMainWindow):
         if message:
             self.add_status_message(message)
 
-    def download_url_formats(self, url):
+    def download_url_formats(self, url: str) -> None:
         """Download and display the formats avilable at url
 
         Args:
@@ -1207,7 +1220,12 @@ class MainWindow(QMainWindow):
         with YoutubeDL(ydl_opts) as ydl:
             try:
                 meta = ydl.extract_info(url, download=False)
-                format_list = meta.get('formats', [meta])
+                if isinstance(meta, dict):
+                    format_list = meta.get('formats', [meta])
+                else:
+                    message = "Data error in ydl metedata"
+                    self.add_status_message(message)
+                    return
             except utils.DownloadError as e:
                 error_message = str(e)
                 message = f"Download error: {error_message}"
@@ -1221,9 +1239,10 @@ class MainWindow(QMainWindow):
             table = DocTable("File formats", headers)
 
             for fmt in format_list:
-                # Tupple is key, is_numeric, suffix
+                # Tupple is (key, is_numeric, suffix, linkId)
                 keys = [("format_id", False, "", LinkIds.LINKID_FORMATID),
                         ("ext", False, "", LinkIds.LINKID_FILEEXT),
+                        # TODO - Implement audio and video links
                         # ("acodec", False, "", LinkIds.LINKID_AUDIOCODEC),
                         # ("vcodec", False, "", LinkIds.LINKID_VIDEOCODEC),
                         ("acodec", False, "", None),
@@ -1253,7 +1272,7 @@ class MainWindow(QMainWindow):
         # Reenable widgets that would interfere with processing
         self.enable_active_buttons(True)
 
-    def download_subtitle_formats(self, url):
+    def download_subtitle_formats(self, url: str) -> None:
         """Downloads and displays subtitles available from url
 
         Args:
@@ -1284,8 +1303,10 @@ class MainWindow(QMainWindow):
                     dict_key (str): Dictionary key in meta name to parse
                     sub_name (str): Description of this subtitle
                 """
-                if dict_key not in meta or not isinstance(
-                        meta[dict_key], dict) or not meta[dict_key]:
+                if not isinstance(meta, dict)\
+                        or dict_key not in meta\
+                        or not isinstance(meta[dict_key], dict)\
+                        or not meta[dict_key]:
                     self.add_status_message("This video seems to contain no "
                                             f"{sub_name}.")
                 else:
@@ -1314,7 +1335,7 @@ class MainWindow(QMainWindow):
             parse_subs(self, "subtitles", "Subtitles")
         self.enable_active_buttons(True)
 
-    def add_status_message(self, message):
+    def add_status_message(self, message: str) -> None:
         """Adds text to the status window and scrolls to the bottom
 
         Args:
@@ -1325,7 +1346,7 @@ class MainWindow(QMainWindow):
         # Drive message loop
         QApplication.processEvents()
 
-    def enable_active_buttons(self, enable):
+    def enable_active_buttons(self, enable: bool) -> None:
         """Enables or disables widgets while downloading is in progress
 
         Args:
@@ -1337,11 +1358,11 @@ class MainWindow(QMainWindow):
             widget.setEnabled(enable)
 
 
-def main(argv):
+def main(argv: list[str]) -> int:
     """ Main function entry point
 
     Args:
-        argv ([str]): Command line arguments
+        argv (list[str]): Command line arguments
 
     Returns:
         int: exit() value

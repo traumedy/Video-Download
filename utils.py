@@ -7,11 +7,15 @@ __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
 import shutil
+from typing import Any
 from PySide6.QtCore import QFileInfo, QDir
 
 
-def value_to_bool(value):
+def value_to_bool(value: Any) -> bool:
     """Helper function to convert QSettings.value() to bool
+
+    Args:
+        value (Any): Converts Any to bool
 
     Returns:
         bool: Evaluated bool value
@@ -21,7 +25,7 @@ def value_to_bool(value):
         else bool(value)
 
 
-def normalize_path(path):
+def normalize_path(path: str) -> str:
     """Returns paths with the correct slash for the operating system
 
     Args:
@@ -35,7 +39,7 @@ def normalize_path(path):
     return path
 
 
-def get_ffmpeg_bin_path():
+def get_ffmpeg_bin_path() -> str:
     """Returns the path to ffmpeg binaries
 
     Returns:
