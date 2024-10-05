@@ -10,7 +10,6 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 
 from typing import Any
 from PySide6.QtWidgets import QWidget
-from video_download import MainWindow
 
 
 class AppConst:
@@ -71,7 +70,7 @@ class SettingsConst:
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 
     @staticmethod
-    def get_mainwindow_widgets_vals(mainwindow: MainWindow) -> list[
+    def get_mainwindow_widgets_vals(mainwindow) -> list[
             tuple[QWidget, str, Any]]:
         """Returns list of widgets and their associated settings key string
             and their default values
