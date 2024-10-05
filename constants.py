@@ -8,6 +8,10 @@ Author: Josh Buchbinder
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
+from typing import Any
+from PySide6.QtWidgets import QWidget
+from video_download import MainWindow
+
 
 class AppConst:
     """Various strings
@@ -67,12 +71,13 @@ class SettingsConst:
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 
     @staticmethod
-    def get_mainwindow_widgets_vals(mainwindow):
+    def get_mainwindow_widgets_vals(mainwindow: MainWindow) -> list[
+            tuple[QWidget, str, Any]]:
         """Returns list of widgets and their associated settings key string
             and their default values
 
         Returns:
-            [(QWidget, str)]: [(Widget, settings key, default)]
+            list[tuple[QWidget, str, Any]]: [(Widget, settings key, default)]
         """
 
         return [

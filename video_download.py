@@ -1239,7 +1239,7 @@ class MainWindow(QMainWindow):
             table = DocTable("File formats", headers)
 
             for fmt in format_list:
-                # Tupple is (key, is_numeric, suffix, linkId)
+                # Tuple is (key, is_numeric, suffix, linkId)
                 keys = [("format_id", False, "", LinkIds.LINKID_FORMATID),
                         ("ext", False, "", LinkIds.LINKID_FILEEXT),
                         # TODO - Implement audio and video links
