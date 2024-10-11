@@ -266,7 +266,7 @@ class ComboBoxExt(QComboBox):
             bool: True if item is checked
         """
         item = self.mdl.item(index, 0)
-        return item and item.checkState() == Qt.CheckState.Checked
+        return item is not None and item.checkState() == Qt.CheckState.Checked
 
     def checked_count(self) -> int:
         """Returns the number of checked items

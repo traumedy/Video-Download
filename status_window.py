@@ -19,6 +19,11 @@ from constants import AppConst, LinkIds, StringMaps
 class StatusWindow(QTextEdit):
     """Subclass of QTextEdit allowing clickable links
     """
+    anchor: str
+    link_click_callback: Callable[[str], None]
+    text_font: QFont
+    autoscroll: bool
+
     def __init__(self, link_click_callback: Callable[[str], None]) -> None:
         """Initializer for StatusWindow
 
@@ -27,10 +32,10 @@ class StatusWindow(QTextEdit):
                 clicked links
         """
         super().__init__()
-        self.anchor = None
-        self.link_click_callback = link_click_callback
+        self.anchor = ""
+        self.link_click_callback: Callable[[str], None] = link_click_callback
         # Set font to monospace black
-        self.text_font = QFont(AppConst.MONOSPACE_FONT_NAME)
+        self.text_font = QFont(AppConst.FONT_NAME_STATUSWINDOW)
         self.text_font.setStyleHint(QFont.StyleHint.TypeWriter)
         self.text_font.setWeight(QFont.Weight.Black)
         self.setFont(self.text_font)
@@ -77,7 +82,7 @@ class StatusWindow(QTextEdit):
             anchor = self.anchorAt(e.pos())
             if anchor == self.anchor:
                 self.link_click_callback(self.anchor)
-                self.anchor = None
+                self.anchor = ""
         super().mouseReleaseEvent(e)
 
     @override

@@ -8,24 +8,30 @@ Author: Josh Buchbinder
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
+if TYPE_CHECKING:
+    from video_download import MainWindow
 
 
 class AppConst:
     """Various strings
     """
     # Monospace font name used for status window text
-    MONOSPACE_FONT_NAME = "Monospace"
+    FONT_NAME_STATUSWINDOW = "Monospace"
     # URL for format string help
-    FORMAT_STRING_HELP_URL = "https://github.com/yt-dlp/yt-dlp/blob/"\
+    URL_HELP_FORMATSELECTION = "https://github.com/yt-dlp/yt-dlp/blob/"\
         "master/README.md#format-selection"
     # Regex to strip color codes from string
     REGEX_COLORSTRIP = r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]'
     # Regex for escape sequences
     REGEX_ESCAPESEQ = r"(\x1B\[([\d;]+)m)"
     # URL list file extensions
-    URLLIST_EXTENSIONS = ["html", "txt"]
+    EXTENSIONS_URLLIST = ["html", "txt"]
+    # Format string for file progress bar
+    FORMATSTR_FILEPROGRESS = "%vMb/%mMb %p%"
+    # Format string for total progress bar
+    FORMATSTR_TOTALPROGRESS = "%v/%m"
 
 
 class SettingsConst:
@@ -70,7 +76,7 @@ class SettingsConst:
     SETTINGS_VAL_WINDOWHEIGHT = "WindowHeight"
 
     @staticmethod
-    def get_mainwindow_widgets_vals(mainwindow) -> list[
+    def get_mainwindow_widgets_vals(mainwindow: 'MainWindow') -> list[
             tuple[QWidget, str, Any]]:
         """Returns list of widgets and their associated settings key string
             and their default values

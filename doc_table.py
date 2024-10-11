@@ -7,13 +7,17 @@ __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
 from PySide6.QtGui import QFont, QBrush, QColor
-from PySide6.QtGui import QTextCursor, QTextDocument, QTextTableFormat
+from PySide6.QtGui import QTextCursor, QTextDocument
+from PySide6.QtGui import QTextTableFormat, QTextTable
 from constants import LinkIds
 
 
 class DocTable(QTextDocument):
     """Subclass of QTextDocument that encapsulates the document and a table
     """
+    table_format: QTextTableFormat
+    table: QTextTable
+
     def __init__(self, title: str, headers: list[str]) -> None:
         """Initializer for DocTable
 

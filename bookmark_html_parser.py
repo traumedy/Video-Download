@@ -64,17 +64,17 @@ class BookmarkHTMLParser(HTMLParser):
     """HTML parsing class derived from HTMLParser
     """
     # List of extracted URLs
-    url_dict = {}
+    url_dict: dict[str, list[str]] = {}
     # Current tag
-    current_tag = ""
+    current_tag: str = ""
     # Flag for in H3 tag
-    in_folder_title = False
+    in_folder_title: bool = False
     # Current folder name
-    current_folder = ""
+    current_folder: str = ""
     # Parent window for dialog
-    parent_widget = None
+    parent_widget: QWidget | None = None
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget | None = None):
         super().__init__()
         # Store parent widget for folder dialog
         self.parent_widget = parent
@@ -106,7 +106,7 @@ class BookmarkHTMLParser(HTMLParser):
         elif "a" == tag:
             # URLs are stored in href attribute of a tags
             for attr in attrs:
-                if "href" == attr[0]:
+                if "href" == attr[0] and attr[1]:
                     self.url_dict[self.current_folder].append(attr[1])
 
     @override

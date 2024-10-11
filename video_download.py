@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 import sys
 from typing import Any
@@ -36,6 +36,9 @@ from utils import value_to_bool, normalize_path, get_ffmpeg_bin_path
 class MainWindow(QMainWindow):
     """Main application window class derived from QMainWindow
     """
+    download_filenames: list[str]
+    cancel_flag: bool
+    settings: QSettings
     main_layout: QFormLayout
     url_type_combo: QComboBox
     url_stacked_widget: QStackedWidget
@@ -98,8 +101,6 @@ class MainWindow(QMainWindow):
     download_button: QPushButton
     bottom_buttonbox: QDialogButtonBox
     cancel_button: QPushButton
-    cancel_flag: bool
-    settings: QSettings
 
     def __init__(self) -> None:
         """Initializer for MainWindow
@@ -229,8 +230,8 @@ class MainWindow(QMainWindow):
         # QLineEdit fields to expand to fill
         # (These don't seem to work, probably Apply UI guidelines prevent
         # usable interfaces)
-        widgets = [self.list_path_text, self.download_path_text,
-                   self.ffmpeg_path_text]
+        widgets: list[QWidget] = [self.list_path_text, self.download_path_text,
+                                  self.ffmpeg_path_text]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Expanding,
                                  QSizePolicy.Policy.Minimum)
@@ -293,8 +294,8 @@ class MainWindow(QMainWindow):
             self.resolution_combo.addItem(label, res)
 
         # Set progress bars display text formats
-        self.file_progress.setFormat("%vMb/%mMb %p%")
-        self.total_progress.setFormat("%v/%m")
+        self.file_progress.setFormat(AppConst.FORMATSTR_FILEPROGRESS)
+        self.total_progress.setFormat(AppConst.FORMATSTR_TOTALPROGRESS)
 
         # Hide cancel button
         self.cancel_button.setVisible(False)
@@ -507,7 +508,8 @@ class MainWindow(QMainWindow):
         self.format_type_combo.currentIndexChanged.connect(
             self.format_type_combo_changed)
         self.format_string_help_button.clicked.connect(
-            lambda: QDesktopServices.openUrl(AppConst.FORMAT_STRING_HELP_URL))
+            lambda: QDesktopServices.openUrl(
+                AppConst.URL_HELP_FORMATSELECTION))
         self.cancel_button.clicked.connect(self.cancel_button_clicked)
         self.close_button.clicked.connect(self.close)
         self.download_button.clicked.connect(self.download_button_clicked)
@@ -591,7 +593,7 @@ class MainWindow(QMainWindow):
         if drag_url.isLocalFile():
             drag_file = QFileInfo(drag_url.toLocalFile())
             suffix = drag_file.suffix().lower()
-            if suffix in AppConst.URLLIST_EXTENSIONS:
+            if suffix in AppConst.EXTENSIONS_URLLIST:
                 event.accept()
                 return
         event.ignore()
@@ -655,7 +657,7 @@ class MainWindow(QMainWindow):
                 if self.subs_lang_combo.check_item_by_data(value, True):
                     self.downloadsubs_check.setChecked(True)
             elif ident == LinkIds.LINKID_SUBEXTENSION:
-                if self.subs_format_combo.setCurrentText(value):
+                if self.subs_format_combo.set_current_text(value):
                     self.downloadsubs_check.setChecked(True)
             elif ident == LinkIds.LINKID_RESOLUTION:
                 xpos = value.find("x")
@@ -899,8 +901,8 @@ class MainWindow(QMainWindow):
                                                       encoding="utf-8")
                     .readlines() if line[0] != '#']
         # Remove blank lines
-        url_list = [x for x in url_list if x]
-        return url_list
+        url_list_clean = [x for x in url_list if x]
+        return url_list_clean
 
     def parse_html_file(self, file_path: str) -> list[str]:
         """Parses a HTML bookmark file and builds a list of entries.
@@ -937,7 +939,7 @@ class MainWindow(QMainWindow):
             ydl_opts["no_warnings"] = True
         ydl_opts["noprogress"] = True
 
-    def create_ydl_auth_options(self, ydl_opts: dict[str, Any]):
+    def create_ydl_auth_options(self, ydl_opts: dict[str, Any]) -> None:
         """Sets the dictionary values for authentication options
 
         Args:
@@ -1069,7 +1071,7 @@ class MainWindow(QMainWindow):
                 constructor
         """
         # Set options for yt_dlp.YoutubeDL
-        ydl_opts = {}
+        ydl_opts: dict[str, Any] = {}
         ydl_opts["postprocessor_hooks"] = [self.ydl_postprocessor_hook]
         ffmpeg_path = self.ffmpeg_path_text.text()
         if ffmpeg_path:
@@ -1212,7 +1214,7 @@ class MainWindow(QMainWindow):
 
         # Disable widgets that would interfere with processing
         self.enable_active_buttons(False)
-        ydl_opts = {}
+        ydl_opts: dict[str, Any] = {}
         self.create_ydl_quiet_options(ydl_opts)
         ydl_opts["simulate"] = True
 
@@ -1251,7 +1253,7 @@ class MainWindow(QMainWindow):
                         ("tbr", True, " K/s", None),
                         ("filesize", True, " bytes", None),
                         ("format_note", False, "", None)]
-                fields = []
+                fields: list[tuple[str | list[str], str | None]] = []
                 for key, is_numeric, suffix, linkid in keys:
                     text = ""
                     link = None
@@ -1282,7 +1284,7 @@ class MainWindow(QMainWindow):
         message = f"Trying to retrieve subtitle list for URL {url}"
         self.add_status_message(message)
 
-        ydl_opts = {}
+        ydl_opts: dict[str, Any] = {}
         self.create_ydl_quiet_options(ydl_opts)
         ydl_opts["simulate"] = True
 
@@ -1296,7 +1298,8 @@ class MainWindow(QMainWindow):
                 self.enable_active_buttons(True)
                 return
 
-            def parse_subs(self, dict_key, sub_name):
+            def parse_subs(self: MainWindow, dict_key: str,
+                           sub_name: str) -> None:
                 """Parses subtitle metadata
 
                 Args:
