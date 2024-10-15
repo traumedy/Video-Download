@@ -64,15 +64,15 @@ class BookmarkHTMLParser(HTMLParser):
     """HTML parsing class derived from HTMLParser
     """
     # List of extracted URLs
-    url_dict: dict[str, list[str]] = {}
+    url_dict: dict[str, list[str]]
     # Current tag
-    current_tag: str = ""
+    current_tag: str
     # Flag for in H3 tag
-    in_folder_title: bool = False
+    in_folder_title: bool
     # Current folder name
-    current_folder: str = ""
+    current_folder: str
     # Parent window for dialog
-    parent_widget: QWidget | None = None
+    parent_widget: QWidget | None
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__()
@@ -80,6 +80,9 @@ class BookmarkHTMLParser(HTMLParser):
         self.parent_widget = parent
         # Handle case of URLs before a folder name
         self.url_dict[""] = []
+        self.current_tag = ""
+        self.in_folder_title = False
+        self.current_folder = ""
 
     @override
     def handle_decl(self, decl: str) -> None:
@@ -150,7 +153,7 @@ class BookmarkHTMLParser(HTMLParser):
                     # Just return the list in the dictionary
                     return self.url_dict[folder]
                 # No folder selected, combine all the folder lists into one
-                url_list = []
+                url_list: list[str] = []
                 for urls in list(self.url_dict.values()):
                     url_list.extend(urls)
                 return url_list

@@ -53,13 +53,13 @@ class DocTable(QTextDocument):
             cursor.insertText(header)
 
     def add_row(self, fields:
-                list[tuple[str | list[str], str | None]]) -> None:
+                list[tuple[str | list[str], str]]) -> None:
         """Adds a row to a QTextTable
         Args:
 
-            fields (list[tuple[tuple[str | list[str], str | None]]): List of
+            fields (list[tuple[tuple[str | list[str], str]]): List of
                 tuples of fields and links to add (text, link). If link is
-                None it is not a link. if text is a list the text is formed
+                "" it is not a link. if text is a list the text is formed
                 from the list making links for each.
         """
         # TODO - Simplify this somehow

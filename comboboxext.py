@@ -59,9 +59,10 @@ class ComboBoxExt(QComboBox):
                 Defaults to None.
         """
         super().addItem(text, user_data)
-        item = self.mdl.item(self.count() - 1, 0)
-        # Uncheck item to make checkbox appear
-        item.setCheckState(Qt.CheckState.Unchecked)
+        if self.checkboxes:
+            item = self.mdl.item(self.count() - 1, 0)
+            # Uncheck item to make checkbox appear
+            item.setCheckState(Qt.CheckState.Unchecked)
 
     @override
     def hidePopup(self) -> None:
@@ -93,13 +94,14 @@ class ComboBoxExt(QComboBox):
         Args:
             index (QModelIndex): Index of pressed item
         """
-        item = self.mdl.itemFromIndex(index)
-        state = Qt.CheckState.Checked
-        if item.checkState() == Qt.CheckState.Checked:
-            state = Qt.CheckState.Unchecked
-        item.setCheckState(state)
-        self.changed = True
-        self.update_edit_text()
+        if self.checkboxes:
+            item = self.mdl.itemFromIndex(index)
+            state = Qt.CheckState.Checked
+            if item.checkState() == Qt.CheckState.Checked:
+                state = Qt.CheckState.Unchecked
+            item.setCheckState(state)
+            self.changed = True
+            self.update_edit_text()
 
     def set_current_data(self, data: Any) -> bool:
         """Select item by data
@@ -160,8 +162,12 @@ class ComboBoxExt(QComboBox):
         Returns:
             list[str]: List of checked items' text
         """
-        return [self.itemText(i) for i in range(self.count())
-                if self.mdl.item(i, 0).checkState() == Qt.CheckState.Checked]
+        if self.checkboxes:
+            return [self.itemText(i) for i in range(self.count())
+                    if self.mdl.item(i, 0).checkState() ==
+                    Qt.CheckState.Checked]
+        else:
+            return []
 
     def checked_items_data(self) -> list[Any]:
         """Returns a list of the data of checked items
@@ -169,8 +175,12 @@ class ComboBoxExt(QComboBox):
         Returns:
             list[Any]: List of checked items' data
         """
-        return [self.itemData(i) for i in range(self.count())
-                if self.mdl.item(i, 0).checkState() == Qt.CheckState.Checked]
+        if self.checkboxes:
+            return [self.itemData(i) for i in range(self.count())
+                    if self.mdl.item(i, 0).checkState() ==
+                    Qt.CheckState.Checked]
+        else:
+            return []
 
     def check_item_by_index(self, index: int, checked: bool) -> bool:
         """Checks an item identified by its index
@@ -182,14 +192,15 @@ class ComboBoxExt(QComboBox):
         Returns:
             bool: True if item is found
         """
-        item = self.mdl.item(index, 0)
-        if item:
-            state = Qt.CheckState.Unchecked
-            if checked:
-                state = Qt.CheckState.Checked
-            item.setCheckState(state)
-            self.update_edit_text()
-            return True
+        if self.checkboxes:
+            item = self.mdl.item(index, 0)
+            if item:
+                state = Qt.CheckState.Unchecked
+                if checked:
+                    state = Qt.CheckState.Checked
+                item.setCheckState(state)
+                self.update_edit_text()
+                return True
         return False
 
     def check_item_by_text(self, text: str, checked: bool) -> bool:
@@ -202,11 +213,12 @@ class ComboBoxExt(QComboBox):
         Returns:
             bool: True if item is found
         """
-        item_index = self.findText(text)
-        if item_index != -1:
-            self.check_item_by_index(item_index, checked)
-            self.update_edit_text()
-            return True
+        if self.checkboxes:
+            item_index = self.findText(text)
+            if item_index != -1:
+                self.check_item_by_index(item_index, checked)
+                self.update_edit_text()
+                return True
         return False
 
     def check_item_by_data(self, data: Any, checked: bool) -> bool:
@@ -219,11 +231,12 @@ class ComboBoxExt(QComboBox):
         Returns:
             bool: True if item is found
         """
-        item_index = self.findData(data)
-        if item_index != -1:
-            self.check_item_by_index(item_index, checked)
-            self.update_edit_text()
-            return True
+        if self.checkboxes:
+            item_index = self.findData(data)
+            if item_index != -1:
+                self.check_item_by_index(item_index, checked)
+                self.update_edit_text()
+                return True
         return False
 
     def check_items_by_text(self, text_list: list[str], checked: bool) -> None:
@@ -233,8 +246,9 @@ class ComboBoxExt(QComboBox):
             text_list (list[str]): List of strings identifying items to check
             checked (bool): True if items are to be checked
         """
-        for text in text_list:
-            self.check_item_by_text(text, checked)
+        if self.checkboxes:
+            for text in text_list:
+                self.check_item_by_text(text, checked)
 
     def check_items_by_data(self, data_list: list[Any], checked: bool) -> None:
         """Checks multiple items identified by their data
@@ -244,8 +258,9 @@ class ComboBoxExt(QComboBox):
                 items to check
             checked (bool): True if items are to be checked
         """
-        for data in data_list:
-            self.check_item_by_data(data, checked)
+        if self.checkboxes:
+            for data in data_list:
+                self.check_item_by_data(data, checked)
 
     def check_all(self, checked: bool) -> None:
         """Checks or unchecks all items in list
@@ -253,8 +268,9 @@ class ComboBoxExt(QComboBox):
         Args:
             checked (bool): True if items are to be checked
         """
-        for i in range(0, self.count()):
-            self.check_item_by_index(i, checked)
+        if self.checkboxes:
+            for i in range(0, self.count()):
+                self.check_item_by_index(i, checked)
 
     def is_item_checked(self, index: int) -> bool:
         """Returns True if an item at an index exists and is checked
@@ -265,8 +281,11 @@ class ComboBoxExt(QComboBox):
         Returns:
             bool: True if item is checked
         """
-        item = self.mdl.item(index, 0)
-        return item is not None and item.checkState() == Qt.CheckState.Checked
+        if self.checkboxes:
+            item = self.mdl.item(index, 0)
+            return item is not None and item.checkState() \
+                == Qt.CheckState.Checked
+        return False
 
     def checked_count(self) -> int:
         """Returns the number of checked items
@@ -274,11 +293,14 @@ class ComboBoxExt(QComboBox):
         Returns:
             int: The count of checked items
         """
-        return sum(self.is_item_checked(i) for i in range(self.count()))
+        if self.checkboxes:
+            return sum(self.is_item_checked(i) for i in range(self.count()))
+        return 0
 
     def update_edit_text(self) -> None:
         """Updates the edit text to display the selected count
         """
-        count = self.checked_count()
-        text = f"{count} item{"" if count == 1 else "s"} selected"
-        self.line_edit.setText(text)
+        if self.checkboxes:
+            count = self.checked_count()
+            text = f"{count} item{"" if count == 1 else "s"} selected"
+            self.line_edit.setText(text)

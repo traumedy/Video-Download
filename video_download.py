@@ -228,7 +228,7 @@ class MainWindow(QMainWindow):
             self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
         # QLineEdit fields to expand to fill
-        # (These don't seem to work, probably Apply UI guidelines prevent
+        # (These don't seem to work, maybe Apple UI guidelines prevent
         # usable interfaces)
         widgets: list[QWidget] = [self.list_path_text, self.download_path_text,
                                   self.ffmpeg_path_text]
@@ -475,7 +475,7 @@ class MainWindow(QMainWindow):
         return self.main_layout
 
     def connect_mainwindow_signals(self) -> None:
-        """Connects main window signals to slots
+        """Connect main window signals
         """
         self.url_type_combo.currentIndexChanged.connect(
             self.url_stacked_widget.setCurrentIndex)
@@ -846,7 +846,7 @@ class MainWindow(QMainWindow):
                                 "downloaded to",
                                 QMessageBox.StandardButton.Ok)
             return
-        url_list = []
+        url_list: list[str] = []
         url_type_index = self.url_type_combo.currentIndex()
         if url_type_index == ComboBoxConst.URL_TYPE_SINGLE:
             url = self.url_text.text()
@@ -991,7 +991,7 @@ class MainWindow(QMainWindow):
             if sleep_interval:
                 ydl_opts["sleep_interval_subtitles"] = sleep_interval
             # Create post processors dictionary
-            postprocessors_dict = []
+            postprocessors_dict: list[dict[str, Any]] = []
             convert_format = self.subs_cnvt_combo.currentData()
             if convert_format:
                 postprocessors_dict.append({"format": convert_format,
@@ -1092,7 +1092,7 @@ class MainWindow(QMainWindow):
         # Disable widgets that would interfere with processing
         self.enable_active_buttons(False)
 
-        errors = []
+        errors: list[str] = []
         self.download_filenames = []
         count = 0
         ydl_opts = self.create_ydl_download_options()
@@ -1242,21 +1242,22 @@ class MainWindow(QMainWindow):
 
             for fmt in format_list:
                 # Tuple is (key, is_numeric, suffix, linkId)
-                keys = [("format_id", False, "", LinkIds.LINKID_FORMATID),
-                        ("ext", False, "", LinkIds.LINKID_FILEEXT),
-                        # TODO - Implement audio and video links
-                        # ("acodec", False, "", LinkIds.LINKID_AUDIOCODEC),
-                        # ("vcodec", False, "", LinkIds.LINKID_VIDEOCODEC),
-                        ("acodec", False, "", None),
-                        ("vcodec", False, "", None),
-                        ("resolution", False, "", LinkIds.LINKID_RESOLUTION),
-                        ("tbr", True, " K/s", None),
-                        ("filesize", True, " bytes", None),
-                        ("format_note", False, "", None)]
-                fields: list[tuple[str | list[str], str | None]] = []
+                keys: list[tuple[str, bool, str, str]] = \
+                        [("format_id", False, "", LinkIds.LINKID_FORMATID),
+                         ("ext", False, "", LinkIds.LINKID_FILEEXT),
+                         # TODO - Implement audio and video codec links
+                         # ("acodec", False, "", LinkIds.LINKID_AUDIOCODEC),
+                         # ("vcodec", False, "", LinkIds.LINKID_VIDEOCODEC),
+                         ("acodec", False, "", ""),
+                         ("vcodec", False, "", ""),
+                         ("resolution", False, "", LinkIds.LINKID_RESOLUTION),
+                         ("tbr", True, " K/s", ""),
+                         ("filesize", True, " bytes", ""),
+                         ("format_note", False, "", "")]
+                fields: list[tuple[str | list[str], str]] = []
                 for key, is_numeric, suffix, linkid in keys:
-                    text = ""
-                    link = None
+                    text: str = ""
+                    link: str = ""
                     if key in fmt and fmt[key]:
                         if is_numeric:
                             text = format(fmt[key], ',')
@@ -1317,7 +1318,7 @@ class MainWindow(QMainWindow):
                     headers = ["Code", "Name", "Format"]
                     table = DocTable(sub_name, headers)
                     for key, value in subtitles_list.items():
-                        fields = []
+                        fields: list[tuple[str | list[str], str]] = []
                         link = LinkIds.LINKID_SUBLANGUAGE + \
                             LinkIds.LINKID_SEP + key
                         fields.append((key, link))
@@ -1327,7 +1328,7 @@ class MainWindow(QMainWindow):
                             name = sub["name"] if "name" in sub else ""
                             extensions.append(sub["ext"]
                                               if "ext" in sub else "")
-                        fields.append((name, None))
+                        fields.append((name, ""))
                         fields.append((extensions,
                                        LinkIds.LINKID_SUBEXTENSION))
                         table.add_row(fields)
