@@ -6,9 +6,10 @@
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont, QBrush, QColor
 from PySide6.QtGui import QTextCursor, QTextDocument
-from PySide6.QtGui import QTextTableFormat, QTextTable
+from PySide6.QtGui import QTextTableFormat, QTextTable, QTextFrameFormat
 from constants import LinkIds
 
 
@@ -27,8 +28,12 @@ class DocTable(QTextDocument):
         """
         super().__init__()
         self.table_format = QTextTableFormat()
-        self.table_format.setCellPadding(len(headers))
+        self.table_format.setCellPadding(5)
         self.table_format.setCellSpacing(0)
+        self.table_format.setBorder(1)
+        self.table_format.setBorderStyle(
+            QTextFrameFormat.BorderStyle.BorderStyle_Solid)
+        self.table_format.setBorderBrush(QBrush(Qt.GlobalColor.black))
         cursor = QTextCursor(self)
         self.table = cursor.insertTable(1, len(headers), self.table_format)
         self.add_headers([title])
@@ -49,7 +54,6 @@ class DocTable(QTextDocument):
             fmt.setFontWeight(QFont.Weight.Bold)
             fmt.setForeground(QBrush(QColor.fromRgb(200, 100, 50)))
             cell.setFormat(fmt)
-            # fmt_orig = cursor.charFormat()
             cursor.insertText(header)
 
     def add_row(self, fields:
@@ -62,7 +66,6 @@ class DocTable(QTextDocument):
                 "" it is not a link. if text is a list the text is formed
                 from the list making links for each.
         """
-        # TODO - Simplify this somehow
         row = self.table.rows()
         self.table.appendRows(1)
         for idx, field in enumerate(fields):
