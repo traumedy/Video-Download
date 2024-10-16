@@ -302,5 +302,5 @@ class ComboBoxExt(QComboBox):
         """
         if self.checkboxes:
             count = self.checked_count()
-            text = f"{count} item{"" if count == 1 else "s"} selected"
+            text = f"{count} item{'' if count == 1 else 's'} selected"
             self.line_edit.setText(text)
