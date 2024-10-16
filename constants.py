@@ -11,7 +11,7 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 from typing import Any, TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
 if TYPE_CHECKING:
-    from video_download import MainWindow
+    from main_window import MainWindow
 
 
 class AppConst:
