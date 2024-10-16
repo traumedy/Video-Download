@@ -9,7 +9,7 @@ Author: Josh Buchbinder
 
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 import sys
 from typing import Any
@@ -245,18 +245,7 @@ class MainWindow(QMainWindow):
                    self.download_path_browse_button,
                    self.ffmpeg_path_browse_button, self.subs_clear_button,
                    self.subs_all_button, self.list_subs_button,
-                   self.resolution_combo
-                   # self.subs_lang_combo, self.subs_format_combo,
-                   # self.subs_cnvt_combo,
-                   # self.format_type_combo,
-                   # self.format_quality_combo, self.format_audext_combo,
-                   # self.format_vidext_combo, self.format_audcodec_combo,
-                   # self.format_vidcodec_combo,
-                   # self.format_merge_audio_combo,
-                   # self.format_merge_video_combo,
-                   # self.format_marge_container_combo,
-                   # self.subs_delay_spin
-                   ]
+                   self.resolution_combo]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
@@ -1374,6 +1363,8 @@ def main(argv: list[str]) -> int:
 
     # Create application
     app = QApplication(argv)
+    # Use Fusion app style
+    app.setStyle('Fusion')
 
     # Create window
     window = MainWindow()
