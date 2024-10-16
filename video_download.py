@@ -432,8 +432,8 @@ class MainWindow(QMainWindow):
         self.subtitles_layout.addWidget(self.subs_cnvt_combo, 2, 5)
         self.subtitles_layout.addWidget(QLabel("Download delay:"), 2, 6,
                                         alignment=Qt.AlignmentFlag.AlignRight)
-        self.subtitles_layout.addWidget(self.subs_delay_spin, 2, 7)
         self.subtitles_layout.addWidget(self.list_subs_button, 1, 7)
+        self.subtitles_layout.addWidget(self.subs_delay_spin, 2, 7)
 
         # By default the layout is too tall for the QStackedWidget
         layouts = [url_layout, list_path_layout, format_quality_layout,
@@ -738,6 +738,8 @@ class MainWindow(QMainWindow):
                                 QMessageBox.StandardButton.Ok)
             return
         self.download_url_formats(url)
+        # Restore focus to clicked button which got disabled and lost focus
+        self.list_formats_button.setFocus()
 
     def list_browse_button_clicked(self) -> None:
         """Called when video list browse button is clicked
@@ -1327,6 +1329,8 @@ class MainWindow(QMainWindow):
             parse_subs(self, "automatic_captions", "Auto-generated captions")
             parse_subs(self, "subtitles", "Subtitles")
         self.enable_active_buttons(True)
+        # Restore focus to clicked button which got disabled and lost focus
+        self.list_subs_button.setFocus()
 
     def add_status_message(self, message: str) -> None:
         """Adds text to the status window and scrolls to the bottom
@@ -1345,8 +1349,9 @@ class MainWindow(QMainWindow):
         Args:
             enable (bool): Enable widgets flag
         """
-        widgets = [self.list_formats_button, self.list_subs_button,
-                   self.bottom_buttonbox]
+        widgets: list[QWidget] = [self.list_formats_button,
+                                  self.list_subs_button,
+                                  self.bottom_buttonbox]
         for widget in widgets:
             widget.setEnabled(enable)
 
