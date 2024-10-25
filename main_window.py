@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QApplication, QWidget, QMainWindow, QMessageBox
 from PySide6.QtWidgets import QLayout, QFormLayout, QHBoxLayout, QGridLayout
 from PySide6.QtWidgets import QLineEdit, QPushButton, QLabel, QFileDialog
 from PySide6.QtWidgets import QProgressBar, QDialogButtonBox, QSpinBox
-from PySide6.QtWidgets import QCheckBox, QComboBox, QStyle
+from PySide6.QtWidgets import QCheckBox, QStyle
 from PySide6.QtWidgets import QSizePolicy, QStackedWidget
 from yt_dlp import YoutubeDL, utils
 
@@ -26,6 +26,7 @@ from constants import AppConst, SettingsConst, ComboBoxConst, ToolTips, LinkIds
 from bookmark_html_parser import BookmarkHTMLParser
 from doc_table import DocTable
 from utils import value_to_bool, normalize_path, get_ffmpeg_bin_path
+from utils import get_videos_path
 
 
 class MainWindow(QMainWindow):
@@ -35,7 +36,7 @@ class MainWindow(QMainWindow):
     cancel_flag: bool
     settings: QSettings
     main_layout: QFormLayout
-    url_type_combo: QComboBox
+    url_type_combo: ComboBoxExt
     url_stacked_widget: QStackedWidget
     url_text_layout_widget: QWidget
     url_text: QLineEdit
@@ -61,7 +62,7 @@ class MainWindow(QMainWindow):
     format_stacked_widget: QStackedWidget
     format_type_combo: ComboBoxExt
     format_quality_layout_widget: QWidget
-    format_quality_combo: QComboBox
+    format_quality_combo: ComboBoxExt
     format_audext_layout_widget: QWidget
     format_audext_combo: ComboBoxExt
     format_vidext_layout_widget: QWidget
@@ -71,21 +72,21 @@ class MainWindow(QMainWindow):
     format_vidcodec_layout_widget: QWidget
     format_vidcodec_combo: ComboBoxExt
     format_merge_layout_widget: QWidget
-    format_merge_audio_combo: QComboBox
-    format_merge_video_combo: QComboBox
-    format_marge_container_combo: QComboBox
+    format_merge_audio_combo: ComboBoxExt
+    format_merge_video_combo: ComboBoxExt
+    format_marge_container_combo: ComboBoxExt
     format_string_layout_widget: QWidget
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
     resolution_layout: QHBoxLayout
     resolution_combo: ComboBoxExt
     subtitles_layout: QGridLayout
-    generatedsubs_check: QCheckBox
+    subsgenerated_check: QCheckBox
     subs_lang_combo: ComboBoxExt
     subs_all_button: QPushButton
     subs_clear_button: QPushButton
     subs_format_combo: ComboBoxExt
-    subs_cnvt_combo: QComboBox
+    subs_cnvt_combo: ComboBoxExt
     subs_merge_check: QCheckBox
     subs_delay_spin: QSpinBox
     list_subs_button: QPushButton
@@ -96,11 +97,18 @@ class MainWindow(QMainWindow):
     download_button: QPushButton
     bottom_buttonbox: QDialogButtonBox
     cancel_button: QPushButton
+    settings_save: bool
+    exit_on_completion: bool
 
-    def __init__(self) -> None:
+    def __init__(self, settings_load: bool = True,
+                 settings_save: bool = True) -> None:
         """Initializer for MainWindow
         """
         super().__init__()
+
+        # Store for when we exit to allow not saving settings
+        self.settings_save = settings_save
+
         # Set title text for window and include app version
         # Import here to avoid circular import
         # pylint: disable=import-outside-toplevel
@@ -135,13 +143,26 @@ class MainWindow(QMainWindow):
 
         # Used to detect cancel request
         self.cancel_flag = False
+        # Used to cause application to exit after performing download
+        self.exit_on_completion = False
 
         # Set minimum window size
         size = self.size()
         self.setMinimumSize(size.width() + 260, size.height())
 
-        # Load persistent settings including stored window size
-        self.load_settings()
+        if settings_load:
+            # Load persistent settings including stored window size
+            self.load_settings()
+
+        # Get a default place to store videos if output path is invalid
+        download_path = self.download_path_text.text()
+        if not download_path or not QFileInfo(download_path).isDir():
+            self.download_path_text.setText(get_videos_path())
+
+        # Try to find ffmpeg path if blank or not a directory
+        ffmpeg_path = self.ffmpeg_path_text.text()
+        if not ffmpeg_path or not QFileInfo(ffmpeg_path).isDir():
+            self.ffmpeg_path_text.setText(get_ffmpeg_bin_path())
 
         # Set status window auto-scroll state
         self.status_text.set_autoscroll(self.autoscroll_check.isChecked())
@@ -158,7 +179,7 @@ class MainWindow(QMainWindow):
         """Create widgets for window
         """
         self.url_stacked_widget = QStackedWidget()
-        self.url_type_combo = QComboBox()
+        self.url_type_combo = ComboBoxExt()
         self.url_text_layout_widget = QWidget()
         self.url_text = QLineEdit()
         self.list_formats_button = QPushButton("List formats")
@@ -183,7 +204,7 @@ class MainWindow(QMainWindow):
         self.format_stacked_widget = QStackedWidget()
         self.format_type_combo = ComboBoxExt()
         self.format_quality_layout_widget = QWidget()
-        self.format_quality_combo = QComboBox()
+        self.format_quality_combo = ComboBoxExt()
         self.format_audext_layout_widget = QWidget()
         self.format_audext_combo = ComboBoxExt()
         self.format_vidext_layout_widget = QWidget()
@@ -193,21 +214,21 @@ class MainWindow(QMainWindow):
         self.format_vidcodec_layout_widget = QWidget()
         self.format_vidcodec_combo = ComboBoxExt()
         self.format_merge_layout_widget = QWidget()
-        self.format_merge_audio_combo = QComboBox()
-        self.format_merge_video_combo = QComboBox()
-        self.format_marge_container_combo = QComboBox()
+        self.format_merge_audio_combo = ComboBoxExt()
+        self.format_merge_video_combo = ComboBoxExt()
+        self.format_marge_container_combo = ComboBoxExt()
         self.format_string_layout_widget = QWidget()
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
         self.resolution_layout = QHBoxLayout()
         self.resolution_combo = ComboBoxExt()
         self.subtitles_layout = QGridLayout()
-        self.generatedsubs_check = QCheckBox("Auto-generated")
+        self.subsgenerated_check = QCheckBox("Auto-generated")
         self.subs_lang_combo = ComboBoxExt(checkboxes=True)
         self.subs_all_button = QPushButton("Check all languages")
         self.subs_clear_button = QPushButton("Uncheck all languages")
         self.subs_format_combo = ComboBoxExt()
-        self.subs_cnvt_combo = QComboBox()
+        self.subs_cnvt_combo = ComboBoxExt()
         self.subs_merge_check = QCheckBox("Merge into video")
         self.subs_delay_spin = QSpinBox()
         self.list_subs_button = QPushButton("List subtitles")
@@ -257,7 +278,7 @@ class MainWindow(QMainWindow):
             self.subs_cnvt_combo.addItem(label, data)
 
         # Populate format selection combo boxes
-        for label, idx in ComboBoxConst.FORMAT_TYPE_LIST:
+        for label, idx, _ in ComboBoxConst.FORMAT_TYPE_LIST:
             self.format_type_combo.addItem(label, idx)
         for idx, label in enumerate(ComboBoxConst.FORMAT_LABELS_QUALITY_LIST):
             self.format_quality_combo.addItem(label, "." + str(idx + 1))
@@ -269,9 +290,9 @@ class MainWindow(QMainWindow):
             self.format_audcodec_combo.addItem(codec, codec)
         for label, codec in ComboBoxConst.FORMAT_CODEC_VID_LIST:
             self.format_vidcodec_combo.addItem(label, codec)
-        for label, fstr in ComboBoxConst.FORMAT_MERGE_AUD_LIST:
+        for label, fstr, _ in ComboBoxConst.FORMAT_MERGE_AUD_LIST:
             self.format_merge_audio_combo.addItem(label, fstr)
-        for label, fstr in ComboBoxConst.FORMAT_MERGE_VID_LIST:
+        for label, fstr, _ in ComboBoxConst.FORMAT_MERGE_VID_LIST:
             self.format_merge_video_combo.addItem(label, fstr)
         for ext in ComboBoxConst.FORMAT_MERGE_OUTPUT_LIST:
             self.format_marge_container_combo.addItem(ext, ext)
@@ -413,7 +434,7 @@ class MainWindow(QMainWindow):
         self.resolution_layout.addWidget(self.resolution_combo)
         self.resolution_layout.addStretch()
         # Subtitles layout
-        self.subtitles_layout.addWidget(self.generatedsubs_check, 1, 1)
+        self.subtitles_layout.addWidget(self.subsgenerated_check, 1, 1)
         self.subtitles_layout.addWidget(self.subs_merge_check, 2, 1)
         self.subtitles_layout.addWidget(QLabel("Languages:"), 1, 2,
                                         alignment=Qt.AlignmentFlag.AlignRight)
@@ -528,7 +549,7 @@ class MainWindow(QMainWindow):
         self.preferfreeformats_check.setToolTip(
             ToolTips.TTT_PREFERFREEFORMATS_CHECK)
         self.consoleoutput_check.setToolTip(ToolTips.TTT_CONSOLEOUTPUT_CHECK)
-        self.generatedsubs_check.setToolTip(ToolTips.TTT_GENERATEDSUBS_CHECK)
+        self.subsgenerated_check.setToolTip(ToolTips.TTT_SUBSGENERATED_CHECK)
         self.subs_lang_combo.setToolTip(ToolTips.TTT_SUBS_LANG_COMBO)
         self.subs_clear_button.setToolTip(ToolTips.TTT_SUBS_CLEAR_BUTTON)
         self.subs_format_combo.setToolTip(ToolTips.TTT_SUBS_FORMAT_COMBO)
@@ -547,7 +568,7 @@ class MainWindow(QMainWindow):
         self.format_merge_audio_combo.setToolTip(
             ToolTips.TTT_FORMAT_MERGE_AUDIO_COMBO)
         self.format_merge_video_combo.setToolTip(
-            ToolTips.TTT_FORMAT_MERGE_VIDIO_COMBO)
+            ToolTips.TTT_FORMAT_MERGE_VIDEO_COMBO)
         self.format_marge_container_combo.setToolTip(
             ToolTips.TTT_FORMAT_MARGE_CONTAINER_COMBO)
         self.format_string_text.setToolTip(ToolTips.TTT_FORMAT_STRING_TEXT)
@@ -566,7 +587,8 @@ class MainWindow(QMainWindow):
             event (PySide6.QtGui.QCloseEvent): Event type
         """
         self.cancel_flag = True
-        self.save_settings()
+        if self.settings_save:
+            self.save_settings()
         event.accept()
 
     @override
@@ -599,6 +621,20 @@ class MainWindow(QMainWindow):
             event.accept()
             return
         event.ignore()
+
+    def display_warning(self, title: str, message: str) -> None:
+        """Displays a warning, possibly via message box or console
+
+        Args:
+            message (str): Message to display
+        """
+        if self.exit_on_completion or self.consoleoutput_check.isChecked():
+            print(message)
+            if self.exit_on_completion:
+                self.close()
+        elif not self.exit_on_completion:
+            QMessageBox.warning(self, title, message,
+                                QMessageBox.StandardButton.Ok)
 
     def status_click_callback(self, link: str) -> None:
         """Callback when a link is clicked in the status text widget
@@ -671,9 +707,6 @@ class MainWindow(QMainWindow):
                 else:
                     widget.setCurrentText(str(self.settings.value(settings_key,
                                                                   default)))
-            elif isinstance(widget, QComboBox):
-                widget.setCurrentText(str(self.settings.value(settings_key,
-                                                              default)))
             elif isinstance(widget, QCheckBox):
                 widget.setChecked(value_to_bool(
                                   self.settings.value(settings_key, default)))
@@ -692,9 +725,6 @@ class MainWindow(QMainWindow):
                             SettingsConst.SETTINGS_VAL_WINDOWSTATE,
                             Qt.WindowState.WindowNoState, int)
         self.setWindowState(Qt.WindowState(state))
-        # Try to find ffmpeg path if blank
-        if not self.ffmpeg_path_text.text():
-            self.ffmpeg_path_text.setText(get_ffmpeg_bin_path())
 
     def save_settings(self) -> None:
         """Save persistent settingss
@@ -710,8 +740,6 @@ class MainWindow(QMainWindow):
                                            "|".join(checked_items))
                 else:
                     self.settings.setValue(settings_key, widget.currentText())
-            elif isinstance(widget, QComboBox):
-                self.settings.setValue(settings_key, widget.currentText())
             elif isinstance(widget, QCheckBox):
                 self.settings.setValue(settings_key, widget.isChecked())
             elif isinstance(widget, QSpinBox):
@@ -731,9 +759,8 @@ class MainWindow(QMainWindow):
         """
         url = self.url_text.text()
         if not url:
-            QMessageBox.warning(self, "Missing download URL",
-                                "Enter a valid URL for format listing",
-                                QMessageBox.StandardButton.Ok)
+            self.display_warning("Missing download URL",
+                                 "Enter a valid URL for format listing")
             return
         self.download_url_formats(url)
         # Restore focus to clicked button which got disabled and lost focus
@@ -830,27 +857,24 @@ class MainWindow(QMainWindow):
         """
         dir_info = QFileInfo(self.download_path_text.text())
         if not dir_info.isDir():
-            QMessageBox.warning(self, "Missing download directory",
-                                "Enter a valid directory for files to be "
-                                "downloaded to",
-                                QMessageBox.StandardButton.Ok)
+            self.display_warning("Missing download directory",
+                                 "Enter a valid directory for files to be "
+                                 "downloaded to")
             return
         url_list: list[str] = []
         url_type_index = self.url_type_combo.currentIndex()
         if url_type_index == ComboBoxConst.URL_TYPE_SINGLE:
             url = self.url_text.text()
             if not url:
-                QMessageBox.warning(self, "Missing download URL",
-                                    "Enter a valid URL to be downloaded",
-                                    QMessageBox.StandardButton.Ok)
+                self.display_warning("Missing download URL",
+                                     "Enter a valid URL to be downloaded")
                 return
             url_list = [url]
         elif url_type_index == ComboBoxConst.URL_TYPE_LIST:
             file_info = QFileInfo(self.list_path_text.text())
             if not file_info.exists():
-                QMessageBox.warning(self, "Missing URL list",
-                                    "Enter the path to a valid list of URLs",
-                                    QMessageBox.StandardButton.Ok)
+                self.display_warning("Missing URL list",
+                                     "Enter the path to a valid list of URLs")
             else:
                 message = f"Processing URL list {file_info.absoluteFilePath()}"
                 self.add_status_message(message)
@@ -863,9 +887,8 @@ class MainWindow(QMainWindow):
                     url_list = self.parse_html_file(
                         file_info.absoluteFilePath())
                 else:
-                    QMessageBox.warning(self, "Unsupported file type",
-                                        "Valid file types are HTML, TXT",
-                                        QMessageBox.StandardButton.Ok)
+                    self.display_warning("Unsupported file type",
+                                         "Valid file types are HTML, TXT")
         # Process URLs
         if url_list:
             # Store the current diretory to return after processing
@@ -964,7 +987,7 @@ class MainWindow(QMainWindow):
                 constructor
         """
         if self.downloadsubs_check.isChecked():
-            if self.generatedsubs_check.isChecked():
+            if self.subsgenerated_check.isChecked():
                 ydl_opts["writeautomaticsub"] = True
             else:
                 ydl_opts["writesubtitles"] = True
@@ -1128,10 +1151,14 @@ class MainWindow(QMainWindow):
         message += f"\n{len(self.download_filenames)} downloads complete"
         if errors:
             message += f"\n{len(errors)} errors encountered"
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Download complete")
-        dlg.setText(message)
-        dlg.exec()
+        if self.exit_on_completion:
+            print(message)
+            self.close()
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Download complete")
+            dlg.setText(message)
+            dlg.exec()
 
     def ydl_download_progress_hook(self, progress_dict:
                                    dict[str, Any]) -> None:
@@ -1336,6 +1363,9 @@ class MainWindow(QMainWindow):
         Args:
             message (str): Message text to add
         """
+        # Output to console
+        if self.consoleoutput_check.isChecked():
+            print(message)
         # Add text to status window
         self.status_text.append_text(message)
         # Drive message loop

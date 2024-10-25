@@ -8,7 +8,7 @@ __copyright__ = "Copyright 2024, Josh Buchbinder"
 
 import shutil
 from typing import Any
-from PySide6.QtCore import QFileInfo, QDir
+from PySide6.QtCore import QFileInfo, QDir, QStandardPaths
 
 
 def value_to_bool(value: Any) -> bool:
@@ -55,3 +55,17 @@ def get_ffmpeg_bin_path() -> str:
         ffmpeg_path = ""
     ffmpeg_path = normalize_path(ffmpeg_path)
     return ffmpeg_path
+
+
+def get_videos_path() -> str:
+    """Returns the path to a place to store video files
+
+    Returns:
+        str: Path to directory where videos might be stored
+    """
+    videos_paths = QStandardPaths.standardLocations(
+        QStandardPaths.StandardLocation.MoviesLocation)
+    if not videos_paths:
+        return ""
+    video_path = normalize_path(videos_paths[0])
+    return video_path

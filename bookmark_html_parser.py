@@ -4,6 +4,9 @@
 browser bookmarks to extract URLs.
 """
 
+__author__ = "Josh Buchbinder"
+__copyright__ = "Copyright 2024, Josh Buchbinder"
+
 from html.parser import HTMLParser
 from overrides import override
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout

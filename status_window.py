@@ -152,16 +152,6 @@ class StatusWindow(QTextEdit):
         if self.autoscroll:
             self.scroll_to_end()
 
-    def append_console_text(self, text: str) -> None:
-        """Add console text with color escape sequences converted
-        to change the text color
-
-        Args:
-            text (str): Text to add
-        """
-        # TODO
-        self.append_text(text)
-
     def append_html(self, text: str) -> None:
         """Simple text append, allows html
 

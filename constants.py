@@ -32,6 +32,13 @@ class AppConst:
     FORMATSTR_FILEPROGRESS = "%vMb/%mMb %p%"
     # Format string for total progress bar
     FORMATSTR_TOTALPROGRESS = "%v/%m"
+    # Help description
+    HELP_DESCRIPTION = "Download video from URLs. Copyright 2024, " \
+        "Josh Buchbinder."
+    # Text at bottom of help
+    HELP_EPILOG = "Most of these options set values in the GUI.\n" \
+        "Using --noloadsettings without --nosavesettings will reset GUI " \
+        "settings to default."
 
 
 class SettingsConst:
@@ -118,7 +125,7 @@ class SettingsConst:
                 SettingsConst.SETTINGS_VAL_PREFERFREEFORMATS, False),
             (mainwindow.consoleoutput_check,
                 SettingsConst.SETTINGS_VAL_CONSOLEOUTPUT, False),
-            (mainwindow.generatedsubs_check,
+            (mainwindow.subsgenerated_check,
                 SettingsConst.SETTINGS_VAL_AUTOGENSUBS, False),
             (mainwindow.subs_lang_combo,
                 SettingsConst.SETTINGS_VAL_SUBTITLELANGUAGE, ""),
@@ -236,17 +243,25 @@ class ComboBoxConst:
     FORMAT_TYPE_MERGE = 8
     FORMAT_TYPE_RAWSTRING = 9
 
-    FORMAT_TYPE_LIST = [
-        ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA),
-        ("Audio only by quality", FORMAT_TYPE_AUD_BY_QUA),
-        ("Video only by quality", FORMAT_TYPE_VID_BY_QUA),
-        ("Audio+Video by extension", FORMAT_TYPE_AUDVID_BY_EXT),
-        ("Audio only by extension", FORMAT_TYPE_AUD_BY_EXT),
-        ("Video only by extension", FORMAT_TYPE_VID_BY_EXT),
-        ("Audio only by codec", FORMAT_TYPE_AUD_BY_CODEC),
-        ("Video only by codec", FORMAT_TYPE_VID_BY_CODEC),
-        ("Merge formats", FORMAT_TYPE_MERGE),
-        ("Raw format string", FORMAT_TYPE_RAWSTRING)
+    FORMAT_TYPE_LIST: list[tuple[str, int, str]] = [
+        ("Audio+Video by quality", FORMAT_TYPE_AUDVID_BY_QUA,
+         "audiovideoquality"),
+        ("Audio only by quality", FORMAT_TYPE_AUD_BY_QUA,
+         "audioonlyquality"),
+        ("Video only by quality", FORMAT_TYPE_VID_BY_QUA,
+         "videoonlyquality"),
+        ("Audio+Video by extension", FORMAT_TYPE_AUDVID_BY_EXT,
+         "audiovideoextension"),
+        ("Audio only by extension", FORMAT_TYPE_AUD_BY_EXT,
+         "audioonlyextension"),
+        ("Video only by extension", FORMAT_TYPE_VID_BY_EXT,
+         "videoonlyextension"),
+        ("Audio only by codec", FORMAT_TYPE_AUD_BY_CODEC,
+         "audioonlycodec"),
+        ("Video only by codec", FORMAT_TYPE_VID_BY_CODEC,
+         "videoonlycodec"),
+        ("Merge formats", FORMAT_TYPE_MERGE, "merge"),
+        ("Raw format string", FORMAT_TYPE_RAWSTRING, "raw")
     ]
 
     FORMAT_LABELS_QUALITY_LIST = ["Best quality", "Second best quality",
@@ -266,42 +281,44 @@ class ComboBoxConst:
                              ("vp8", "vp08"), ("h263", "h263"),
                              ("theora", "theora")]
     # Merge options
-    FORMAT_MERGE_AUD_LIST = [("Best audio", "bestaudio"),
-                             ("All audio only", "mergeall[vcodec=none]"),
-                             ("Codec flac", "ba[acodec~=flac]"),
-                             ("Codec alac", "ba[acodec~=alac]"),
-                             ("Codec wav", "ba[acodec~=wav]"),
-                             ("Codec aiff", "ba[acodec~=aiff]"),
-                             ("Codec opus", "ba[acodec~=opus]"),
-                             ("Codec vorbis", "ba[acodec~=vorbis]"),
-                             ("Codec aac", "ba[acodec~=aac]"),
-                             ("Codec mp4a", "ba[acodec~=mp4a]"),
-                             ("Codec mp3", "ba[acodec~=mp3]"),
-                             ("Codec ac4", "ba[acodec~=ac4]"),
-                             ("Codec eac3", "ba[acodec~=eac3]"),
-                             ("Codec ac3", "ba[acodec~=ac3]"),
-                             ("Codec dts", "ba[acodec~=dts]"),
-                             ("Extension m4a", "be[ext=m4a]"),
-                             ("Extension aac", "be[ext=aac]"),
-                             ("Extension mp3", "be[ext=mp3]"),
-                             ("Extension ogg", "be[ext=ogg]"),
-                             ("Extension opus", "be[ext=opus]"),
-                             ("Extension webm", "be[ext=webm]")]
-    FORMAT_MERGE_VID_LIST = [("Best video", "bestvideo"),
-                             ("All video only", "mergeall[acodec=none"),
-                             ("Codec av01", "bv*[vcodec~=av01]"),
-                             ("Codec vp9.2", "bv*[vcodec~=vp09.2]"),
-                             ("Codec vp9", "bv*[vcodec~=vp09]"),
-                             ("Codec hevc/h265", "bv*[vcodec~=h265]"),
-                             ("Codec avc1/h264", "bv*[vcodec~=avc1]"),
-                             ("Codec vp8", "bv*[vcodec~=vp08]"),
-                             ("Codec h263", "bv*[vcodec~=h263]"),
-                             ("Codec theora", "bv*[vcodec~=theora]"),
-                             ("Extension mp4", "bv*[ext=mp4]"),
-                             ("Extension mov", "bv*[ext=mov]"),
-                             ("Extension webm", "bv*[ext=webm]"),
-                             ("Extension flv", "bv*[ext=flv]"),
-                             ("Extension 3gp", "bv*[ext=3gp]")]
+    FORMAT_MERGE_AUD_LIST = [
+        ("Best audio", "bestaudio", "bestaudio"),
+        ("All audio only", "mergeall[vcodec=none]", "allaudioonly"),
+        ("Codec flac", "ba[acodec~=flac]", "codec-flac"),
+        ("Codec alac", "ba[acodec~=alac]", "codec-alac"),
+        ("Codec wav", "ba[acodec~=wav]", "codec-wav"),
+        ("Codec aiff", "ba[acodec~=aiff]", "codec-aiff"),
+        ("Codec opus", "ba[acodec~=opus]", "codec-opus"),
+        ("Codec vorbis", "ba[acodec~=vorbis]", "codec-vorbis"),
+        ("Codec aac", "ba[acodec~=aac]", "codec-aac"),
+        ("Codec mp4a", "ba[acodec~=mp4a]", "codec-mp4a"),
+        ("Codec mp3", "ba[acodec~=mp3]", "codec-mp3"),
+        ("Codec eac3", "ba[acodec~=eac3]", "codec-eac3"),
+        ("Codec ac3", "ba[acodec~=ac3]", "codec-ac3"),
+        ("Codec ac4", "ba[acodec~=ac4]", "codec-ac4"),
+        ("Codec dts", "ba[acodec~=dts]", "codec-dts"),
+        ("Extension m4a", "be[ext=m4a]", "extension-m4a"),
+        ("Extension aac", "be[ext=aac]", "extension-aac"),
+        ("Extension mp3", "be[ext=mp3]", "extension-mp3"),
+        ("Extension ogg", "be[ext=ogg]", "extension-ogg"),
+        ("Extension opus", "be[ext=opus]", "extension-opus"),
+        ("Extension webm", "be[ext=webm]", "extension-webm")]
+    FORMAT_MERGE_VID_LIST = [
+        ("Best video", "bestvideo", "bestvideo"),
+        ("All video only", "mergeall[acodec=none", "allvideoonly"),
+        ("Codec av01", "bv*[vcodec~=av01]", "codec-av01"),
+        ("Codec vp9.2", "bv*[vcodec~=vp09.2]", "codec-vp9.2"),
+        ("Codec vp9", "bv*[vcodec~=vp09]", "codec-vp9"),
+        ("Codec hevc/h265", "bv*[vcodec~=h265]", "codec-h265"),
+        ("Codec avc1/h264", "bv*[vcodec~=avc1]", "codec-h264"),
+        ("Codec vp8", "bv*[vcodec~=vp08]", "codec-vp08"),
+        ("Codec h263", "bv*[vcodec~=h263]", "codec-h263"),
+        ("Codec theora", "bv*[vcodec~=theora]", "codec-theora"),
+        ("Extension mp4", "bv*[ext=mp4]", "extension-mp4"),
+        ("Extension mov", "bv*[ext=mov]", "extension-mov"),
+        ("Extension webm", "bv*[ext=webm]", "extension-webm"),
+        ("Extension flv", "bv*[ext=flv]", "extension-flv"),
+        ("Extension 3gp", "bv*[ext=3gp]", "extension-3gp")]
     FORMAT_MERGE_OUTPUT_LIST = ["mkv", "mp4", "webm"]
 
     FORMAT_RESOLUTION_LIST = [("8K (4320)", 4320),
@@ -319,22 +336,25 @@ class ToolTips:
     """Strings for widgt tooltips
     """
     # ToolTip text for widgets
-    TTT_URL_TYPE_COMBO = "Select either a single URL to download or a URL list"
-    TTT_URL_TEXT = "The URL of a page with a video to download"
+    TTT_URL_TYPE_COMBO = "Select either a single URL to download or a URL " \
+        "list."
+    TTT_URL_TEXT = "The URL of a page with a video to download."
     TTT_LIST_FORMATS_BUTTON = "Retrieve the list of video and audio formats " \
         "available for this URL."
-    TTT_LIST_PATH_TEXT = "The path to the list of URLs to download"
-    TTT_LIST_PATH_BROSE_BUTTON = "Use dialog to browse to URL list path"
+    TTT_LIST_PATH_TEXT = "The path to text file or bookmark HTML containing " \
+        "the URLs to download."
+    TTT_LIST_PATH_BROSE_BUTTON = "Use dialog to browse to URL list path."
     TTT_DOWNLOAD_PATH_TEXT = "The path to the directory to download videos " \
-        "into"
-    TTT_DOWNLOAD_PATH_BROWSE_BUTTON = "Use dialog to browse to download " \
-        "directory"
+        "into."
+    TTT_DOWNLOAD_PATH_BROWSE_BUTTON = "Open dialog to browse for download " \
+        "directory."
     TTT_FFMPEG_PATH_TEXT = "Path to directory containing ffmpeg and ffprobe " \
         "binaries.\nffmpeg is only required if you select format options " \
         "that require post processing."
-    TTT_FFMPEG_PATH_BROWSE_BUTTON = "Use dialog to browse to ffmpeg directory"
-    TTT_USERNAME_TEXT = "User name for authentication"
-    TTT_PASSWORD_TEXT = "Password for authentication"
+    TTT_FFMPEG_PATH_BROWSE_BUTTON = "Open dialog to browse for ffmpeg " \
+        "directory."
+    TTT_USERNAME_TEXT = "User name for authentication."
+    TTT_PASSWORD_TEXT = "Password for authentication."
     TTT_SPECIFYFORMAT_CHECK = "Specify the format(s) to download and " \
         "optionally merge.\nIf unchecked the highest quality format with " \
         "audio and video will be downloaded.\nThis might not be as high " \
@@ -345,30 +365,28 @@ class ToolTips:
         "be downloaded."
     TTT_RESOLUTION_COMBO = "Select the highest resolution to download.\n" \
         "The highest resolution below or equal to this will be downloaded."
-    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video.\nMore options " \
-        "will be revealed when checked."
+    TTT_DOWNLOADSUBS_CHECK = "Download subtitles with video."
     TTT_AUTOSCROLL_CHECK = "When checked, status window automatically " \
         "scrolls to the bottom when new text is added."
     TTT_OVERWRITE_CHECK = "Overwrite video files if they exist when " \
         "downloading."
     TTT_KEEPFILES_CHECK = "Keep media files after post processing."
-    TTT_PREFERFREEFORMATS_CHECK = "Whether to prefer video formats with " \
+    TTT_PREFERFREEFORMATS_CHECK = "Prefer downloading media formats with " \
         "free containers over non-free ones of same quality."
     TTT_CONSOLEOUTPUT_CHECK = "The yt_dlp library will output to the " \
         "console that launched this program.\nUseful for debugging."
-    TTT_GENERATEDSUBS_CHECK = "Download automatically generated caption " \
-        "text.\nIf unchecked, user supplied subtitles will be downloaded " \
+    TTT_SUBSGENERATED_CHECK = "Download automatically generated caption " \
+        "text.\nIf not selected, user supplied subtitles will be downloaded " \
         "if available."
     TTT_SUBS_LANG_COMBO = "The languages of subtitles to download.\nThe " \
         "languages must be available from the server."
     TTT_SUBS_CLEAR_BUTTON = "Clears all checked subtitle languages."
-    TTT_SUBS_FORMAT_COMBO = "The destination subtitle format.\nSome formats " \
-        "will be converted."
-    TTT_SUBS_CONVERT_COMBO = "The optional format to convert the downloaded " \
+    TTT_SUBS_FORMAT_COMBO = "The subtitle format to download."
+    TTT_SUBS_CONVERT_COMBO = "The format to convert the downloaded " \
         "subtitles to."
     TTT_SUBS_MERGE_CHECK = "Merge subtitles into output video file."
     TTT_SUBS_DELAY_SPIN = "The delay in seconds between subtitle " \
-        "retrievals.\nIf too many download requests happen too quickly, \n" \
+        "retrievals.\nIf too many download requests happen too quickly,\n" \
         "some sites will abort the activity."
     TTT_LIST_SUBS_BUTTON = "Attempt to retrieve a list of available " \
         "subtitles from the server."
@@ -392,7 +410,7 @@ class ToolTips:
         "may not offer all types."
     TTT_FORMAT_MERGE_AUDIO_COMBO = "The audio format or formats to be " \
         "combined into the output file.\nffmpeg is required."
-    TTT_FORMAT_MERGE_VIDIO_COMBO = "The video format or formats to be " \
+    TTT_FORMAT_MERGE_VIDEO_COMBO = "The video format or formats to be " \
         "combined into the output file.\nffmpeg is required."
     TTT_FORMAT_MARGE_CONTAINER_COMBO = "The output format for the merged " \
         "video file.\nffmpeg is required."
@@ -409,7 +427,7 @@ class ToolTips:
         "download options."
     TTT_CLOSE_BUTTON = "Close this window."
     TTT_DOWNLOAD_BUTTON = "Begin downloading and processing " \
-        "files."
+        "files with the current settings."
     # ToolTip text for links in the status window
     TTT_LINK_STATUSWINDOW_FMTID = "Click here to change format selection " \
         "options to\ndownload this specific format ID."
@@ -443,7 +461,7 @@ class StringMaps:
     """String maps
     """
     # Map of link IDs to their tooltips in the status window
-    STRINGMAP_LINKID_TOOLTIP = {
+    STRINGMAP_LINKID_TOOLTIP: dict[str, str] = {
         LinkIds.LINKID_FORMATID: ToolTips.TTT_LINK_STATUSWINDOW_FMTID,
         LinkIds.LINKID_FILEEXT: ToolTips.TTT_LINK_STATUSWINDOW_FILEEXT,
         LinkIds.LINKID_AUDIOCODEC: ToolTips.TTT_LINK_STATUSWINDOW_AUDIOCODEC,
@@ -452,3 +470,12 @@ class StringMaps:
         LinkIds.LINKID_SUBEXTENSION:
         ToolTips.TTT_LINK_STATUSWINDOW_SUBEXTENSION,
         LinkIds.LINKID_RESOLUTION: ToolTips.TTT_LINK_STATUSWINDOW_RESOLUTION}
+
+    STRINGMAP_FORMATTYPE = {cmdline: index for _, index, cmdline
+                            in ComboBoxConst.FORMAT_TYPE_LIST}
+
+    STRINGMAP_MERGEAUDIO = {name: data for _, data, name
+                            in ComboBoxConst.FORMAT_MERGE_AUD_LIST}
+
+    STRINGMAP_MERGEVIDEO = {name: data for _, data, name
+                            in ComboBoxConst.FORMAT_MERGE_VID_LIST}
