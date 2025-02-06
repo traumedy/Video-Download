@@ -3,7 +3,7 @@
 Description: GUI for downloading video URLs using `yt_dlp` library.  
 
 Author: Josh Buchbinder  
-Copyright 2024, Josh Buchbinder  
+Copyright 2025, Josh Buchbinder  
 
 ## General usage  
 
@@ -119,11 +119,5 @@ All settings in the GUI are stored between executions including the window
 size.  
 
 Every site has a limited selection of file types, audio and video codecs. Use
-the `List formats` button available when `Single URL` is selecte at the top
+the `List formats` button available when `Single URL` is selected at the top
 to view the available formats for a site based on any video URL.  
-
-The file progress bar does not work with some sites. This may be a limitation
-of the yt_dlp library.  
-
-The subtitle downloading may not download the expected file format. Post
-processing also does not seem to work as expected.  
