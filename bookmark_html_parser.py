@@ -7,6 +7,7 @@ browser bookmarks to extract URLs.
 __author__ = "Josh Buchbinder"
 __copyright__ = "Copyright 2024, Josh Buchbinder"
 
+from typing import Optional
 from html.parser import HTMLParser
 from overrides import override
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout
@@ -20,7 +21,7 @@ class FolderSelectDialog(QDialog):
     dlg_layout: QVBoxLayout
     folder_listbox: QListWidget
 
-    def __init__(self, parent: QWidget | None = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         """Initializer for dialog
 
         Args:
@@ -75,9 +76,9 @@ class BookmarkHTMLParser(HTMLParser):
     # Current folder name
     current_folder: str
     # Parent window for dialog
-    parent_widget: QWidget | None
+    parent_widget: Optional[QWidget]
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent: Optional[QWidget] = None):
         super().__init__()
         # Store parent widget for folder dialog
         self.parent_widget = parent
@@ -99,12 +100,12 @@ class BookmarkHTMLParser(HTMLParser):
 
     @override
     def handle_starttag(self, tag: str,
-                        attrs: list[tuple[str, str | None]]) -> None:
+                        attrs: list[tuple[str, Optional[str]]]) -> None:
         """Overriden method, handles tag opening
 
         Args:
             tag (str): Tag name
-            attrs (list[tuple[str, str | None]]): List of attributes
+            attrs (list[tuple[str, Optional[str]]]): List of attributes
                 for start tag
         """
         if "h3" == tag:
