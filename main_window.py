@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
     format_string_text: QLineEdit
     format_string_help_button: QPushButton
     resolution_layout: QHBoxLayout
-    resolution_combo: ComboBoxExt
+    resheight_combo: ComboBoxExt
     subtitles_layout: QGridLayout
     subsgenerated_check: QCheckBox
     subs_lang_combo: ComboBoxExt
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow):
         self.format_string_text = QLineEdit()
         self.format_string_help_button = QPushButton("Help")
         self.resolution_layout = QHBoxLayout()
-        self.resolution_combo = ComboBoxExt()
+        self.resheight_combo = ComboBoxExt()
         self.subtitles_layout = QGridLayout()
         self.subsgenerated_check = QCheckBox("Auto-generated")
         self.subs_lang_combo = ComboBoxExt(checkboxes=True)
@@ -247,8 +247,6 @@ class MainWindow(QMainWindow):
             self.url_type_combo.addItem(label)
         # These Expanding policies seem necessary for Mac to get the
         # QLineEdit fields to expand to fill
-        # (These don't seem to work, maybe Apple UI guidelines prevent
-        # usable interfaces)
         widgets: list[QWidget] = [self.list_path_text, self.download_path_text,
                                   self.ffmpeg_path_text]
         for widget in widgets:
@@ -264,7 +262,7 @@ class MainWindow(QMainWindow):
                    self.download_path_browse_button,
                    self.ffmpeg_path_browse_button, self.subs_clear_button,
                    self.subs_all_button, self.list_subs_button,
-                   self.resolution_combo]
+                   self.resheight_combo]
         for widget in widgets:
             widget.setSizePolicy(QSizePolicy.Policy.Fixed,
                                  QSizePolicy.Policy.Fixed)
@@ -299,7 +297,7 @@ class MainWindow(QMainWindow):
 
         # Populate resolution combobox
         for label, res in ComboBoxConst.FORMAT_RESOLUTION_LIST:
-            self.resolution_combo.addItem(label, res)
+            self.resheight_combo.addItem(label, res)
 
         # Set progress bars display text formats
         self.file_progress.setFormat(AppConst.FORMATSTR_FILEPROGRESS)
@@ -431,7 +429,7 @@ class MainWindow(QMainWindow):
         self.format_layout.addWidget(self.format_type_combo)
         self.format_layout.addWidget(self.format_stacked_widget)
         # Resolution layout
-        self.resolution_layout.addWidget(self.resolution_combo)
+        self.resolution_layout.addWidget(self.resheight_combo)
         self.resolution_layout.addStretch()
         # Subtitles layout
         self.subtitles_layout.addWidget(self.subsgenerated_check, 1, 1)
@@ -574,7 +572,7 @@ class MainWindow(QMainWindow):
         self.format_string_text.setToolTip(ToolTips.TTT_FORMAT_STRING_TEXT)
         self.format_string_help_button.setToolTip(
             ToolTips.TTT_FORMAT_STRING_HELP_BUTTON)
-        self.resolution_combo.setToolTip(ToolTips.TTT_RESOLUTION_COMBO)
+        self.resheight_combo.setToolTip(ToolTips.TTT_RESOLUTION_COMBO)
         self.status_text.setToolTip(ToolTips.TTT_STATUSWINDOW_TEXT)
         self.close_button.setToolTip(ToolTips.TTT_CLOSE_BUTTON)
         self.download_button.setToolTip(ToolTips.TTT_DOWNLOAD_BUTTON)
@@ -687,7 +685,7 @@ class MainWindow(QMainWindow):
                 if xpos != -1:
                     value = value[xpos + 1:]
                 try:
-                    if self.resolution_combo.set_current_data_lte(int(value)):
+                    if self.resheight_combo.set_current_data_lte(int(value)):
                         self.specifyres_check.setChecked(True)
                 except ValueError:
                     pass
@@ -727,7 +725,7 @@ class MainWindow(QMainWindow):
         self.setWindowState(Qt.WindowState(state))
 
     def save_settings(self) -> None:
-        """Save persistent settingss
+        """Save persistent settings
         """
         widgets = SettingsConst.get_mainwindow_widgets_vals(self)
         for widget, settings_key, _ in widgets:
@@ -1066,9 +1064,9 @@ class MainWindow(QMainWindow):
             self.add_status_message(message)
             ydl_opts["format"] = format_str
         if self.specifyres_check.isChecked():
-            resdata = self.resolution_combo.currentData()
+            resdata = self.resheight_combo.currentData()
             if resdata:
-                sort_str = f"res:{resdata}"
+                sort_str = f"height:{resdata}"
                 ydl_opts["format_sort"] = [sort_str]
                 message = f"Using format sort string: {sort_str}"
                 self.add_status_message(message)
@@ -1179,8 +1177,8 @@ class MainWindow(QMainWindow):
 
         if "downloading" == status:
             if file_bytes is not None and file_total is not None:
-                pos_value = file_bytes / 1024 / 1024
-                pos_max = file_total / 1024 / 1024
+                pos_value = file_bytes // 1024 // 1024
+                pos_max = file_total // 1024 // 1024
                 self.file_progress.setTextVisible(True)
                 self.file_progress.setValue(pos_value)
                 self.file_progress.setMaximum(pos_max)
@@ -1194,7 +1192,7 @@ class MainWindow(QMainWindow):
                 message = f"Finished with file {filename}"
                 self.add_status_message(message)
                 if file_total:
-                    pos_max = file_total / 1024 / 1024
+                    pos_max = file_total // 1024 // 1024
                     self.file_progress.setMaximum(pos_max)
                     self.file_progress.setValue(pos_max)
             elif "error" == status:

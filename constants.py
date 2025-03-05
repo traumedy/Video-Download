@@ -111,7 +111,7 @@ class SettingsConst:
                 SettingsConst.SETTINGS_VAL_SPECIFYFORMAT, False),
             (mainwindow.specifyres_check,
                 SettingsConst.SETTINGS_VAL_SPECIFYRES, False),
-            (mainwindow.resolution_combo,
+            (mainwindow.resheight_combo,
                 SettingsConst.SETTINGS_VAL_RESHEIGHT, ""),
             (mainwindow.downloadsubs_check,
                 SettingsConst.SETTINGS_VAL_DOWNLOADSUBTITLES, False),
@@ -409,9 +409,9 @@ class ToolTips:
         "Different sites will have different video codecs available and " \
         "may not offer all types."
     TTT_FORMAT_MERGE_AUDIO_COMBO = "The audio format or formats to be " \
-        "combined into the output file.\nffmpeg is required."
+        "combined into the merged output file.\nffmpeg is required."
     TTT_FORMAT_MERGE_VIDEO_COMBO = "The video format or formats to be " \
-        "combined into the output file.\nffmpeg is required."
+        "combined into the merged output file.\nffmpeg is required."
     TTT_FORMAT_MARGE_CONTAINER_COMBO = "The output format for the merged " \
         "video file.\nffmpeg is required."
     TTT_FORMAT_STRING_TEXT = "Enter the string representing the format to " \

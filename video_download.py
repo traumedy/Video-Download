@@ -235,7 +235,7 @@ def main(argv: list[str]) -> int:
     if args.rawformatstring:
         window.format_string_text.setText(args.rawformatstring)
     if args.maxheight:
-        window.resolution_combo.set_current_data(args.maxheight)
+        window.resheight_combo.set_current_data(args.maxheight)
     if args.subsgenerated:
         window.subsgenerated_check.setChecked(True)
     elif args.subssupplied:
