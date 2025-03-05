@@ -21,8 +21,8 @@ See `yt-dlp` documentation to see which video sites are
 After cloning this repository of code and entering the directory,
 follow these steps:  
 
-1. Ensure you have a recent version of Python 3 installed, at least
-version 3.10.  
+1. Ensure you have a recent version of Python 3 installed, between
+versions 3.10 and 3.12.  
 
 2. Optionally create and activate a venv virtual environment to contain
 the packages for this program:  
