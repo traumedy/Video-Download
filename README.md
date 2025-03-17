@@ -39,8 +39,8 @@ venv\Scripts\activate
 
 On *nix or Mac:  
 
-```
-*nix $ source venv/bin/activate
+```bash
+source venv/bin/activate
 ```
 
 3. Install requirements.txt:  
